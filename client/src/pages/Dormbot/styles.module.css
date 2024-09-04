@@ -1,0 +1,61 @@
+/* styles.module.css */
+.container {
+  padding: 20px;
+}
+
+.header {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.subHeader {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.button {
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.input {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.imagesWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.image {
+  width: 40px;
+  height: 40px;
+}
