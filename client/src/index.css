@@ -11,3 +11,26 @@ code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
 		monospace;
 }
+
+
+:root {
+	--primary-color: #0d9488;
+	--secondary-color: #134e4a;
+	--background-color: #f0fdfa;
+	--text-color: #333;
+	--white: #fff;
+}
+
+body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	background-color: var(--background-color);
+	color: var(--text-color);
+}
+
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 20px;
+}
