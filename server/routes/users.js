@@ -1,4 +1,3 @@
-// routes/users.js
 const express = require("express");
 const router = express.Router();
 const User = require("../models/user"); // Ensure the User model is correctly set up
@@ -11,7 +10,7 @@ router.post("/", async (req, res) => {
     let user = await User.findOne({ email });
     if (user) return res.status(400).send({ message: "User already exists" });
 
-    // Save new user
+    // Save new user with role
     user = new User(req.body);
     await user.save();
     res.status(201).send({ message: "User registered successfully" });
