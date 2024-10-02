@@ -10,11 +10,11 @@ const Footer = () => {
         <div className={styles.footerContent}>
           <div className={styles.contactInfo}>
             <h4>Contact Us</h4>
-            <p>MlQU Dormitory</p>
-            <p>Suite 456</p>
-            <p>City, State, ZIP</p>
-            <p>Phone: (123) 456-7890</p>
-            <p>Email: mlqu.dormitory@gmai.com</p>
+            <p>MLQU Dormitory</p>
+
+            <p>Manila, Philippines 1712</p>
+            <p>Phone: (02) 8994 5124</p>
+            <p>Email: mlqu.dormitory@gmail.com</p>
           </div>
           <div className={styles.links}>
             <h4>Links</h4>

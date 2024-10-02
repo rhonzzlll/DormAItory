@@ -1,3 +1,8 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
 	margin: 0;
 	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
@@ -5,6 +10,7 @@ body {
 		sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	background-color: #03787c; /* Updated background color */
 }
 
 code {
@@ -12,11 +18,10 @@ code {
 		monospace;
 }
 
-
 :root {
 	--primary-color: #0d9488;
 	--secondary-color: #134e4a;
-	--background-color: #f0fdfa;
+	--background-color: #f0fdfa; /* You can choose to update this if needed */
 	--text-color: #333;
 	--white: #fff;
 }
@@ -25,7 +30,6 @@ body {
 	font-family: Arial, sans-serif;
 	margin: 0;
 	padding: 0;
-	background-color: var(--background-color);
 	color: var(--text-color);
 }
 

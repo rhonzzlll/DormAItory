@@ -2,6 +2,17 @@
   padding: 2rem 0;
 }
 
+/* styles/Main.module.css */
+/* styles/Main.module.css */
+.welcomeMessage {
+  margin-bottom: 1rem; /* Space below the welcome message */
+  text-align: left; /* Align the text to the left */
+  font-size: 1.2rem; /* Font size for the welcome message */
+  color: whitesmoke; /* Change text color to black */
+  padding-left: 1rem; /* Add padding to the left for better alignment */
+}
+
+
 .container {
   max-width: 1200px;
   margin: 0 auto;

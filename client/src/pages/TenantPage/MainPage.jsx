@@ -42,6 +42,11 @@ const MainPage = () => {
   return (
     <main className={styles.mainContent}>
       <div className={styles.container}>
+        {/* Welcome Message */}
+        <div className={styles.welcomeMessage}>
+          <p>Welcome to the User Dashboard</p>
+        </div>
+
         <div className={styles.actionCards}>
           <ActionCard
             icon={<List />}

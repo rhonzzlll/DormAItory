@@ -1,6 +1,7 @@
 /* Header.module.css */
 .header {
-  background-color: var(--primary-color);
+  background-color: #03787c;
+  /* Updated background color to match the page */
   color: var(--white);
   padding: 1rem 0;
 }
@@ -36,3 +37,59 @@
   margin-right: 0.5rem;
 }
 
+.logoutButton {
+  background-color: #3bb19b;
+  /* Change to your preferred color */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  background-color: #34a688;
+  /* Darker shade for hover effect */
+}
+
+/* Dropdown styles */
+.dropdown {
+  position: absolute;
+  /* Allows the dropdown to overlay other content */
+  right: 0;
+  /* Align to the right of the user icon */
+  background-color: #03787c;
+  /* Same as header background */
+  color: white;
+  border: 1px solid #3bb19b;
+  /* Optional border */
+  border-radius: 5px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Adds shadow for depth */
+  z-index: 1000;
+  /* Ensure it appears above other elements */
+  padding: 10px;
+}
+
+.dropdownItem {
+  padding: 10px;
+  cursor: pointer;
+}
+
+.dropdownItem:hover {
+  background-color: #3bb19b;
+  /* Highlight effect on hover */
+}
+
+/* Header.module.css */
+.logo {
+  max-width: 100px;
+  /* Adjust this as needed */
+  max-height: 150px;
+  /* Adjust this as needed */
+  height: auto;
+  /* Maintain aspect ratio */
+  width: auto;
+  /* Maintain aspect ratio */
+  margin-right: 10px;
+}

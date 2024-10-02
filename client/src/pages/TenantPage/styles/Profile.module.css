@@ -1,0 +1,91 @@
+.profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #2d7163;
+    color: white;
+    padding: 20px;
+}
+
+.profile-header h1 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.profile-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.profile-body {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.profile-picture-section {
+    text-align: center;
+}
+
+.profile-picture {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background-color: #ccc;
+    margin-bottom: 10px;
+}
+
+.add-picture-link {
+    color: #2d7163;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.profile-details {
+    flex-grow: 1;
+    margin-left: 30px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+}
+
+.detail-label {
+    font-weight: bold;
+    color: #7d7d7d;
+}
+
+.detail-value {
+    font-size: 1.1rem;
+}
+
+.change-password-link {
+    color: #2d7163;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.profile-footer {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.edit-profile-button {
+    background-color: #2d7163;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}

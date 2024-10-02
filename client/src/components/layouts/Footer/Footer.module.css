@@ -1,68 +1,72 @@
 /* Footer styles */
 .footer {
-    background-color: var(--secondary-color);
-    color: var(--white);
-    padding: 2rem 0;
-    margin-top: 2rem;
+  background-color: var(--secondary-color);
+  color: var(--white);
+  padding: 2rem 0;
+  margin-top: 2rem;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  padding-left: 2rem;
+  /* Added padding to move contents to the right */
+}
+
+.footer h4 {
+  margin-bottom: 1rem;
+}
+
+.footer ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.footer ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer a {
+  color: var(--white);
+  text-decoration: none;
+}
+
+.social-icons {
+  display: flex;
+  gap: 1rem;
+}
+
+.copyright {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .header .container {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  
-  .footer-content {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+
+  .header nav {
+    margin-top: 1rem;
   }
-  
-  .footer h4 {
-    margin-bottom: 1rem;
+
+  .header nav ul {
+    flex-wrap: wrap;
   }
-  
-  .footer ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .footer ul li {
+
+  .header nav ul li {
     margin-bottom: 0.5rem;
   }
-  
-  .footer a {
-    color: var(--white);
-    text-decoration: none;
+
+  .info-section {
+    grid-template-columns: 1fr;
   }
-  
-  .social-icons {
-    display: flex;
-    gap: 1rem;
+
+  .footer-content {
+    grid-template-columns: 1fr;
+    padding-left: 1rem;
+    /* Adjust padding for smaller screens */
   }
-  
-  .copyright {
-    text-align: center;
-    margin-top: 2rem;
-  }
-  
-  @media (max-width: 768px) {
-    .header .container {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  
-    .header nav {
-      margin-top: 1rem;
-    }
-  
-    .header nav ul {
-      flex-wrap: wrap;
-    }
-  
-    .header nav ul li {
-      margin-bottom: 0.5rem;
-    }
-  
-    .info-section {
-      grid-template-columns: 1fr;
-    }
-  
-    .footer-content {
-      grid-template-columns: 1fr;
-    }
-  }
+}
