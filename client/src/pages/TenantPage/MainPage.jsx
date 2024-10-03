@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { List, Users, Zap, Mail, Settings, CreditCard, Calendar, FileText } from 'lucide-react';
 import styles from './styles/Main.module.css';
@@ -14,7 +14,20 @@ const ActionCard = ({ icon, title, description, onClick }) => {
   );
 };
 
-const CalendarComponent = () => {
+const CalendarComponent = ({ events }) => {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  const eventDates = events.reduce((acc, event) => {
+    const date = new Date(event.date);
+    if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+      acc[date.getDate()] = event.title;
+    }
+    return acc;
+  }, {});
+
   return (
     <div className={styles.calendar_section}>
       <Calendar className={styles.calendar_icon} />
@@ -22,11 +35,15 @@ const CalendarComponent = () => {
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
           <div key={day} className={styles.calendar_day}>{day}</div>
         ))}
-        {[...Array(31)].map((_, i) => (
-          <div key={i} className={i === 6 ? styles.highlighted_day : styles.calendar_date}>
-            {i + 1}
-          </div>
-        ))}
+        {[...Array(daysInMonth)].map((_, i) => {
+          const day = i + 1;
+          const isHighlighted = eventDates[day] ? styles.highlighted_day : '';
+          return (
+            <div key={i} className={`${styles.calendar_date} ${isHighlighted}`} title={eventDates[day]}>
+              {day}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -34,6 +51,19 @@ const CalendarComponent = () => {
 
 const MainPage = () => {
   const navigate = useNavigate();
+  const [announcements, setAnnouncements] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+
+  useEffect(() => {
+    // Fetch announcements and calendar events from your backend or state management
+    // This is a placeholder. Replace with actual data fetching logic.
+    setAnnouncements([
+      { id: 1, content: "Office closed today. Hours resume tomorrow, 8 AM - 4:30 PM." }
+    ]);
+    setCalendarEvents([
+      { id: 1, date: '2024-10-07', title: 'Maintenance Day' }
+    ]);
+  }, []);
 
   const handleCardClick = (path) => {
     navigate(path);
@@ -108,12 +138,14 @@ const MainPage = () => {
         <div className={styles.infoSection}>
           <div className={styles.calendar}>
             <h3>Calendar</h3>
-            <CalendarComponent />
+            <CalendarComponent events={calendarEvents} />
           </div>
           <div className={styles.announcements}>
             <h3>Announcements</h3>
             <ul>
-              <li>Our office will be closed today. Hence, the office hours will be resumed tomorrow, Monday, from 8 AM to 4:30 PM. Thank you!</li>
+              {announcements.map(announcement => (
+                <li key={announcement.id}>{announcement.content}</li>
+              ))}
             </ul>
           </div>
         </div>

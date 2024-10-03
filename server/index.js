@@ -1,28 +1,41 @@
-require("dotenv").config();
+require("dotenv").config(); // Load environment variables
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-const app = express();
-
-// Database connection
-mongoose.connect(process.env.DB, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("Connected to MongoDB..."))
-.catch((err) => console.error("Could not connect to MongoDB...", err));
-
-// Middleware
-app.use(express.json());
-app.use(cors());
-
-// Routes
+// Import routes
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
+const maintenanceRoutes = require("./routes/maintenanceroutes"); // Import maintenance routes
 
-app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes);
+const app = express();
+const PORT = process.env.PORT || 8080; // Set default port
+
+// Middleware
+app.use(cors()); // Enable CORS for all requests
+app.use(express.json()); // Parse JSON requests
+
+// Database connection
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.DB || 'mongodb://localhost:27017/maintenance_db', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to MongoDB...");
+  } catch (err) {
+    console.error("Could not connect to MongoDB...", err);
+    process.exit(1); // Exit if connection fails
+  }
+};
+
+// Connect to the database
+connectDB();
+
+// API Routes
+app.use("/api/users", userRoutes); // User routes
+app.use("/api/auth", authRoutes); // Authentication routes
+app.use("/api/maintenance", maintenanceRoutes); // Maintenance routes
 
 // Root route
 app.get("/", (req, res) => {
@@ -30,7 +43,9 @@ app.get("/", (req, res) => {
 });
 
 // Start the server
-const port = process.env.PORT || 8080;
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
+
+// Export the app for testing or further use
+module.exports = app;

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '../../components/layouts/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/layouts/ui/tabs';
+import { Card, CardContent } from '../../components/layouts/ui/Card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/layouts/ui'; // Adjust the path as needed
+
+
 import Button from '../../components/layouts/ui/Button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/layouts/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/layouts/ui/dialog';
@@ -68,8 +70,8 @@ function AdminMaintenance() {
   const [newConcern, setNewConcern] = useState({ name: '', description: '' });
   const [editingConcern, setEditingConcern] = useState(null);
 
-  const filteredRequests = activeTab === 'all' 
-    ? requests 
+  const filteredRequests = activeTab === 'all'
+    ? requests
     : requests.filter(req => req.status === activeTab);
 
   const handleStatusChange = (requestId, newStatus) => {
@@ -82,10 +84,10 @@ function AdminMaintenance() {
 
   const handleAddNote = (requestId) => {
     if (!noteInput.trim()) return;
-    
+
     setRequests(prevRequests =>
       prevRequests.map(req =>
-        req.id === requestId 
+        req.id === requestId
           ? { ...req, notes: [...req.notes, noteInput] }
           : req
       )
@@ -113,7 +115,7 @@ function AdminMaintenance() {
 
   const handleUpdateConcern = () => {
     if (editingConcern) {
-      setConcernTypes(concernTypes.map(concern => 
+      setConcernTypes(concernTypes.map(concern =>
         concern.id === editingConcern.id ? editingConcern : concern
       ));
       setEditingConcern(null);
@@ -321,12 +323,12 @@ function AdminMaintenance() {
                                   </div>
                                   <div>
                                     <Label>Add Note</Label>
-                                    <Textarea 
+                                    <Textarea
                                       value={noteInput}
                                       onChange={(e) => setNoteInput(e.target.value)}
                                       placeholder="Add a note about this request"
                                     />
-                                    <Button 
+                                    <Button
                                       onClick={() => handleAddNote(req.id)}
                                       className="mt-2"
                                     >
@@ -348,7 +350,7 @@ function AdminMaintenance() {
                                 </div>
                               </DialogContent>
                             </Dialog>
-                            
+
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="sm">Cancel</Button>
