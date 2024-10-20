@@ -7,13 +7,18 @@ const mongoose = require("mongoose");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const maintenanceRoutes = require("./routes/maintenanceroutes"); // Import maintenance routes
+const tenantRouter = require('./routes/tenantRouter'); // Adjust the path as needed
+const bodyParser = require('body-parser');
+const dormRoutes = require("./routes/Dorm"); // Ensure this path matches the actual file name
 
 const app = express();
 const PORT = process.env.PORT || 8080; // Set default port
 
 // Middleware
 app.use(cors()); // Enable CORS for all requests
-app.use(express.json()); // Parse JSON requests
+app.use(express.json({ limit: '10mb' })); // Increase payload size limit to 10MB
+app.use(express.urlencoded({ limit: '10mb', extended: true })); // Increase URL-encoded payload size limit
+app.use(bodyParser.json());
 
 // Database connection
 const connectDB = async () => {
@@ -36,10 +41,28 @@ connectDB();
 app.use("/api/users", userRoutes); // User routes
 app.use("/api/auth", authRoutes); // Authentication routes
 app.use("/api/maintenance", maintenanceRoutes); // Maintenance routes
+app.use('/api/tenants', tenantRouter); // Tenant routes
+app.use('/api/dorms', dormRoutes); // Dorm routes
+
+
 
 // Root route
 app.get("/", (req, res) => {
   res.send("Welcome to the Dormitory Management System!");
+});
+
+app.get('/api/dorms/get/:id', async (req, res) => {
+  const roomId = req.params.id;
+  try {
+    const room = await RoomModel.findById(roomId); // Assuming RoomModel is the model you're using
+    if (!room) {
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+    res.json(room);
+  } catch (error) {
+    console.error('Error fetching room:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // Start the server
