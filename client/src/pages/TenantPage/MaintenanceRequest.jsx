@@ -27,7 +27,7 @@ export default function MaintenanceRequestForm() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-teal-600 text-white p-6 rounded-t-lg">
+    <div className="bg-white text-black p-6 rounded-t-lg">
         <h1 className="text-3xl font-semibold mb-2">Maintenance Request</h1>
         <p className="text-sm">
           Fill out the following fields and submit your request form. Please expect a minimum of 1-2 days for

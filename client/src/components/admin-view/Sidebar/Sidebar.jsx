@@ -10,6 +10,8 @@ const Sidebar = () => {
   const menuItems = [
     { title: 'Dashboard', path: '/admin' },
     { icon: <List size={20} />, title: 'Room List', path: '/admin/rooms' },
+    { icon: <List size={20} />, title: 'Manage Rooms', path: '/admin/managerooms' },
+    { icon: <Users size={20} />, title: 'Tenants', path: '/admin/users' },
     { icon: <Users size={20} />, title: 'Visitor Management', path: '/admin/visitors' },
     { icon: <Zap size={20} />, title: 'Utilities', path: '/admin/utilities' },
     { icon: <Mail size={20} />, title: 'Contact Admin', path: '/admin/contacts' },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { List, Users, Zap, Mail, Settings, CreditCard, Calendar, FileText } from 'lucide-react';
 import styles from './styles/Main.module.css';
 import dormbotPic from '../../Images/icons/dormbot pic.png';
@@ -32,14 +32,14 @@ const CalendarComponent = ({ events }) => {
     <div className={styles.calendar_section}>
       <Calendar className={styles.calendar_icon} />
       <div className={styles.calendar_grid}>
-        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-          <div key={day} className={styles.calendar_day}>{day}</div>
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+          <div key={`day-${index}`} className={styles.calendar_day}>{day}</div>
         ))}
         {[...Array(daysInMonth)].map((_, i) => {
           const day = i + 1;
           const isHighlighted = eventDates[day] ? styles.highlighted_day : '';
           return (
-            <div key={i} className={`${styles.calendar_date} ${isHighlighted}`} title={eventDates[day]}>
+            <div key={`date-${day}`} className={`${styles.calendar_date} ${isHighlighted}`} title={eventDates[day]}>
               {day}
             </div>
           );
@@ -132,7 +132,9 @@ const MainPage = () => {
               <p>Allow me to assist you!</p>
             </div>
           </div>
-          <button className={styles.chatButton}>Chat with DormBot now!</button>
+          <div className={styles.chatButtonContainer}>
+            <Link to="/tenant/chatbot" className={styles.chatButton}>Chat with DormBot now!</Link>
+          </div>
         </div>
 
         <div className={styles.infoSection}>

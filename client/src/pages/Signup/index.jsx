@@ -1,25 +1,25 @@
-import { useState } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
-import styles from "./styles.module.css";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import styles from './styles.module.css';
 
 const Signup = () => {
   const [data, setData] = useState({
-    firstName: "",
-    lastName: "",
-    address: "",
+    firstName: '',
+    lastName: '',
     birthdate: {
-      day: "",
-      month: "",
-      year: "",
+      day: '',
+      month: '',
+      year: '',
     },
-    gender: "",
-    email: "",
-    phoneNumber: "",
-    password: "",
-    confirmPassword: "",
+    gender: '',
+    email: '',
+    phoneNumber: '',
+    password: '',
+    confirmPassword: '',
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -34,16 +34,64 @@ const Signup = () => {
     }
   };
 
+  const validate = () => {
+    const errors = {};
+
+    if (!data.firstName.trim()) {
+      errors.firstName = 'First Name is required';
+    }
+
+    if (!data.lastName.trim()) {
+      errors.lastName = 'Last Name is required';
+    }
+
+    if (!data.birthdate.day || !data.birthdate.month || !data.birthdate.year) {
+      errors.birthdate = 'Complete Birthdate is required';
+    }
+
+    if (!data.gender) {
+      errors.gender = 'Gender is required';
+    }
+
+    if (!data.email) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(data.email)) {
+      errors.email = 'Email address is invalid';
+    }
+
+    if (!data.phoneNumber) {
+      errors.phoneNumber = 'Phone Number is required';
+    } else if (!/^\d{10}$/.test(data.phoneNumber)) {
+      errors.phoneNumber = 'Phone Number is invalid';
+    }
+
+    if (!data.password) {
+      errors.password = 'Password is required';
+    } else if (data.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!data.confirmPassword) {
+      errors.confirmPassword = 'Confirm Password is required';
+    } else if (data.password !== data.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (data.password !== data.confirmPassword) {
-      setError("Passwords do not match");
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
+
     try {
-      const url = "http://localhost:8080/api/users";
+      const url = 'http://localhost:8080/api/users';
       const { data: res } = await axios.post(url, data);
-      navigate("/login");
+      navigate('/login');
       console.log(res.message);
     } catch (error) {
       if (
@@ -76,6 +124,7 @@ const Signup = () => {
               className={styles.input}
               required
             />
+            {errors.firstName && <div className={styles.error_msg}>{errors.firstName}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="lastName">Last Name</label>
@@ -89,19 +138,7 @@ const Signup = () => {
               className={styles.input}
               required
             />
-          </div>
-          <div className={`${styles.input_group} ${styles.full_width}`}>
-            <label htmlFor="address">Address</label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              placeholder="Enter your Address"
-              value={data.address}
-              onChange={handleChange}
-              className={styles.input}
-              required
-            />
+            {errors.lastName && <div className={styles.error_msg}>{errors.lastName}</div>}
           </div>
           <div className={styles.input_group}>
             <label>Birthdate (DD/MM/YYYY)</label>
@@ -115,7 +152,7 @@ const Signup = () => {
               >
                 <option value="">Day</option>
                 {[...Array(31)].map((_, i) => (
-                  <option key={i} value={i + 1}>
+                  <option key={`day-${i}`} value={i + 1}>
                     {i + 1}
                   </option>
                 ))}
@@ -129,20 +166,20 @@ const Signup = () => {
               >
                 <option value="">Month</option>
                 {[
-                  "Jan",
-                  "Feb",
-                  "Mar",
-                  "Apr",
-                  "May",
-                  "Jun",
-                  "Jul",
-                  "Aug",
-                  "Sep",
-                  "Oct",
-                  "Nov",
-                  "Dec",
+                  'Jan',
+                  'Feb',
+                  'Mar',
+                  'Apr',
+                  'May',
+                  'Jun',
+                  'Jul',
+                  'Aug',
+                  'Sep',
+                  'Oct',
+                  'Nov',
+                  'Dec',
                 ].map((month, i) => (
-                  <option key={i} value={i + 1}>
+                  <option key={`month-${i}`} value={i + 1}>
                     {month}
                   </option>
                 ))}
@@ -158,13 +195,14 @@ const Signup = () => {
                 {[...Array(100)].map((_, i) => {
                   const year = new Date().getFullYear() - i;
                   return (
-                    <option key={i} value={year}>
+                    <option key={`year-${i}`} value={year}>
                       {year}
                     </option>
                   );
                 })}
               </select>
             </div>
+            {errors.birthdate && <div className={styles.error_msg}>{errors.birthdate}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="gender">Gender</label>
@@ -180,6 +218,7 @@ const Signup = () => {
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
+            {errors.gender && <div className={styles.error_msg}>{errors.gender}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="password">Password</label>
@@ -193,6 +232,7 @@ const Signup = () => {
               className={styles.input}
               required
             />
+            {errors.password && <div className={styles.error_msg}>{errors.password}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="confirmPassword">Confirm Password</label>
@@ -206,6 +246,7 @@ const Signup = () => {
               className={styles.input}
               required
             />
+            {errors.confirmPassword && <div className={styles.error_msg}>{errors.confirmPassword}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="email">Email Address</label>
@@ -219,6 +260,7 @@ const Signup = () => {
               className={styles.input}
               required
             />
+            {errors.email && <div className={styles.error_msg}>{errors.email}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="phoneNumber">Phone Number</label>
@@ -232,6 +274,7 @@ const Signup = () => {
               className={styles.input}
               required
             />
+            {errors.phoneNumber && <div className={styles.error_msg}>{errors.phoneNumber}</div>}
           </div>
           {error && <div className={styles.error_msg}>{error}</div>}
           <button
@@ -242,7 +285,7 @@ const Signup = () => {
           </button>
           <div className={styles.link_container}>
             <p>
-              Already have an account?{" "}
+              Already have an account?{' '}
               <Link to="/login" className={styles.link}>
                 Log in here
               </Link>

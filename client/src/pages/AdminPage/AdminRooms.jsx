@@ -1,250 +1,387 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Select, Modal, Form } from '../../components/layouts/ui';
+import axios from 'axios';
+import { AlertCircle, Plus, Upload, X } from 'lucide-react';
+import { Alert, AlertDescription } from '../../components/layouts/ui/alert';
+import AdminContentTemplate from './AdminContentTemplate';
+import imageCompression from 'browser-image-compression';
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/layouts/ui/table';
-import { Search, Plus, Edit, UserPlus, UserMinus } from 'lucide-react';
+export default function DormitoryManagement({ onRoomChange }) {
+  const [formData, setFormData] = useState({
+    id: '',
+    roomNumber: '',
+    capacity: 1,
+    occupied: 0,
+    price: 0,
+    amenities: {
+      aircon: false,
+      wifi: false,
+      bathroom: false,
+    },
+    description: '',
+    images: [],
+  });
 
-const AdminRoomsList = () => {
-  const [rooms, setRooms] = useState([]);
-  const [filteredRooms, setFilteredRooms] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
-  const [currentRoom, setCurrentRoom] = useState(null);
-  const [isAssignUsersModalOpen, setIsAssignUsersModalOpen] = useState(false);
-  const [isEvictUserModalOpen, setIsEvictUserModalOpen] = useState(false);
+  const [dorms, setDorms] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchRooms();
+    // Load dorms from API on component mount
+    axios.get('http://localhost:8080/api/dorms')
+      .then(response => setDorms(response.data))
+      .catch(error => setError(error.message));
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [rooms, searchTerm, statusFilter]);
+  const handleChange = (e) => {
+    const { id, value, type, checked } = e.target;
 
-  const fetchRooms = async () => {
-    try {
-      const response = await fetch('/api/rooms');
-      const data = await response.json();
-      setRooms(data);
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
-    }
-  };
-
-  const applyFilters = () => {
-    let filtered = rooms;
-    if (searchTerm) {
-      filtered = filtered.filter(room =>
-        room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        room.type.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(room => room.status === statusFilter);
-    }
-    setFilteredRooms(filtered);
-  };
-
-  const handleSearch = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleStatusFilter = (value) => {
-    setStatusFilter(value);
-  };
-
-  const handleAddRoom = () => {
-    setCurrentRoom(null);
-    setIsAddEditModalOpen(true);
-  };
-
-  const handleEditRoom = (room) => {
-    setCurrentRoom(room);
-    setIsAddEditModalOpen(true);
-  };
-
-  const handleAssignUsers = (room) => {
-    setCurrentRoom(room);
-    setIsAssignUsersModalOpen(true);
-  };
-
-  const handleEvictUser = (room) => {
-    setCurrentRoom(room);
-    setIsEvictUserModalOpen(true);
-  };
-
-  const handleSaveRoom = async (roomData) => {
-    try {
-      const url = currentRoom ? `/api/rooms/${currentRoom.id}` : '/api/rooms';
-      const method = currentRoom ? 'PUT' : 'POST';
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(roomData),
+    if (id.startsWith('amenities.')) {
+      const amenityName = id.split('.')[1];
+      setFormData({
+        ...formData,
+        amenities: {
+          ...formData.amenities,
+          [amenityName]: checked,
+        },
       });
-      if (response.ok) {
-        fetchRooms();
-        setIsAddEditModalOpen(false);
-      }
-    } catch (error) {
-      console.error('Error saving room:', error);
+    } else {
+      setFormData({
+        ...formData,
+        [id]: type === 'number' ? Number(value) : value,
+      });
     }
   };
 
-  const handleAssignUsersSave = async (assignedUsers) => {
-    try {
-      const response = await fetch(`/api/rooms/${currentRoom.id}/assign`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ users: assignedUsers }),
-      });
-      if (response.ok) {
-        fetchRooms();
-        setIsAssignUsersModalOpen(false);
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    setUploading(true);
+    setError('');
+
+    const compressImage = async (file) => {
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      };
+
+      try {
+        const compressedFile = await imageCompression(file, options);
+        return await convertToBase64(compressedFile);
+      } catch (error) {
+        console.error("Error compressing image:", error);
+        throw error;
       }
-    } catch (error) {
-      console.error('Error assigning users:', error);
+    };
+
+    const convertToBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
+      });
+    };
+
+    try {
+      const compressedImages = await Promise.all(files.map(compressImage));
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...compressedImages].slice(0, 6) // Limit to 6 images
+      }));
+      setUploading(false);
+    } catch (err) {
+      setError("Error processing images. Please try again.");
+      setUploading(false);
     }
   };
 
-  const handleEvictUserConfirm = async (userId) => {
-    try {
-      const response = await fetch(`/api/rooms/${currentRoom.id}/evict`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-      if (response.ok) {
-        fetchRooms();
-        setIsEvictUserModalOpen(false);
-      }
-    } catch (error) {
-      console.error('Error evicting user:', error);
+  const handleRemoveImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (formData.occupied > formData.capacity) {
+      setError('Occupied beds cannot exceed capacity');
+      return;
     }
+
+    const submitData = async () => {
+      try {
+        const data = { ...formData };
+        if (!isEditing) {
+          delete data.id; // Remove `id` field when creating a new dorm
+        }
+
+        const response = isEditing
+          ? await axios.put(`http://localhost:8080/api/dorms/update/${formData.id}`, data)
+          : await axios.post('http://localhost:8080/api/dorms/create', data);
+
+        if (isEditing) {
+          setDorms(dorms.map(dorm => dorm.id === formData.id ? response.data : dorm));
+        } else {
+          setDorms([...dorms, response.data]);
+        }
+        resetForm();
+        onRoomChange(); // Notify RoomList to refetch rooms
+      } catch (error) {
+        setError(error.response?.data?.message || error.message);
+      }
+    };
+
+    submitData();
+  };
+
+  const handleEdit = (dorm) => {
+    setFormData(dorm);
+    setIsEditing(true);
+  };
+
+  const handleDelete = (id) => {
+    axios.delete(`http://localhost:8080/api/dorms/delete/${id}`)
+      .then(() => {
+        setDorms(dorms.filter(dorm => dorm.id !== id));
+        onRoomChange(); // Notify RoomList to refetch rooms
+      })
+      .catch(error => setError(error.message));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      id: '',
+      roomNumber: '',
+      capacity: 1,
+      occupied: 0,
+      price: 0,
+      amenities: {
+        aircon: false,
+        wifi: false,
+        bathroom: false,
+      },
+      description: '',
+      images: [],
+    });
+    setIsEditing(false);
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Room Management</h1>
+    <AdminContentTemplate>
+      <div className="max-w-4xl mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-6">Dormitory Management System</h1>
 
-      <div className="flex mb-4">
-        <div className="relative w-64 mr-4">
-          <Input
-            type="text"
-            placeholder="Search rooms..."
-            value={searchTerm}
-            onChange={handleSearch}
-            className="pl-10"
-          />
-          <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
-        </div>
+        <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="roomNumber" className="block mb-1">Room Number</label>
+              <input
+                type="text"
+                id="roomNumber"
+                value={formData.roomNumber}
+                onChange={handleChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="capacity" className="block mb-1">Capacity</label>
+              <input
+                type="number"
+                id="capacity"
+                value={formData.capacity}
+                onChange={handleChange}
+                min="1"
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="occupied" className="block mb-1">Occupied Beds</label>
+              <input
+                type="number"
+                id="occupied"
+                value={formData.occupied}
+                onChange={handleChange}
+                min="0"
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="price" className="block mb-1">Rent</label>
+              <input
+                type="number"
+                id="price"
+                value={formData.price}
+                onChange={handleChange}
+                min="0"
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+          </div>
 
-        <Select
-          value={statusFilter}
-          onChange={(e) => handleStatusFilter(e.target.value)}
-          className="w-40 mr-4"
-        >
-          <option value="all">All Status</option>
-          <option value="vacant">Vacant</option>
-          <option value="occupied">Occupied</option>
-        </Select>
+          <div>
+            <label className="block mb-1">Amenities</label>
+            <div className="flex gap-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="amenities.aircon"
+                  checked={formData.amenities.aircon}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Air Conditioning
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="amenities.wifi"
+                  checked={formData.amenities.wifi}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                WiFi
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="amenities.bathroom"
+                  checked={formData.amenities.bathroom}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Bathroom
+              </label>
+            </div>
+          </div>
 
-        <Button onClick={handleAddRoom} className="flex items-center">
-          <Plus className="mr-2" /> Add Room
-        </Button>
-      </div>
+          <div>
+            <label htmlFor="description" className="block mb-1">Description</label>
+            <textarea
+              id="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full p-2 border rounded"
+              rows="3"
+            />
+          </div>
 
-      <Table>
-        <thead>
-          <tr>
-            <th>Room Number</th>
-            <th>Type</th>
-            <th>Capacity</th>
-            <th>Status</th>
-            <th>Amenities</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredRooms.map(room => (
-            <tr key={room.id}>
-              <td>{room.number}</td>
-              <td>{room.type}</td>
-              <td>{room.capacity}</td>
-              <td>{room.status}</td>
-              <td>{room.amenities.join(', ')}</td>
-              <td>
-                <Button onClick={() => handleEditRoom(room)} className="mr-2">
-                  <Edit className="mr-1" /> Edit
-                </Button>
-                <Button onClick={() => handleAssignUsers(room)} className="mr-2">
-                  <UserPlus className="mr-1" /> Assign
-                </Button>
-                {room.status === 'occupied' && (
-                  <Button onClick={() => handleEvictUser(room)} variant="danger">
-                    <UserMinus className="mr-1" /> Evict
-                  </Button>
+          <div>
+            <label className="block mb-1">Room Images</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center justify-center px-4 py-2 bg-blue-50 text-blue-500 rounded cursor-pointer hover:bg-blue-100">
+                <Upload className="w-5 h-5 mr-2" />
+                Choose Images
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageUpload}
+                  disabled={uploading || formData.images.length >= 6}
+                />
+              </label>
+              <span className="text-sm text-gray-500">
+                {formData.images.length}/6 images
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mt-4">
+              {formData.images.map((image, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={image}
+                    alt={`Room ${index + 1}`}
+                    className="w-full h-32 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {isEditing ? 'Update Room' : 'Add Room'}
+          </button>
+        </form>
+
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold mb-4">Dormitory Rooms</h2>
+          {dorms.map(dorm => (
+            <div key={dorm.id} className="border p-4 rounded shadow-sm">
+              <div className="flex flex-col md:flex-row gap-4">
+                {dorm.images.length > 0 && (
+                  <div className="w-full md:w-1/3">
+                    <img
+                      src={dorm.images[0]}
+                      alt={`Room ${dorm.roomNumber}`}
+                      className="w-full h-48 object-cover rounded"
+                    />
+                  </div>
                 )}
-              </td>
-            </tr>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">Room {dorm.roomNumber}</h3>
+                      <p className="text-gray-600">
+                        Capacity: {dorm.occupied}/{dorm.capacity} - ₱{dorm.price} per bed
+                      </p>
+                      <p className="text-sm text-gray-500">{dorm.description}</p>
+                      <div className="mt-2 flex gap-2">
+                        {Object.entries(dorm.amenities).map(([key, value]) => (
+                          value && (
+                            <span key={key} className="bg-gray-100 px-2 py-1 rounded text-sm">
+                              {key.charAt(0).toUpperCase() + key.slice(1)}
+                            </span>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-x-2">
+                      <button
+                        onClick={() => handleEdit(dorm)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(dorm.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </Table>
-
-      <Modal
-        isOpen={isAddEditModalOpen}
-        onClose={() => setIsAddEditModalOpen(false)}
-        title={currentRoom ? 'Edit Room' : 'Add Room'}
-      >
-        <RoomForm
-          room={currentRoom}
-          onSave={handleSaveRoom}
-          onCancel={() => setIsAddEditModalOpen(false)}
-        />
-      </Modal>
-
-      <Modal
-        isOpen={isAssignUsersModalOpen}
-        onClose={() => setIsAssignUsersModalOpen(false)}
-        title="Assign Users"
-      >
-        <AssignUsersForm
-          room={currentRoom}
-          onSave={handleAssignUsersSave}
-          onCancel={() => setIsAssignUsersModalOpen(false)}
-        />
-      </Modal>
-
-      <Modal
-        isOpen={isEvictUserModalOpen}
-        onClose={() => setIsEvictUserModalOpen(false)}
-        title="Evict User"
-      >
-        <EvictUserForm
-          room={currentRoom}
-          onConfirm={handleEvictUserConfirm}
-          onCancel={() => setIsEvictUserModalOpen(false)}
-        />
-      </Modal>
-    </div>
+        </div>
+      </div>
+    </AdminContentTemplate>
   );
-};
-
-// Placeholder components for the modals
-const RoomForm = ({ room, onSave, onCancel }) => {
-  // Implement form for adding/editing room details
-  return <div>Room Form Placeholder</div>;
-};
-
-const AssignUsersForm = ({ room, onSave, onCancel }) => {
-  // Implement form for assigning users to a room
-  return <div>Assign Users Form Placeholder</div>;
-};
-
-const EvictUserForm = ({ room, onConfirm, onCancel }) => {
-  // Implement form for evicting a user from a room
-  return <div>Evict User Form Placeholder</div>;
-};
-
-export default AdminRoomsList;
+}

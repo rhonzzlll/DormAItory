@@ -32,7 +32,7 @@ const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      "mt-2",
       className
     )}
     {...props}
@@ -40,8 +40,4 @@ const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-// Export default Tabs
-export default Tabs;
-
-// Named exports
-export { TabsList, TabsTrigger, TabsContent };
+export { Tabs, TabsList, TabsTrigger, TabsContent };

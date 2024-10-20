@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../../components/admin-view/Sidebar/Sidebar';
 import Header from '../../components/layouts/Header/Header';
 import DashboardContent from './DashboardContent';
+import AdminContentTemplate from './AdminContentTemplate';
 
 const AdminDashboardLayout = () => {
   const location = useLocation();

@@ -46,4 +46,5 @@ export { default as LineChart } from './LineChart';
 export { default as BarChart } from './BarChart';
 
 // Export Tabs components if applicable
-export  {default as Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'; // Adjust according to your tabs implementation
+export {Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'; 
+ 
