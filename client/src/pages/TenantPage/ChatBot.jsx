@@ -11,7 +11,7 @@ const presetQuestions = [
 const botResponses = {
     "what can dormbot do": "I can help you with various dorm-related queries, assist with maintenance requests, provide information about payments, and answer questions about dorm policies.",
     "where can i make a cash payment": "Cash payments can be made at the Bursar's Office located in the Administration Building. Their office hours are Monday to Friday, 9 AM to 4 PM.",
-    "how do i request a repair": "To request a repair, please use the 'Maintenance Request' form on our dorm portal. Alternatively, you can contact the Residence Life office directly at extension 5555.",
+    "how do i request a repair": "To request a repair, please use the 'Maintenance Request' form on our dorm portal. Alternatively, you can contact the MLQU admin directly.",
     "can i have visitors in my room": "Yes, you can have visitors in your room. However, please refer to the dorm policy regarding visiting hours and overnight stays. All visitors must be signed in at the front desk.",
 };
 
@@ -35,7 +35,7 @@ const DormBot = () => {
             setIsTyping(true);
 
             setTimeout(() => {
-                const botResponse = botResponses[text.toLowerCase()] || "I'm sorry, I don't have specific information on that query. Please contact the Residence Life office for more detailed assistance.";
+                const botResponse = botResponses[text.toLowerCase()] || "I'm sorry, I don't have specific information on that query. Please contact the MlQU admin for more detailed assistance.";
                 setMessages(prev => [...prev, { text: botResponse, sender: 'bot' }]);
                 setIsTyping(false);
             }, 1500);
@@ -55,9 +55,8 @@ const DormBot = () => {
                         key={index}
                         className={`mb-4 flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                        <div className={`p-3 rounded-lg max-w-xs ${
-                            message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-white text-black'
-                        }`}>
+                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                            }`}>
                             {message.text}
                         </div>
                     </div>

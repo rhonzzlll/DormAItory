@@ -1,16 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function MaintenanceRequestForm() {
   const [formData, setFormData] = useState({
     fullName: '',
     tenantId: '',
-    floorNo: '',
     roomNo: '',
-    roomLetter: '',
     concernType: '',
     otherConcern: '',
     specificationOfConcern: ''
   });
+
+  useEffect(() => {
+    // Fetch tenant data from the API
+    const fetchTenantData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/tenants'); // Adjust the endpoint as needed
+        const { fullName, tenantId, roomNo } = response.data;
+        setFormData(prevState => ({
+          ...prevState,
+          fullName,
+          tenantId,
+          roomNo
+        }));
+      } catch (error) {
+        console.error('Error fetching tenant data:', error);
+      }
+    };
+
+    fetchTenantData();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -20,14 +39,19 @@ export default function MaintenanceRequestForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    try {
+      await axios.post('http://localhost:8080/api/maintenance-requests', formData);
+      console.log('Form submitted:', formData);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto">
-    <div className="bg-white text-black p-6 rounded-t-lg">
+      <div className="bg-white text-black p-6 rounded-t-lg">
         <h1 className="text-3xl font-semibold mb-2">Maintenance Request</h1>
         <p className="text-sm">
           Fill out the following fields and submit your request form. Please expect a minimum of 1-2 days for
@@ -51,6 +75,7 @@ export default function MaintenanceRequestForm() {
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
                 onChange={handleInputChange}
                 value={formData.fullName}
+                readOnly
               />
             </div>
             <div>
@@ -61,21 +86,12 @@ export default function MaintenanceRequestForm() {
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
                 onChange={handleInputChange}
                 value={formData.tenantId}
+                readOnly
               />
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Floor No.</label>
-              <input
-                type="text"
-                name="floorNo"
-                className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
-                value={formData.floorNo}
-              />
-            </div>
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Room No.</label>
               <input
@@ -84,16 +100,7 @@ export default function MaintenanceRequestForm() {
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
                 onChange={handleInputChange}
                 value={formData.roomNo}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Room Letter (A or B)</label>
-              <input
-                type="text"
-                name="roomLetter"
-                className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
-                value={formData.roomLetter}
+                readOnly
               />
             </div>
           </div>

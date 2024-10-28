@@ -1,0 +1,74 @@
+.contactAdmin {
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .header {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  .Chat {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .title {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .chat {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .messagesBox {
+    flex-grow: 1;
+    margin-bottom: 10px;
+  }
+  
+  .messageCompanion, .messageSelf {
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .messageCompanion {
+    background-color: #e1f5fe;
+    align-self: flex-start;
+  }
+  
+  .messageSelf {
+    background-color: #c8e6c9;
+    align-self: flex-end;
+  }
+  
+  .sendFrom {
+    display: flex;
+    align-items: center;
+  }
+  
+  .sendInput {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-right: 10px;
+  }
+  
+  .sendButton {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .sendButton:hover {
+    background-color: #0056b3;
+  }

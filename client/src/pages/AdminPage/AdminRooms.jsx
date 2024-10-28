@@ -30,7 +30,10 @@ export default function DormitoryManagement({ onRoomChange }) {
     // Load dorms from API on component mount
     axios.get('http://localhost:8080/api/dorms')
       .then(response => setDorms(response.data))
-      .catch(error => setError(error.message));
+      .catch(error => {
+        console.error('Error fetching dorms:', error);
+        setError('Failed to fetch dorms: ' + error.message);
+      });
   }, []);
 
   const handleChange = (e) => {
@@ -131,6 +134,7 @@ export default function DormitoryManagement({ onRoomChange }) {
         resetForm();
         onRoomChange(); // Notify RoomList to refetch rooms
       } catch (error) {
+        console.error('Error saving room data:', error);
         setError(error.response?.data?.message || error.message);
       }
     };
@@ -149,7 +153,10 @@ export default function DormitoryManagement({ onRoomChange }) {
         setDorms(dorms.filter(dorm => dorm.id !== id));
         onRoomChange(); // Notify RoomList to refetch rooms
       })
-      .catch(error => setError(error.message));
+      .catch(error => {
+        console.error('Error deleting room:', error);
+        setError('Error deleting room: ' + error.message);
+      });
   };
 
   const resetForm = () => {

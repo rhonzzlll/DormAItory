@@ -35,52 +35,60 @@ import AdminChatbot from './pages/AdminPage/AdminChatbot';
 import AdminUsers from './pages/AdminPage/AdminUsers';
 import AdminManageRooms from './pages/AdminPage/AdminManageRooms';
 
+// Tenant Sidebar
+import TenantSidebar from './components/layouts/TenantSidebar';
+
 function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
   const isAdminDashboard = location.pathname.startsWith('/admin');
+  const isTenantPageWithSidebar = location.pathname.startsWith('/tenant') && location.pathname !== '/tenant';
 
   return (
     <MaintenanceProvider>
       {!isAuthPage && !isAdminDashboard && <Header />}
-      <Routes>
-        {/* Authentication Pages */}
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+      <div className="flex">
+        {isTenantPageWithSidebar && <TenantSidebar />}
+        <div className="flex-1">
+          <Routes>
+            {/* Authentication Pages */}
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
 
-        {/* Admin Dashboard Routes */}
-        <Route path="/admin" element={<AdminDashboardLayout />}>
-          <Route index element={<DashboardContent />} />
-          <Route path="rooms" element={<AdminRooms />} />
-          <Route path="visitors" element={<AdminVisitors />} />
-          <Route path="utilities" element={<AdminUtilities />} />
-          <Route path="contacts" element={<AdminContacts />} />
-          <Route path="maintenance" element={<AdminMaintenance />} />
-          <Route path="payments" element={<AdminPayments />} />
-          <Route path="records" element={<AdminRecords />} />
-          <Route path="announcements" element={<AdminAnnouncements />} />
-          <Route path="managerooms" element={<AdminManageRooms />} />
-          <Route path="users" element={<AdminUsers />} />
-          <Route path="chatbot" element={<AdminChatbot />} />
-        </Route>
+            {/* Admin Dashboard Routes */}
+            <Route path="/admin" element={<AdminDashboardLayout />}>
+              <Route index element={<DashboardContent />} />
+              <Route path="rooms" element={<AdminRooms />} />
+              <Route path="visitors" element={<AdminVisitors />} />
+              <Route path="utilities" element={<AdminUtilities />} />
+              <Route path="contacts" element={<AdminContacts />} />
+              <Route path="maintenance" element={<AdminMaintenance />} />
+              <Route path="payments" element={<AdminPayments />} />
+              <Route path="records" element={<AdminRecords />} />
+              <Route path="announcements" element={<AdminAnnouncements />} />
+              <Route path="managerooms" element={<AdminManageRooms />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="chatbot" element={<AdminChatbot />} />
+            </Route>
 
-        {/* Tenant Pages */}
-        <Route path="/tenant" element={<MainPage />} />
-        <Route path="/tenant/room-list" element={<RoomList />} />
-        <Route path="/tenant/room-view/:id" element={<RoomView />} />
+            {/* Tenant Pages */}
+            <Route path="/tenant" element={<MainPage />} />
+            <Route path="/tenant/room-list" element={<RoomList />} />
+            <Route path="/tenant/room-view/:id" element={<RoomView />} />
+            <Route path="/tenant/records" element={<Records />} />
+            <Route path="/tenant/visitor-management" element={<VisitorManagement />} />
+            <Route path="/tenant/utilities" element={<Utilities />} />
+            <Route path="/tenant/contact-admin" element={<ContactAdmin />} />
+            <Route path="/tenant/maintenance-request" element={<MaintenanceRequest />} />
+            <Route path="/tenant/payment-options" element={<PaymentOptions />} />
+            <Route path="/tenant/chatbot" element={<ChatBot />} />
+            <Route path="/profile" element={<Profile />} />
 
-        <Route path="/tenant/records" element={<Records />} />
-        <Route path="/tenant/visitor-management" element={<VisitorManagement />} />
-        <Route path="/tenant/utilities" element={<Utilities />} />
-        <Route path="/tenant/contact-admin" element={<ContactAdmin />} />
-        <Route path="/tenant/maintenance-request" element={<MaintenanceRequest />} />
-        <Route path="/tenant/payment-options" element={<PaymentOptions />} />
-        <Route path="/tenant/chatbot" element={<ChatBot />} />
-        <Route path="/profile" element={<Profile />} />
-
-        {/* Default Redirect */}
-        <Route path="/" element={<Navigate replace to="/login" />} />
-      </Routes>
+            {/* Default Redirect */}
+            <Route path="/" element={<Navigate replace to="/login" />} />
+          </Routes>
+        </div>
+      </div>
       {!isAuthPage && !isAdminDashboard && <Footer />}
     </MaintenanceProvider>
   );

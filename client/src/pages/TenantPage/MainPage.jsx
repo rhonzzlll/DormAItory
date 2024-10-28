@@ -120,6 +120,8 @@ const MainPage = () => {
             description="View your transaction history"
             onClick={() => handleCardClick('/tenant/records')}
           />
+
+          
         </div>
 
         <div className={styles.chatBot}>

@@ -1,5 +1,13 @@
+:root {
+	--primary-color: #0d9488;
+	--secondary-color: #134e4a;
+	--background-color: #f0fdfa; /* You can choose to update this if needed */
+	--text-color: #333;
+	--white: #fff;
+}
+
 .container {
-  background-color: white;
+ 
   min-height: 100vh;
   padding: 20px;
   display: flex;
