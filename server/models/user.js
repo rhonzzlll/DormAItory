@@ -16,8 +16,7 @@ const userSchema = new mongoose.Schema({
     password: { type: String, required: true },
     profileImage: { type: String },
     role: { type: String, enum: ['admin', 'tenant'], default: 'tenant' },
-    createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
