@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const mongoose = require('mongoose');
 
 const User = require("../models/user"); // Ensure the User model is correctly set up
-const Chatroom = require("../models/chatroom");
-const ChatroomMembers = require("../models/chatroomMembers");
 
 // POST route to handle user registration
 router.post("/", async (req, res) => {
@@ -20,18 +17,13 @@ router.post("/", async (req, res) => {
     const user = await new User(req.body).save();
 
     if (user) {
-      const chatroom = await new Chatroom().save();
-
-      new ChatroomMembers({ chatroomId: chatroom["_id"], userId: user["_id"]}).save();
-      new ChatroomMembers({ chatroomId: chatroom["_id"], userId: new mongoose.Types.ObjectId("67249b84b01d71f586fdca22") }).save();
-
       return res.status(201).send({ message: "User registered successfully" });
     }
-
-    return res.status(500).send({ message: "Something went wrong! Please try again." });
   } catch (error) {
-    return res.status(500).send(error);
+    console.log(error);
   }
+
+  return res.status(500).send({ message: "Something went wrong! Please try again." });
 });
 
 module.exports = router;
