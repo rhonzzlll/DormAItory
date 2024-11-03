@@ -18,6 +18,7 @@ router.post('/', async (req, res) => {
 
     const token = user.generateAuthToken();
     res.status(200).send({
+      "_id": user["_id"],
       token,
       role: user.role,
       message: 'Logged in successfully'

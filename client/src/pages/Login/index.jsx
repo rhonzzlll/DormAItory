@@ -20,7 +20,8 @@ const Login = () => {
       const url = "http://localhost:8080/api/auth"; // Your API endpoint
       const { data: res } = await axios.post(url, data);
 
-      // Save token and role to local storage
+      // Save user ID, token and role to local storage
+      localStorage.setItem("_id", res["_id"]);
       localStorage.setItem("token", res.token);
       localStorage.setItem("role", res.role);
 
