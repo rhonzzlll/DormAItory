@@ -197,6 +197,55 @@ exports.getPrompts = async (req, res) => {
     });
 };
 
+exports.upsertPrompt = async (req, res) => {
+    try {
+        const { _id, query, response } = req.body;
+
+        if (_id) {
+            const update = await Prompt.findOneAndUpdate({ 
+                "_id": new mongoose.Types.ObjectId(_id),
+                query,
+                response 
+            });
+    
+            if (update) {
+                return res.status(200).json({ message: `Prompt with ID ${id} has been updated successfully.` });
+            }
+        } else {
+            const insert = await Prompt({ 
+                query,
+                response 
+            }).save();
+    
+            if (insert) {
+                return res.status(200).json({ message: `A new prompt has been added successfully.` });
+            }
+        }
+    } catch (error) {
+        console.log(error);
+    }
+
+    return res.status(200).json({ message: "Could not successfully insert/update the prompt, please try again." });
+};
+
+exports.deletePrompt = async (req, res) => {
+    try {
+        const { _id } = req.body;
+
+        const prompt = await Prompt.findOneAndDelete({ 
+            "_id": new mongoose.Types.ObjectId(_id),
+        });
+
+        if (prompt) {
+            return res.status(200).json({ message: `Prompt with ID ${id} has been deleted successfully.` });
+        }
+    } catch (error) {
+        console.log(error);
+    }
+
+    return res.status(200).json({ message: "Could not successfully delete the prompt, please try again." });
+};
+
 exports.getMessages = async (req, res) => {
     try {
         const messages = await Message
