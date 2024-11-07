@@ -12,6 +12,11 @@ export default function MaintenanceRequestForm() {
   });
 
   useEffect(() => {
+    // Fertch user data from the API
+    const fetchUser = async () => {
+
+    };
+    
     // Fetch tenant data from the API
     const fetchTenantData = async () => {
       try {
@@ -73,7 +78,6 @@ export default function MaintenanceRequestForm() {
                 type="text"
                 name="fullName"
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
                 value={formData.fullName}
                 readOnly
               />
@@ -84,7 +88,6 @@ export default function MaintenanceRequestForm() {
                 type="text"
                 name="tenantId"
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
                 value={formData.tenantId}
                 readOnly
               />
@@ -98,7 +101,6 @@ export default function MaintenanceRequestForm() {
                 type="text"
                 name="roomNo"
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
                 value={formData.roomNo}
                 readOnly
               />

@@ -1,7 +1,25 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 const User = require("../models/user"); // Ensure the User model is correctly set up
+
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findOne({ "_id": new mongoose.Types.ObjectId(id) });
+
+    if (user) {
+      
+    }
+
+    console.log(user);
+  } catch (error) {
+    console.log(error);
+  }
+
+  return res.status(500).send({ message: "Something went wrong! Please try again." });
+});
 
 // POST route to handle user registration
 router.post("/", async (req, res) => {
