@@ -14,6 +14,7 @@ import { Pencil, Trash2, UserPlus, Search } from 'lucide-react';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
+import moment from "moment";
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending', color: '#FFA500' },
@@ -25,7 +26,15 @@ const STATUS_OPTIONS = [
 export default function AdminMaintenance() {
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState({
+    _id: "",
+    tenantId: "",
+    firstName: "",
+    lastName: "",
+    concernType: "",
+    specificationOfConcern: "",
+    createdAt: ""
+  });
   const [open, setOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,10 +42,6 @@ export default function AdminMaintenance() {
   useEffect(() => {
     fetchRequests();
   }, []);
-
-  useEffect(() => {
-    filterRequests();
-  }, [searchTerm, requests]);
 
   const filterRequests = () => {
     const filtered = requests.filter(request => 
@@ -49,20 +54,35 @@ export default function AdminMaintenance() {
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/maintenance-requests');
-      setRequests(response.data);
-      setFilteredRequests(response.data);
+      const response = await axios.get('http://localhost:8080/api/maintenancerequest/get');
+      
+      const { requests } = response.data.data;
+
+      setRequests(requests);
+      setFilteredRequests(requests);
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
     }
   };
 
-  const handleStatusChange = (requestId, newStatus) => {
-    setRequests(prevRequests =>
-      prevRequests.map(req =>
-        req.id === requestId ? { ...req, status: newStatus } : req
-      )
-    );
+  const handleStatusChange = async (requestId, newStatus) => {
+    const req = await axios.post("http://localhost:8080/api/maintenancerequest/update/status", {
+      _id: requestId,
+      status: newStatus
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+
+    if (req.status === 200) {
+      setRequests(prevRequests =>
+        prevRequests.map(req =>
+          req._id === requestId ? { ...req, status: newStatus } : req
+        )
+      );
+    }
   };
 
   const handleInputChange = (e) => {
@@ -74,23 +94,71 @@ export default function AdminMaintenance() {
   };
 
   const handleOpen = (request = {}) => {
-    setSelectedRequest(request);
-    setIsEdit(!!request.id);
+    setIsEdit(!!request._id);
+
+    if (isEdit) {
+      setSelectedRequest({
+        _id: request?.["_id"],
+        firstName: request?.tenant[0].info[0].firstName,
+        lastName: request?.tenant[0].info[0].lastName,
+        tenantId: request?.["tenantId"],
+        roomNo: request?.tenant[0].info[0].roomNo,
+        concernType: request?.["concernType"],
+        specificationOfConcern: request?.["specificationOfConcern"],
+        status: request?.["status"],
+        createdAt: moment(request["dateSubmitted"]).format("YYYY-MM-DD"),
+      });
+    } else {
+      setSelectedRequest({
+        firstName: "",
+        lastName: "",
+        concernType: "",
+        specificationOfConcern: "",
+        createdAt: Date.now()
+      });
+    }
+
     setOpen(true);
   };
 
   const handleClose = () => {
     setOpen(false);
-    setSelectedRequest(null);
+    setSelectedRequest({
+      _id: "",
+      firstName: "",
+      lastName: "",
+      tenantId: "",
+      roomNo: "",
+      concernType: "",
+      specificationOfConcern: "",
+      status: "",
+      createdAt: "",
+    });
   };
 
   const handleSubmit = async () => {
     try {
       if (isEdit) {
-        await axios.put(`http://localhost:8080/api/maintenance-requests/${selectedRequest.id}`, selectedRequest);
+        await axios.post('http://localhost:8080/api/maintenancerequest/update', {
+          _id: selectedRequest["_id"],
+          firstName: selectedRequest?.tenant[0].info[0].firstName,
+          lastName: selectedRequest?.tenant[0].info[0].lastName,
+          concernType: selectedRequest["concernType"],
+          specificationOfConcern: selectedRequest["specificationOfConcern"],
+          status: selectedRequest["status"],
+          createdAt: selectedRequest["dateSubmitted"]
+        });
       } else {
-        await axios.post('http://localhost:8080/api/maintenance-requests', selectedRequest);
+        await axios.post('http://localhost:8080/api/maintenancerequest/create', {
+          firstName: selectedRequest.firstName,
+          lastName: selectedRequest.lastName,
+          concernType: selectedRequest["concernType"],
+          specificationOfConcern: selectedRequest["specificationOfConcern"],
+          status: selectedRequest["status"],
+          createdAt: selectedRequest["createdAt"]
+        });
       }
+
       fetchRequests();
       handleClose();
     } catch (error) {
@@ -100,7 +168,7 @@ export default function AdminMaintenance() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/api/maintenance-requests/${id}`);
+      await axios.get(`http://localhost:8080/api/maintenancerequest/delete/${id}`);
       fetchRequests();
     } catch (error) {
       console.error('Error deleting request:', error);
@@ -108,9 +176,28 @@ export default function AdminMaintenance() {
   };
 
   const columns = [
-    { field: 'fullName', headerName: 'Full Name', flex: 1, minWidth: 150 },
+    { field: "fullName",
+      headerName: 'Full Name', 
+      flex: 1, 
+      minWidth: 150,
+      renderCell: (params) => {
+        const { firstName, lastName } = params.row.tenant[0].info[0];
+
+        return `${firstName} ${lastName}`;
+      }
+    },
     { field: 'tenantId', headerName: 'Tenant ID', flex: 1, minWidth: 120 },
-    { field: 'roomNo', headerName: 'Room No.', flex: 0.7, minWidth: 100 },
+    { 
+      field: 'roomNumber', 
+      headerName: 'Room No.', 
+      flex: 0.7, 
+      minWidth: 100,
+      renderCell: (params) => {
+        const { roomNo } = params.row.tenant[0].info[0];
+
+        return `${roomNo}`;
+      }
+    },
     { field: 'concernType', headerName: 'Concern Type', flex: 1, minWidth: 130 },
     { field: 'specificationOfConcern', headerName: 'Specification', flex: 1.5, minWidth: 200 },
     {
@@ -121,7 +208,7 @@ export default function AdminMaintenance() {
       renderCell: (params) => (
         <Select
           value={params.row.status}
-          onChange={(e) => handleStatusChange(params.row.id, e.target.value)}
+          onChange={(e) => handleStatusChange(params.row._id, e.target.value)}
           sx={{
             color: STATUS_OPTIONS.find(option => option.value === params.row.status)?.color,
             '.MuiOutlinedInput-notchedOutline': { border: 'none' },
@@ -138,7 +225,7 @@ export default function AdminMaintenance() {
         </Select>
       )
     },
-    { field: 'dateSubmitted', headerName: 'Date Submitted', flex: 1, minWidth: 130 },
+    { field: 'createdAt', headerName: 'Date Submitted', flex: 1, minWidth: 130 },
     {
       field: 'actions',
       headerName: 'Actions',
@@ -149,7 +236,7 @@ export default function AdminMaintenance() {
           <IconButton onClick={() => handleOpen(params.row)} size="small" sx={{ mr: 1 }}>
             <Pencil size={20} />
           </IconButton>
-          <IconButton onClick={() => handleDelete(params.row.id)} size="small" color="error">
+          <IconButton onClick={() => handleDelete(params.row._id)} size="small" color="error">
             <Trash2 size={20} />
           </IconButton>
         </Box>
@@ -190,6 +277,7 @@ export default function AdminMaintenance() {
         pageSize={10}
         rowsPerPageOptions={[10]}
         disableSelectionOnClick
+        getRowId={(row) => row._id}
         sx={{
           border: 'none',
           '& .MuiDataGrid-cell': {
@@ -205,33 +293,50 @@ export default function AdminMaintenance() {
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>{isEdit ? 'Edit Request' : 'Add Request'}</DialogTitle>
         <DialogContent>
-          <TextField
-            margin="dense"
-            name="fullName"
-            label="Full Name"
-            type="text"
-            fullWidth
-            value={selectedRequest?.fullName || ''}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="tenantId"
-            label="Tenant ID"
-            type="text"
-            fullWidth
-            value={selectedRequest?.tenantId || ''}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="roomNo"
-            label="Room No."
-            type="text"
-            fullWidth
-            value={selectedRequest?.roomNo || ''}
-            onChange={handleInputChange}
-          />
+          <div className="flex gap-x-2">
+            <TextField
+              margin="dense"
+              name="firstName"
+              label="First Name"
+              type="text"
+              fullWidth
+              value={selectedRequest?.firstName}
+              onChange={handleInputChange}
+            />
+            <TextField
+              margin="dense"
+              name="lastName"
+              label="Last Name"
+              type="text"
+              fullWidth
+              value={selectedRequest?.lastName}
+              onChange={handleInputChange}
+            />
+          </div>
+          {isEdit && (
+            <>
+              <TextField
+                margin="dense"
+                name="tenantId"
+                label="Tenant ID"
+                type="text"
+                fullWidth
+                value={selectedRequest?.tenantId || ''}
+                onChange={handleInputChange}
+                readOnly
+              />
+              <TextField
+                margin="dense"
+                name="roomNo"
+                label="Room No."
+                type="text"
+                fullWidth
+                value={isEdit ? selectedRequest?.roomNo : ''}
+                onChange={handleInputChange}
+                readOnly
+              />
+            </>
+          )}
           <TextField
             margin="dense"
             name="concernType"
@@ -269,12 +374,13 @@ export default function AdminMaintenance() {
           </Select>
           <TextField
             margin="dense"
-            name="dateSubmitted"
+            name="createdAt"
             label="Date Submitted"
             type="date"
             fullWidth
+            sx={{ mt: 2 }}
             InputLabelProps={{ shrink: true }}
-            value={selectedRequest?.dateSubmitted || ''}
+            value={selectedRequest?.createdAt || ''}
             onChange={handleInputChange}
           />
         </DialogContent>

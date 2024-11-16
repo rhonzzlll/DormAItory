@@ -19,8 +19,24 @@ const Sidebar = () => {
     { icon: <CreditCard size={20} />, title: 'Payment Options', path: '/admin/payments' },
     { icon: <FileText size={20} />, title: 'Records', path: '/admin/records' },
     { icon: <Bell size={20} />, title: 'Manage Announcements', path: '/admin/announcements' },
-    { icon: <FontAwesomeIcon icon={faRobot} size="lg" />, title: 'Chatbot', path: '/admin/chatbot' } // Use Font Awesome robot icon
+    { icon: <FontAwesomeIcon icon={faRobot} size="lg" />, title: 'Prompts', path: '/admin/prompts' } // Use Font Awesome robot icon
   ];
+
+  const ChatBot = () => {
+    return (
+      <div className="mt-4 bg-gray-700 p-4 rounded-lg">
+        <div className="flex items-center mb-2">
+          <MessageCircle size={24} className="mr-2" />
+          <h3 className="font-bold">DormBot</h3>
+        </div>
+        <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 text-sm"
+          onClick={() => navigate("/admin/chatbot")}
+        >
+          Chat with DormBot
+        </button>
+      </div>
+    );
+  };
 
   return (
     <aside className="bg-gray-800 text-white w-64 min-h-screen p-4 flex flex-col">
@@ -41,20 +57,6 @@ const Sidebar = () => {
       </nav>
       <ChatBot />
     </aside>
-  );
-};
-
-const ChatBot = () => {
-  return (
-    <div className="mt-4 bg-gray-700 p-4 rounded-lg">
-      <div className="flex items-center mb-2">
-        <MessageCircle size={24} className="mr-2" />
-        <h3 className="font-bold">DormBot</h3>
-      </div>
-      <button className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 text-sm">
-        Chat with DormBot
-      </button>
-    </div>
   );
 };
 

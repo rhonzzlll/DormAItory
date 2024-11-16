@@ -1,243 +1,146 @@
-import React, { useState, useEffect } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import React, { useState, useEffect, useRef } from 'react';
 import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import TextField from '@mui/material/TextField';
-import IconButton from '@mui/material/IconButton';
-import { Pencil, Trash2, UserPlus, Search } from 'lucide-react';
-import axios from 'axios';
-import Box from '@mui/material/Box';
-import InputAdornment from '@mui/material/InputAdornment';
 import { CardTitle } from '../../components/layouts/ui/Card';
+import { Send } from 'lucide-react';
 
 const AdminChatbot = () => {
-  const [requests, setRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [open, setOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+    const userId = localStorage.getItem("_id");
+    const [chatroomId, setChatroomId] = useState(undefined);
+    const [messages, setMessages] = useState(undefined);
+    const [input, setInput] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const [prompts, setPrompts] = useState(undefined);
+    const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
+    const scrollToBottom = () => {
+        setTimeout(() => messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight, 10);
+    };
 
-  useEffect(() => {
-    filterRequests();
-  }, [searchTerm, requests]);
+    const handleSend = async (text = input) => {
+        if (text.trim()) {
+            const newMessage = { sender: userId, receiver: "673349dfb3adad07a8d18919", content: text };
 
-  const filterRequests = () => {
-    if (!requests) {
-      return;
-    }
+            setMessages(prev => [...prev, newMessage]);
+            
+            setInput('');
+            setIsTyping(true);
 
-    const filtered = requests.filter(request => 
-      Object.values(request).some(query => 
-        query && query.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    );
-    setFilteredRequests(filtered);
-  };
+            scrollToBottom();
 
-  const fetchRequests = async () => {
-    try {
-      const response = await axios.get('http://localhost:8080/api/chat/prompts');
-      setRequests(response.data.data.prompts);
-      setFilteredRequests(response.data.prompts);
-    } catch (error) {
-      console.error('Error fetching maintenance requests:', error);
-    }
-  };
+            const req = await fetch(`http://localhost:8080/api/chat/message/send/${chatroomId}?admin=true`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    sender: localStorage.getItem("_id"),
+                    receiver: "673349dfb3adad07a8d18919",
+                    content: text
+                })
+            });
+            const res = await req.json();
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setSelectedRequest(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
-  };
-
-  const handleOpen = (request = {}) => {
-    setSelectedRequest(request);
-    setIsEdit(!!request._id);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-    setSelectedRequest(null);
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.post(`http://localhost:8080/api/chat/prompts/delete`, {
-        "_id": id,
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
+            setTimeout(() => {
+                setMessages(prev => [...prev, { sender: '673349dfb3adad07a8d18919', receiver: userId, content: res.data.response }]);
+                setIsTyping(false);
+                scrollToBottom();
+            }, 1500);
         }
-      });
-      fetchRequests();
-    } catch (error) {
-      console.error('Error deleting request:', error);
-    }
-  };
+    };
 
-  const handleSubmit = async () => {
-    try {
-      const { _id, query, response } = selectedRequest;
+    useEffect(() => {
+        const fetchChatroomId = async () => {
+            const otherId = "673349dfb3adad07a8d18919";
 
-      if (isEdit) {
-        await axios.post(`http://localhost:8080/api/chat/prompts/upsert`, {
-          _id,
-          query,
-          response
-        }, {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }
-        });
-      } else {
-        await axios.post(`http://localhost:8080/api/chat/prompts/upsert`, {
-          query,
-          response
-        }, {
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }
-        });
-      }
-      
-      fetchRequests();
-      handleClose();
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
-  };
+            const c_req = await fetch("http://localhost:8080/api/chat/chatroom", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    userId,
+                    otherId
+                })
+            });
+            const c_res = await c_req.json();
 
-  const columns = [
-    { field: 'query', headerName: 'Query', flex: 0, minWidth: 200 },
-    { field: 'response', headerName: 'Response', flex: 1, minWidth: 200 },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      minWidth: 25,
-      renderCell: (params) => (
-        <Box>
-          <IconButton onClick={() => handleOpen(params.row)} size="small" sx={{ mr: 1 }}>
-            <Pencil size={20} />
-          </IconButton>
-          <IconButton onClick={() => handleDelete(params.row._id)} size="small" color="error">
-            <Trash2 size={20} />
-          </IconButton>
-        </Box>
-      )
-    }
-  ];
-  
-  return (
-    <Paper sx={{ height: 650, width: '100%', p: 3 }}>
-      <CardTitle>Admin Chatbot</CardTitle>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'center', marginTop: "1rem" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpen()}
-          startIcon={<UserPlus />}
-          sx={{ height: 40 }}
-        >
-          Add Prompt
-        </Button>
-        <TextField
-          placeholder="Search prompts..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ width: 300 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={20} />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+            const chatroomId = c_res["data"].chatroomId;
 
-      <DataGrid
-        rows={filteredRequests}
-        columns={columns}
-        pageSize={10}
-        rowsPerPageOptions={[10]}
-        disableSelectionOnClick
-        getRowId={(row) => row._id}
-        sx={{
-          border: 'none',
-          '& .MuiDataGrid-cell': {
-            borderBottom: '1px solid #f0f0f0',
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: '#f5f5f5',
-            borderBottom: 'none',
-          }
-        }}
-      />
+            if (c_req.status === 200) {
+                setChatroomId(chatroomId);
+            }
 
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{isEdit ? 'Edit Prompt' : 'Add Prompt'}</DialogTitle>
-        <DialogContent>
-          {isEdit ? (
-            <TextField
-              margin="dense"
-              name="_id"
-              label="ID"
-              type="text"
-              fullWidth
-              value={selectedRequest?._id || ''}
-              readOnly
-              disabled
-            />
-            ) : 
-            (
-              <>
-              </>
-            )
-          }
-          <TextField
-            margin="dense"
-            name="query"
-            label="Query"
-            type="text"
-            fullWidth
-            value={selectedRequest?.query || ''}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="response"
-            label="Tenant "
-            type="text"
-            fullWidth
-            value={selectedRequest?.response || ''}
-            onChange={handleInputChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} color="primary" variant="contained">
-            {isEdit ? 'Update' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+            const m_req = await fetch(`http://localhost:8080/api/chat/messages/${chatroomId}`, {
+                method: "GET",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+            const m_res = await m_req.json();
+
+            setMessages(m_res["data"].messages ?? []);
+
+            scrollToBottom();
+        };
+        
+        fetchChatroomId();
+    }, []);
+
+    return (
+        <div className="max-w-4xl mx-auto my-2 bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="bg-teal-600 p-4 flex items-center justify-between text-white">
+                <h2 className="text-2xl font-bold">DormBot</h2>
+                <p className="text-sm">Your Dorm Assistant</p>
+            </div>
+
+            <div ref={messagesEndRef} className="h-[26rem] overflow-y-auto p-4 bg-gray-100">
+                {messages ? messages.map((message, index) => (
+                    <div
+                        key={index}
+                        className={`mb-4 flex ${message.sender === userId ? 'justify-end' : 'justify-start'}`}
+                    >
+                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === userId ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                            }`}>
+                            {message.content}
+                        </div>
+                    </div>
+                )) : (
+                    <div className="w-full h-full flex justify-center items-center">
+                        <svg className="text-teal-700" xmlns="http://www.w3.org/2000/svg" width="4rem" height="4rem" viewBox="0 0 24 24"><path fill="currentColor" d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"><animateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></svg>
+                    </div>
+                )}
+                {isTyping && (
+                    <div className="flex justify-start">
+                        <div className="bg-gray-300 text-black p-3 rounded-lg max-w-xs">
+                            DormBot is typing...
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <div className="p-4 bg-gray-200">
+                <div className="flex items-center">
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                        className="flex-1 p-2 rounded-l-lg focus:outline-none"
+                        placeholder="Type a message..."
+                        disabled={isTyping}
+                    />
+                    <button
+                        onClick={() => handleSend()}
+                        className="bg-teal-600 text-white p-2 rounded-r-lg hover:bg-teal-700 transition-colors"
+                        disabled={isTyping}
+                    >
+                        <Send size={20} />
+                    </button>
+                </div>
+            </div>
+        </div>
   );
 };
 

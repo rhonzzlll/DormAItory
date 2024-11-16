@@ -41,7 +41,7 @@ connectDB();
 // API Routes
 app.use("/api/users", userRoutes); // User routes
 app.use("/api/auth", authRoutes); // Authentication routes
-app.use("/api/maintenance", maintenanceRoutes); // Maintenance routes
+app.use("/api/maintenancerequest", maintenanceRoutes); // Maintenance routes
 app.use('/api/tenants', tenantRouter); // Tenant routes
 app.use('/api/dorms', dormRoutes); // Dorm routes
 app.use('/api/chat', chatRoutes); // Chat routes

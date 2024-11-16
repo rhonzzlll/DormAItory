@@ -32,6 +32,7 @@ import AdminPayments from './pages/AdminPage/AdminPayments';
 import AdminRecords from './pages/AdminPage/AdminRecords';
 import AdminAnnouncements from './pages/AdminPage/AdminAnnouncements';
 import AdminChatbot from './pages/AdminPage/AdminChatbot';
+import AdminChatbotPrompts from './pages/AdminPage/AdminChatbotPrompts';
 import AdminUsers from './pages/AdminPage/AdminUsers';
 import AdminManageRooms from './pages/AdminPage/AdminManageRooms';
 
@@ -69,6 +70,7 @@ function App() {
               <Route path="managerooms" element={<AdminManageRooms />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="chatbot" element={<AdminChatbot />} />
+              <Route path="prompts" element={<AdminChatbotPrompts />} />
             </Route>
 
             {/* Tenant Pages */}
