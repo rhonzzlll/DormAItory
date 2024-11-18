@@ -28,6 +28,7 @@ export default function AdminMaintenance() {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState({
     _id: "",
+    userId: "",
     tenantId: "",
     firstName: "",
     lastName: "",
@@ -49,6 +50,7 @@ export default function AdminMaintenance() {
         value && value.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
+    
     setFilteredRequests(filtered);
   };
 
@@ -58,7 +60,7 @@ export default function AdminMaintenance() {
       
       const { requests } = response.data.data;
 
-      setRequests(requests);
+      // setRequests(requests);
       setFilteredRequests(requests);
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
@@ -79,10 +81,12 @@ export default function AdminMaintenance() {
     if (req.status === 200) {
       setRequests(prevRequests =>
         prevRequests.map(req =>
-          req._id === requestId ? { ...req, status: newStatus } : req
+            req._id === requestId ? { ...req, status: newStatus } : req
         )
       );
     }
+
+    fetchRequests();
   };
 
   const handleInputChange = (e) => {
@@ -99,6 +103,7 @@ export default function AdminMaintenance() {
     if (isEdit) {
       setSelectedRequest({
         _id: request?.["_id"],
+        userId: request?.tenant[0].info[0]._id,
         firstName: request?.tenant[0].info[0].firstName,
         lastName: request?.tenant[0].info[0].lastName,
         tenantId: request?.["tenantId"],
@@ -110,6 +115,7 @@ export default function AdminMaintenance() {
       });
     } else {
       setSelectedRequest({
+        userId: "",
         firstName: "",
         lastName: "",
         concernType: "",
@@ -125,6 +131,7 @@ export default function AdminMaintenance() {
     setOpen(false);
     setSelectedRequest({
       _id: "",
+      userId: "",
       firstName: "",
       lastName: "",
       tenantId: "",
@@ -195,7 +202,7 @@ export default function AdminMaintenance() {
       renderCell: (params) => {
         const { roomNo } = params.row.tenant[0].info[0];
 
-        return `${roomNo}`;
+        return `${roomNo ?? ""}`;
       }
     },
     { field: 'concernType', headerName: 'Concern Type', flex: 1, minWidth: 130 },
@@ -293,6 +300,15 @@ export default function AdminMaintenance() {
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>{isEdit ? 'Edit Request' : 'Add Request'}</DialogTitle>
         <DialogContent>
+            <TextField
+              margin="dense"
+              name="userId"
+              label="User ID"
+              type="text"
+              fullWidth
+              value={selectedRequest?.userId}
+              onChange={handleInputChange}
+            />
           <div className="flex gap-x-2">
             <TextField
               margin="dense"

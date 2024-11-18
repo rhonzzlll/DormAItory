@@ -42,10 +42,6 @@ const Signup = () => {
   const validate = () => {
     const errors = {};
 
-    if (!data.tenantId || isNaN(data.tenantId)) {
-      errors.tenantId = 'Tenant ID is required';
-    }
-
     if (!data.firstName.trim()) {
       errors.firstName = 'First Name is required';
     }
@@ -53,6 +49,8 @@ const Signup = () => {
     if (!data.lastName.trim()) {
       errors.lastName = 'Last Name is required';
     }
+
+    console.log(data.birthdate);
 
     if (!data.birthdate.day || !data.birthdate.month || !data.birthdate.year) {
       errors.birthdate = 'Complete Birthdate is required';
@@ -92,19 +90,20 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    console.log(data);
-
     try {
       const url = 'http://localhost:8080/api/users';
 
-      data["birthdate"] = new Date(`${data.birthdate.day} ${data.birthdate.month} ${data.birthdate.year}`);
+      const currentData = data;
 
-      const { data: res } = await axios.post(url, data);
+      currentData["birthdate"] = new Date(`${data.birthdate.day} ${data.birthdate.month} ${data.birthdate.year}`);
+
+      const { data: res } = await axios.post(url, currentData);
       navigate('/login');
       console.log(res.message);
     } catch (error) {
@@ -126,22 +125,8 @@ const Signup = () => {
           <h1>Tenant Registration Form</h1>
         </div>
         <form className={styles.form_container} onSubmit={handleSubmit}>
-          <div style={{ display: "flex", columnGap: "1rem", gridColumn: "span 2 / span 2" }}>
-            <div className={styles.input_group}>
-              <label htmlFor="tenantId">Tenant ID</label>
-              <input
-                type="text"
-                id="tenantId"
-                name="tenantId"
-                placeholder="Enter your Tenant ID"
-                value={data.tenantId}
-                onChange={handleChange}
-                className={styles.input}
-                required
-              />
-              {errors.tenantId && <div className={styles.error_msg}>{errors.tenantId}</div>}
-            </div>
-            <div className={styles.input_group}>
+          <div style={{ display: "flex", width: "100%", columnGap: "1rem", gridColumn: "span 2 / span 2" }}>
+            <div className={styles.input_group} style={{ width: "100%" }}>
               <label htmlFor="firstName">First Name</label>
               <input
                 type="text"
@@ -155,7 +140,7 @@ const Signup = () => {
               />
               {errors.firstName && <div className={styles.error_msg}>{errors.firstName}</div>}
             </div>
-            <div className={styles.input_group}>
+            <div className={styles.input_group} style={{ width: "100%" }} >
               <label htmlFor="lastName">Last Name</label>
               <input
                 type="text"

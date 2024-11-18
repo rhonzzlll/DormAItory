@@ -115,6 +115,7 @@ exports.updateRequest = async (req, res) => {
     try {
         const {
             _id,
+            userId,
             tenantId,
             concernType,
             specificationOfConcern,
@@ -122,12 +123,42 @@ exports.updateRequest = async (req, res) => {
             dateSubmitted
         } = req.body;
 
-        const foundRequest = await maintenanceRequest.findOneAndUpdate({ _id, tenantId }, {
-            concernType,
-            specificationOfConcern,
-            status,
-            createdAt: dateSubmitted
-        });
+        let foundUser;
+        if (userId) {
+            const currentUser = await user.findOne({ _id: userId, firstName, lastName });
+
+            if (currentUser) {
+                foundUser = currentUser;
+            } else {
+                foundUser = await user.findOne({ _id: userId });
+            }
+        } else {
+            foundUser = await user.findOne({ firstName, lastName });
+        }
+
+        if (!foundUser) {
+            return res.status(404).json({ message: "Specified user could not be found."});
+        }
+
+        const foundTenant = await tenant.findOne({ userId: foundUser._id });
+
+        let foundRequest;
+        if (foundTenant._id === tenantId) {
+            foundRequest = await maintenanceRequest.findOneAndUpdate({ _id, tenantId }, {
+                concernType,
+                specificationOfConcern,
+                status,
+                createdAt: dateSubmitted
+            });
+        } else {
+            foundRequest = await maintenanceRequest.findOneAndUpdate({ _id }, {
+                tenantId,
+                concernType,
+                specificationOfConcern,
+                status,
+                createdAt: dateSubmitted
+            });
+        }
 
         if (foundRequest) {
             return res.status(200).json({ message: "Successfully updated the request." });
@@ -142,6 +173,7 @@ exports.updateRequest = async (req, res) => {
 exports.createRequest = async (req, res) => {
     try {
         const {
+            userId,
             firstName,
             lastName,
             concernType,
@@ -150,7 +182,18 @@ exports.createRequest = async (req, res) => {
             createdAt
         } = req.body;
 
-        const foundUser = await user.findOne({ firstName, lastName });
+        let foundUser;
+        if (userId) {
+            const currentUser = await user.findOne({ _id: userId, firstName, lastName });
+
+            if (currentUser) {
+                foundUser = currentUser;
+            } else {
+                foundUser = await user.findOne({ _id: userId });
+            }
+        } else {
+            foundUser = await user.findOne({ firstName, lastName });
+        }
 
         if (!foundUser) {
             return res.status(404).json({ message: "Specified user could not be found."});
@@ -178,7 +221,7 @@ exports.createRequest = async (req, res) => {
 
 exports.sendRequest = async (req, res) => {
     try {
-        const { 
+        const {
             tenantId,
             concernType,
             specificationOfConcern,

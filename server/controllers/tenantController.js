@@ -69,14 +69,13 @@ exports.deleteTenant = async (req, res) => {
             id,
         } = req.body.tenant; 
 
-        const currentTenant = await tenant.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id._id) });
+        const currentTenant = await tenant.findByIdAndUpdate(id._id, { $unset: { roomId: 1, rentAmount: 1, startDate: 1, endDate: 1, paymentStatus: 1 } });
 
         if (currentTenant) {
             const roomId = new mongoose.Types.ObjectId(id.roomId);
             const currentDorm = await dorm.findOne({ _id: roomId });
             await dorm.findOneAndUpdate({ _id: roomId }, { occupied: currentDorm.occupied - 1 });
-
-            const test = await user.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id.userId) }, { $unset: { roomNo: 1 } });
+            await user.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(id.userId) }, { $unset: { roomNo: 1 } });
 
             return res.status(200).json({ message: "Tenant has been successfully deleted." });
         }
@@ -91,6 +90,7 @@ exports.updateTenant = async (req, res) => {
     try {
         const {
             id,
+            userId,
             firstName, 
             lastName,
             rentAmount, 
@@ -99,7 +99,24 @@ exports.updateTenant = async (req, res) => {
             paymentStatus 
         } = req.body.formData;
 
-        const foundUser = await user.findOne({ firstName, lastName });
+        console.log(req.body.formData);
+
+        let foundUser;
+        if (userId) {
+            const currentUser = await user.findOne({ _id: userId, firstName, lastName });
+
+            if (currentUser) {
+                foundUser = currentUser;
+            } else {
+                foundUser = await user.findOne({ _id: userId });
+            }
+        } else {
+            foundUser = await user.findOne({ firstName, lastName });
+        }
+
+        if (!foundUser._id) {
+            return res.status(404).json({ message: "No tenant exists from the provided information." });
+        }
 
         if (id.userId === foundUser._id.toString()) {
             await tenant.findOneAndUpdate({ _id: id._id, userId: id.userId }, { rentAmount, startDate, endDate, paymentStatus });
@@ -124,6 +141,7 @@ exports.updateTenant = async (req, res) => {
 exports.createTenant = async (req, res) => {
     try {
         const { 
+            userId,
             roomId, 
             firstName, 
             lastName,
@@ -133,26 +151,53 @@ exports.createTenant = async (req, res) => {
             paymentStatus 
         } = req.body.formData;
 
-        const { _id: userId } = await user.findOne({ firstName, lastName });
+        let foundUserId;
 
-        if (!userId) {
+        if (userId) {
+            const currentUser = await user.findOne({ _id: userId, firstName, lastName });
+
+            if (currentUser) {
+                foundUserId = currentUser._id;
+            } else {
+                const foundUser = await user.findOne({ _id: userId });
+                foundUserId = foundUser?._id;
+            }
+        } else {
+            const foundUser = await user.findOne({ firstName, lastName });
+            foundUserId = foundUser?._id;
+        }
+        
+        if (!foundUserId) {
             return res.status(404).json({ message: "No tenant exists from the provided information." });
         }
 
-        const newTenant = await tenant({ 
-            roomId: new mongoose.Types.ObjectId(roomId),
-            userId: new mongoose.Types.ObjectId(userId),
-            rentAmount: Number(rentAmount),
-            startDate: new Date(startDate),
-            endDate: new Date(endDate),
-            paymentStatus
-        }).save();
+        const foundTenant = await tenant.findOne({ userId: foundUserId });
 
+        let newTenant;
+        if (foundTenant) {
+            newTenant = await tenant.findByIdAndUpdate(foundTenant._id, {
+                roomId: new mongoose.Types.ObjectId(roomId),
+                rentAmount: Number(rentAmount),
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                paymentStatus
+            });
+        } else {
+            newTenant = await tenant({ 
+                roomId: new mongoose.Types.ObjectId(roomId),
+                userId: new mongoose.Types.ObjectId(foundUserId),
+                rentAmount: Number(rentAmount),
+                startDate: new Date(startDate),
+                endDate: new Date(endDate),
+                paymentStatus
+            }).save();
+        }
+        
         if (newTenant) {
             const currentDorm = await dorm.findOne({ _id: new mongoose.Types.ObjectId(roomId) });
             await dorm.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(roomId) }, { occupied: currentDorm.occupied + 1 });
 
-            await user.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(userId) }, { roomNo: currentDorm.roomNumber });
+            await user.findOneAndUpdate({ _id: new mongoose.Types.ObjectId(foundUserId) }, { roomNo: currentDorm.roomNumber });
 
             return res.status(201).json({ message: "Tenant has been successfully created." });
         }

@@ -5,6 +5,8 @@ const dormSchema = new mongoose.Schema({
   capacity: { type: Number, required: true },
   occupied: { type: Number, default: 0, required: false },
   price: { type: Number, required: true },
+  electricity: { type: Number, required: true },
+  water: { type: Number, required: true },
   amenities: {
     aircon: { type: Boolean, default: false, required: true },
     wifi: { type: Boolean, default: false, required: true },

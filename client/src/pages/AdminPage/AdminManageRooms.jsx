@@ -53,15 +53,19 @@ const DormitoryManagementGrid = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showRoomDialog, setShowRoomDialog] = useState(false);
+  const [showRoomEditDialog, setShowRoomEditDialog] = useState(false);
   const [showTenantDialog, setShowTenantDialog] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [editingRoom, setEditingRoom] = useState(null);
+  const [editingRoom, setEditingRoom] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
   const [expandedRooms, setExpandedRooms] = useState(new Set());
   const [roomData, setRoomData] = useState({
+    _id: undefined,
     roomNumber: "",
     capacity: 0,
     occupied: 0,
+    electricity: 0.0,
+    water: 0.0,
     price: 0,
     aircon: false,
     wifi: false,
@@ -109,8 +113,10 @@ const DormitoryManagementGrid = () => {
   const handleOpenTenantDialog = (roomId, tenant = null) => {
     if (tenant) {
       setEditingTenant(tenant);
+      console.log(tenant);  
       setFormData({
         ...tenant,
+        userId: tenant.id.userId,
         rentAmount: tenant.rentAmount.toString(),
         startDate: moment(tenant.startDate).format("YYYY-MM-DD"),
         endDate: moment(tenant.endDate).format("YYYY-MM-DD")
@@ -132,19 +138,38 @@ const DormitoryManagementGrid = () => {
     setShowTenantDialog(true);
   };
 
-  const handleOpenRoomDialog = (id = undefined) => {
-    setEditingRoom(null);
+  const handleOpenRoomDialog = (room = undefined) => {
+    if (room?._id) {
+      setEditingRoom(true);
 
-    setRoomData({
-      firstName: "",
-      lastName: "",
-      capacity: 0,
-      price: 0,
-      aircon: "false",
-      wifi: "false",
-      bathroom: "false",
-      description: ''
-    });
+      setRoomData({
+        _id: room._id,
+        roomNumber: room.roomNumber,
+        capacity: room.capacity,
+        occupied: room.occupied,
+        electricity: room.electricity,
+        water: room.water,
+        price: room.price,
+        aircon: room.amenities.aircon.toString(),
+        wifi: room.amenities.wifi.toString(),
+        bathroom: room.amenities.bathroom.toString(),
+        description: room.description
+      });
+    } else {
+      setRoomData({
+        _id: undefined,
+        roomNumber: "",
+        capacity: 0,
+        occupied: 0,
+        electricity: 0.0,
+        water: 0.0,
+        price: 0,
+        aircon: false,
+        wifi: false,
+        bathroom: false,
+        description: ""
+      });
+    }
 
     setShowRoomDialog(true);
   };
@@ -167,18 +192,52 @@ const DormitoryManagementGrid = () => {
     event.preventDefault();
 
     try {
-      await axios.post("http://localhost:8080/api/dorms/create", roomData, {
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        }
-      });
+      if (editingRoom) {
+        await axios.post("http://localhost:8080/api/dorms/update", roomData, {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        });
+
+        setRoomData({
+          _id: undefined,
+          roomNumber: "",
+          capacity: 0,
+          occupied: 0,
+          electricity: 0.0,
+          water: 0.0,
+          price: 0,
+          aircon: false,
+          wifi: false,
+          bathroom: false,
+          description: ""
+        });
+
+        setEditingRoom(false);
+      } else {
+        await axios.post("http://localhost:8080/api/dorms/create", roomData, {
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }
+        });
+      }
 
       setShowRoomDialog(false);
       setError('');
       fetchRooms();
     } catch (error) {
       setError('Failed to add new room');
+    }
+  }
+
+  const handleRoomDelete = async (id) => {
+    try {
+      await axios.get(`http://localhost:8080/api/dorms/delete/${id}`);
+      fetchRooms();
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -316,12 +375,14 @@ const DormitoryManagementGrid = () => {
                       </span>
                       <Button
                         className="flex items-center gap-2 bg-red-500"
+                        onClick={() => handleRoomDelete(room._id)}
                       >
                         <Minus className="w-4 h-4" />
                         Remove
                       </Button>
                       <Button
                         className="flex items-center gap-2 bg-green-500"
+                        onClick={() => handleOpenRoomDialog(room)}
                       >
                         <Pencil className="w-4 h-4" />
                         Edit
@@ -438,6 +499,28 @@ const DormitoryManagementGrid = () => {
                   // required
                 />
               </div>
+              <div className="flex gap-4 items-center">
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Electricity (kw/H)</Label>
+                  <Input
+                    id="electricity"
+                    type="electricity"
+                    value={roomData.electricity}
+                    onChange={(e) => handleRoomChange('electricity', e.target.value)}
+                    // required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="price">Water <span class="relative pr-1.5">(m<span class="absolute top-0 right-0 text-xs -translate-y-1">3</span></span>)</Label>
+                  <Input
+                    id="water"
+                    type="water"
+                    value={roomData.water}
+                    onChange={(e) => handleRoomChange('water', e.target.value)}
+                    // required
+                  />
+                </div>
+              </div>
               <div className="flex items-center justify-center gap-x-2">
                 <div className="text-left w-full grid gap-2">
                   <Label htmlFor="aircon">Aircon</Label>
@@ -520,6 +603,15 @@ const DormitoryManagementGrid = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+                <Label htmlFor="userId">User Id</Label>
+                <Input
+                  id="userId"
+                  type="text"
+                  value={formData.userId}
+                  onChange={(e) => handleInputChange('userId', e.target.value)}
+                />
+              </div>
               <div className="flex gap-x-2 items-center">
                 <div className="flex-grow grid gap-2">
                   <Label htmlFor="firstName">First Name</Label>
@@ -527,7 +619,6 @@ const DormitoryManagementGrid = () => {
                     id="firstName"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
-                    required
                   />
                 </div>
                 <div className="flex-grow grid gap-2">
@@ -536,7 +627,6 @@ const DormitoryManagementGrid = () => {
                     id="lastName"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
-                    required
                   />
                 </div>
               </div>

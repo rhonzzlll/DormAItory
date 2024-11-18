@@ -9,10 +9,6 @@ router.get("/:id", async (req, res) => {
     const { id } = req.params;
     const user = await User.findOne({ "_id": new mongoose.Types.ObjectId(id) });
 
-    if (user) {
-      
-    }
-
     console.log(user);
   } catch (error) {
     console.log(error);
@@ -27,7 +23,7 @@ router.post("/", async (req, res) => {
     // Check if user already exists
     const { email } = req.body;
     const userExists = await User.findOne({ email });
-    
+
     if (userExists) 
       return res.status(400).send({ message: "User already exists" });
 
