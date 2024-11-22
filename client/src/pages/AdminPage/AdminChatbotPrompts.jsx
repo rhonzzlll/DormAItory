@@ -221,7 +221,7 @@ const AdminChatbotPrompts = () => {
           <TextField
             margin="dense"
             name="response"
-            label="Tenant "
+            label="Response"
             type="text"
             fullWidth
             value={selectedRequest?.response || ''}

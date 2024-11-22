@@ -188,6 +188,10 @@ export default function AdminMaintenance() {
       flex: 1, 
       minWidth: 150,
       renderCell: (params) => {
+        if (!params.row.tenant[0]) {
+          return "";
+        }
+
         const { firstName, lastName } = params.row.tenant[0].info[0];
 
         return `${firstName} ${lastName}`;
@@ -200,6 +204,10 @@ export default function AdminMaintenance() {
       flex: 0.7, 
       minWidth: 100,
       renderCell: (params) => {
+        if (!params.row.tenant[0]) {
+          return "";
+        }
+        
         const { roomNo } = params.row.tenant[0].info[0];
 
         return `${roomNo ?? ""}`;
