@@ -10,6 +10,7 @@ const maintenanceRoutes = require("./routes/maintenanceroutes"); // Import maint
 const tenantRouter = require('./routes/tenantRouter'); // Adjust the path as needed
 const bodyParser = require('body-parser');
 const dormRoutes = require("./routes/Dorm"); // Ensure this path matches the actual file name
+const chatRoutes = require("./routes/chatRoutes"); // Ensure this path matches the actual file name
 
 const app = express();
 const PORT = process.env.PORT || 8080; // Set default port
@@ -40,9 +41,10 @@ connectDB();
 // API Routes
 app.use("/api/users", userRoutes); // User routes
 app.use("/api/auth", authRoutes); // Authentication routes
-app.use("/api/maintenance", maintenanceRoutes); // Maintenance routes
+app.use("/api/maintenancerequest", maintenanceRoutes); // Maintenance routes
 app.use('/api/tenants', tenantRouter); // Tenant routes
 app.use('/api/dorms', dormRoutes); // Dorm routes
+app.use('/api/chat', chatRoutes); // Chat routes
 
 
 

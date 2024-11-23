@@ -5,8 +5,10 @@ import styles from './styles.module.css';
 
 const Signup = () => {
   const [data, setData] = useState({
+    tenantId: undefined,
     firstName: '',
     lastName: '',
+    address: "",
     birthdate: {
       day: '',
       month: '',
@@ -25,10 +27,13 @@ const Signup = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name in data.birthdate) {
+      console.log(data.birthdate);
+      
       setData((prev) => ({
         ...prev,
         birthdate: { ...prev.birthdate, [name]: value },
       }));
+
     } else {
       setData((prev) => ({ ...prev, [name]: value }));
     }
@@ -44,6 +49,8 @@ const Signup = () => {
     if (!data.lastName.trim()) {
       errors.lastName = 'Last Name is required';
     }
+
+    console.log(data.birthdate);
 
     if (!data.birthdate.day || !data.birthdate.month || !data.birthdate.year) {
       errors.birthdate = 'Complete Birthdate is required';
@@ -83,6 +90,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
+
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -90,7 +98,12 @@ const Signup = () => {
 
     try {
       const url = 'http://localhost:8080/api/users';
-      const { data: res } = await axios.post(url, data);
+
+      const currentData = data;
+
+      currentData["birthdate"] = new Date(`${data.birthdate.day} ${data.birthdate.month} ${data.birthdate.year}`);
+
+      const { data: res } = await axios.post(url, currentData);
       navigate('/login');
       console.log(res.message);
     } catch (error) {
@@ -112,33 +125,35 @@ const Signup = () => {
           <h1>Tenant Registration Form</h1>
         </div>
         <form className={styles.form_container} onSubmit={handleSubmit}>
-          <div className={styles.input_group}>
-            <label htmlFor="firstName">First Name</label>
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              placeholder="Enter your First Name"
-              value={data.firstName}
-              onChange={handleChange}
-              className={styles.input}
-              required
-            />
-            {errors.firstName && <div className={styles.error_msg}>{errors.firstName}</div>}
-          </div>
-          <div className={styles.input_group}>
-            <label htmlFor="lastName">Last Name</label>
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              placeholder="Enter your Last Name"
-              value={data.lastName}
-              onChange={handleChange}
-              className={styles.input}
-              required
-            />
-            {errors.lastName && <div className={styles.error_msg}>{errors.lastName}</div>}
+          <div style={{ display: "flex", width: "100%", columnGap: "1rem", gridColumn: "span 2 / span 2" }}>
+            <div className={styles.input_group} style={{ width: "100%" }}>
+              <label htmlFor="firstName">First Name</label>
+              <input
+                type="text"
+                id="firstName"
+                name="firstName"
+                placeholder="Enter your First Name"
+                value={data.firstName}
+                onChange={handleChange}
+                className={styles.input}
+                required
+              />
+              {errors.firstName && <div className={styles.error_msg}>{errors.firstName}</div>}
+            </div>
+            <div className={styles.input_group} style={{ width: "100%" }} >
+              <label htmlFor="lastName">Last Name</label>
+              <input
+                type="text"
+                id="lastName"
+                name="lastName"
+                placeholder="Enter your Last Name"
+                value={data.lastName}
+                onChange={handleChange}
+                className={styles.input}
+                required
+              />
+              {errors.lastName && <div className={styles.error_msg}>{errors.lastName}</div>}
+            </div>
           </div>
           <div className={styles.input_group}>
             <label>Birthdate (DD/MM/YYYY)</label>
@@ -164,7 +179,7 @@ const Signup = () => {
                 className={styles.input}
                 required
               >
-                <option value="">Month</option>
+                <option disabled>Month</option>
                 {[
                   'Jan',
                   'Feb',
@@ -179,7 +194,7 @@ const Signup = () => {
                   'Nov',
                   'Dec',
                 ].map((month, i) => (
-                  <option key={`month-${i}`} value={i + 1}>
+                  <option key={`month-${i}`} value={month}>
                     {month}
                   </option>
                 ))}
@@ -219,6 +234,20 @@ const Signup = () => {
               <option value="Female">Female</option>
             </select>
             {errors.gender && <div className={styles.error_msg}>{errors.gender}</div>}
+          </div>
+          <div className={styles.input_group} style={{ gridColumn: "span 2 / span 2" }}>
+            <label htmlFor="address">Address</label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              placeholder="Enter your Address"
+              value={data.address}
+              onChange={handleChange}
+              className={styles.input}
+              required
+            />
+            {errors.address && <div className={styles.error_msg}>{errors.address}</div>}
           </div>
           <div className={styles.input_group}>
             <label htmlFor="password">Password</label>

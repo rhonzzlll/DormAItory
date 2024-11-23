@@ -3,25 +3,28 @@ import axios from 'axios';
 
 export default function MaintenanceRequestForm() {
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     tenantId: '',
     roomNo: '',
     concernType: '',
-    otherConcern: '',
     specificationOfConcern: ''
   });
+  const [selectedConcern, setSelectedConcern] = useState('');
 
   useEffect(() => {
     // Fetch tenant data from the API
     const fetchTenantData = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/tenants'); // Adjust the endpoint as needed
-        const { fullName, tenantId, roomNo } = response.data;
+        const response = await axios.get(`http://localhost:8080/api/tenants/get/${localStorage.getItem("_id")}`);
+        const { tenant: tenant } = response.data.data;
+
         setFormData(prevState => ({
           ...prevState,
-          fullName,
-          tenantId,
-          roomNo
+          firstName: tenant[0].user[0].info[0].firstName,
+          lastName: tenant[0].user[0].info[0].lastName,
+          tenantId: tenant[0]["_id"],
+          roomNo: tenant[0].user[0].roomNumber
         }));
       } catch (error) {
         console.error('Error fetching tenant data:', error);
@@ -33,17 +36,30 @@ export default function MaintenanceRequestForm() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: value === "other" ? "" : value
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.post('http://localhost:8080/api/maintenance-requests', formData);
-      console.log('Form submitted:', formData);
+      const req = await axios.post('http://localhost:8080/api/maintenancerequest/send', formData);
+      if (req.status === 201) {
+        setFormData({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          tenantId: formData.tenantId,
+          roomNo: formData.roomNumber,
+          concernType: '',
+          specificationOfConcern: ''
+        });
+
+        setSelectedConcern("");
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
     }
@@ -73,8 +89,7 @@ export default function MaintenanceRequestForm() {
                 type="text"
                 name="fullName"
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
-                value={formData.fullName}
+                value={formData.firstName + " " + formData.lastName}
                 readOnly
               />
             </div>
@@ -84,7 +99,6 @@ export default function MaintenanceRequestForm() {
                 type="text"
                 name="tenantId"
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
                 value={formData.tenantId}
                 readOnly
               />
@@ -98,7 +112,6 @@ export default function MaintenanceRequestForm() {
                 type="text"
                 name="roomNo"
                 className="w-full p-2 border border-gray-300 rounded bg-gray-100"
-                onChange={handleInputChange}
                 value={formData.roomNo}
                 readOnly
               />
@@ -106,7 +119,7 @@ export default function MaintenanceRequestForm() {
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className={ selectedConcern === "other" ? "mb-0" : "mb-6" }>
           <h2 className="text-xl font-semibold mb-2">Type of Concern</h2>
           <p className="text-sm text-gray-600 mb-4">Fill out all the required fields.</p>
           
@@ -115,7 +128,7 @@ export default function MaintenanceRequestForm() {
               { value: 'electrical', label: 'Electrical (Involves Sockets, Wirings, etc.)' },
               { value: 'aircon', label: 'Aircon Maintenance (Involves Issue/Damages, Cleaning Request, etc.)' },
               { value: 'room', label: 'Room Maintenance (Involves Mattress Request, Bunk Maintenance, etc.)' },
-              { value: 'other', label: 'Others (Please specify)' }
+              { value: 'other', label: 'Others' }
             ].map(option => (
               <label key={option.value} className="block">
                 <input
@@ -125,13 +138,29 @@ export default function MaintenanceRequestForm() {
                   onChange={handleInputChange}
                   className="sr-only"
                 />
-                <div className="p-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors">
+                <div className="p-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 transition-colors" 
+                  onClick={() => setSelectedConcern(option.value)}
+                  style={{ backgroundColor: selectedConcern === option.value ? "#e5e7eb" : null }}
+                  >
                   {option.label}
                 </div>
               </label>
             ))}
           </div>
         </div>
+          
+        {selectedConcern === "other" && (
+          <div className="mt-2 mb-6">
+            <input
+              type="text"
+              name="concernType"
+              className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+              placeholder="Please specify your concern"
+              onChange={handleInputChange}
+              value={formData.concernType}
+            />
+          </div>
+        )}
 
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Specification of Concern</h2>

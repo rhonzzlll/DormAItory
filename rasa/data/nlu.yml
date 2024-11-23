@@ -1,0 +1,245 @@
+version: "3.1"  
+
+nlu:
+- intent: user_lookup
+  examples: |
+    - Who is [Shawn](firstName) [Gestupa](lastName)?
+    - Give me information about [Shawn](firstName) [Gestupa](lastName)
+    - Can you tell me about [Shawn](firstName)?
+    - Tell me more about [Alice](firstName) [Smith](lastName)
+    - I want details about [John](firstName) [Doe](lastName)
+    - Who is [Emily](firstName) [Clark](lastName)?
+    - I'd like to know about [Michael](firstName) [Jordan](lastName)
+    - Do you have any info on [Sarah](firstName) [Williams](lastName)?
+    - Who is [Henry](firstName) [Ford](lastName)?
+    - Give me the profile of [Emma](firstName)
+    - Show details for [Sophia](firstName) [Davis](lastName)
+    - Who exactly is [Ethan](firstName)?
+    - Provide info on [Olivia](firstName)
+    - I'd like to learn about [James](firstName) [Taylor](lastName)
+    - Do you know anything about [Ava](firstName) [Moore](lastName)?
+    - Any information on [Lucas](firstName) [Garcia](lastName)?
+    - Get me the bio of [Mason](firstName)
+    - I'd like details on [Charlotte](firstName) [Martinez](lastName)
+    - What can you tell me about [Liam](firstName)?
+    - Fetch data for [Mia](firstName) [Rodriguez](lastName)
+    - Look up [Chris](firstName) [Evans](lastName) in the system
+    - Query details for [Jessica](firstName) [Miller](lastName)
+    - I need data on [Daniel](firstName) [Lopez](lastName)
+    - Can you retrieve info on [Matthew](firstName) [Wilson](lastName)?
+    - Pull up the profile for [Isabella](firstName) [Anderson](lastName)
+    - Access information about [Amelia](firstName) [Thomas](lastName)
+    - Show me data for [Oliver](firstName) [Harris](lastName)
+    - Do we have records on [Benjamin](firstName)?
+    - Find details about [Harper](firstName)
+    - Could you fetch info on [Alexander](firstName) [Clark](lastName)?
+    - Show everything available for [Ella](firstName) [Lewis](lastName)
+    - I need profile information for [Jack](firstName) [Lee](lastName)
+    - Access the file for [Zoe](firstName) [Walker](lastName)
+    - Provide full details on [Ryan](firstName) [Hall](lastName)
+    - Give me the database entry for [Henry](firstName) [Young](lastName)
+    - I'd like to look up [William](firstName) [Scott](lastName)
+    - Search for records on [Daisy](firstName) [King](lastName)
+    - Retrieve the background of [Lucas](firstName) [Wright](lastName)
+    - Bring up [Abigail](firstName) [Baker](lastName) in the database
+    - List information for [Sebastian](firstName) [Adams](lastName)
+    - Who has the Object ID [60d21b4667d0d8992e610c85](_id)?
+    - Fetch data for user with this ID [60d21b4967d0d8992e610c86](_id)
+    - Retrieve info for user using ID [60d21b4567d0d8992e610c87](_id)
+    - Find user profile by Object ID [60d21b4867d0d8992e610c88](_id)
+    - Show details for user identified by [60d21b4a67d0d8992e610c89](_id)
+    - Do you have details for this ID [60d21b4b67d0d8992e610c8a](_id)?
+    - Tell me about the person with ID [60d21b4c67d0d8992e610c8b](_id)
+    - Look up the user assigned to ID [60d21b4d67d0d8992e610c8c](_id)
+    - I need data on user with identifier [60d21b4e67d0d8992e610c8d](_id)
+    - Show user info by ID [60d21b4f67d0d8992e610c8e](_id)
+    - Find details about the ID [60d21b5067d0d8992e610c8f](_id)
+    - Who exactly is assigned to this ID [60d21b5167d0d8992e610c90](_id)?
+    - Access info on the user with Object ID [60d21b5267d0d8992e610c91](_id)
+    - I want to know who has this ID [60d21b5367d0d8992e610c92](_id)
+    - Search for the user by Object ID [60d21b5467d0d8992e610c93](_id)
+    - Query profile for this Object ID [60d21b5567d0d8992e610c94](_id)
+    - Retrieve data for user with unique ID [60d21b5667d0d8992e610c95](_id)
+    - Who is the user linked to ID [60d21b5767d0d8992e610c96](_id)?
+    - Show user profile for ID [60d21b5867d0d8992e610c97](_id)
+    - Fetch user details for identifier [60d21b5967d0d8992e610c98](_id)
+    - Bring up profile linked with ID [60d21b5a67d0d8992e610c99](_id)
+    - Show everything for user tagged by Object ID [60d21b5b67d0d8992e610c9a](_id)
+    - Look up info by database ID [60d21b5c67d0d8992e610c9b](_id)
+    - What data is available for this ID [60d21b5d67d0d8992e610c9c](_id)?
+    - Who has been assigned the unique ID [60d21b5e67d0d8992e610c9d](_id)?
+    - Access profile for user with identifier [60d21b5f67d0d8992e610c9e](_id)
+    - Who is [David](firstName) [Andrews](lastName)?
+    - Can you show details about [Linda](firstName) [Green](lastName)?
+    - Provide information on [Eleanor](firstName) [Brown](lastName)
+    - Tell me who [Sam](firstName) [Johnson](lastName) is
+    - I need info on [Lisa](firstName)
+    - What details can you find about [Robert](firstName) [White](lastName)?
+    - Who exactly is [Noah](firstName) [Thompson](lastName)?
+    - Do we have a profile for [Ivy](firstName) [Taylor](lastName)?
+    - Find data on [Max](firstName)
+    - Show me the background of [Sophia](firstName) [Hill](lastName)
+    - Bring up info for [Leo](firstName) [Bennett](lastName)
+    - Could you show the profile for [Chloe](firstName) [Brooks](lastName)?
+    - I want to know about [Henry](firstName) [Griffin](lastName)
+    - Give me the record of [Jade](firstName) [Morris](lastName)
+    - Look up information on [Evan](firstName) [Edwards](lastName)
+    - Fetch profile details for [Alice](firstName) [Garrett](lastName)
+    - Search the database for [Aaron](firstName) [Reed](lastName)
+    - Do you have records on [Hannah](firstName) [Howard](lastName)?
+    - Pull up the user profile for [Liam](firstName)
+    - What can you tell me about [Alexis](firstName) [Fox](lastName)?
+    - Can you retrieve information on [Daniel](firstName) [Cole](lastName)?
+    - Find out more about [Natalie](firstName) [Owens](lastName)
+    - Bring up details for [Justin](firstName) [Hughes](lastName)
+    - Who is [Samantha](firstName) [Scott](lastName)?
+    - Access the profile for [Grace](firstName) [Evans](lastName)
+    - Show me the user info for [Carter](firstName) [Price](lastName)
+    - Provide a profile summary on [Maya](firstName) [Nelson](lastName)
+    - I want to see information on [Caleb](firstName) [Bailey](lastName)
+    - Look up details for [Ella](firstName) [Mitchell](lastName)
+    - Who's [Dylan](firstName) [Perez](lastName)?
+    - Retrieve info on [Bella](firstName) [Parker](lastName)
+    - Give me all records for [Lucas](firstName) [Long](lastName)
+    - What can you tell me about [Sophia](firstName)?
+    - Search for the user [Avery](firstName) [Hill](lastName)
+    - Who is [Eva](firstName) [Knight](lastName) in our database?
+    - Show the profile for [Landon](firstName) [Reed](lastName)
+    - Do you have info on [Amelia](firstName) [Clark](lastName)?
+    - Provide details on [Jack](firstName) [Martin](lastName)
+    - Check the system for [Leah](firstName) [Baker](lastName)
+    - Look up background info on [Brandon](firstName) [Lopez](lastName)
+    - Show me everything available for [Chloe](firstName) [Garcia](lastName)
+    - Bring up [Aiden](firstName) [Watson](lastName) from the records
+    - I'd like more information on [Victoria](firstName) [Sanchez](lastName)
+    - Who is [Isabelle](firstName) [Young](lastName) registered as?
+    - Find the profile for [Julian](firstName) [Rogers](lastName)
+    - I'd like to know about [Zoey](firstName) [Rivera](lastName)
+    - Query data on [Brayden](firstName) [Griffin](lastName)
+    - Access user information for [Hailey](firstName) [Phillips](lastName)
+    - Pull up info on [Eli](firstName) [Butler](lastName)
+
+- intent: tenant_lookup
+  examples: |
+    - Where is [Shawn](firstName) [Gestupa](lastName) staying?
+    - Which room is [Shawn](firstName) [Gestupa](lastName) in?
+    - Can you tell me the room for [Alice](firstName) [Smith](lastName)?
+    - What dorm is [John](firstName) [Doe](lastName) assigned to?
+    - Where is [Emily](firstName) [Clark](lastName) currently staying?
+    - Show me the assigned room for [Michael](firstName) [Jordan](lastName)
+    - What location is [Sarah](firstName) [Williams](lastName) in?
+    - Find the room of [Henry](firstName) [Ford](lastName)
+    - What room is [Emma](firstName) in?
+    - Which dorm is [Sophia](firstName) [Davis](lastName) located in?
+    - Where exactly is [Ethan](firstName) staying?
+    - Provide the room number for [Olivia](firstName)
+    - I'd like to know where [James](firstName) [Taylor](lastName) is
+    - Can you look up where [Ava](firstName) [Moore](lastName) is staying?
+    - What room is assigned to [Lucas](firstName) [Garcia](lastName)?
+    - Show me where [Mason](firstName) is currently staying
+    - I'm looking for the room of [Charlotte](firstName) [Martinez](lastName)
+    - Which dorm has [Liam](firstName)?
+    - What's the room assignment for [Mia](firstName) [Rodriguez](lastName)?
+    - Locate the room or dorm for [Chris](firstName) [Evans](lastName)
+    - Where can I find [Jessica](firstName) [Miller](lastName)?
+    - Tell me where [Daniel](firstName) [Lopez](lastName) is assigned
+    - Pull up the room location for [Matthew](firstName) [Wilson](lastName)
+    - What dorm is [Isabella](firstName) [Anderson](lastName) in?
+    - Access location details for [Amelia](firstName) [Thomas](lastName)
+    - Show me the room or dorm for [Oliver](firstName) [Harris](lastName)
+    - Do you know where [Benjamin](firstName) is staying?
+    - Find out the dorm for [Harper](firstName)
+    - Where is [Alexander](firstName) [Clark](lastName) assigned?
+    - Look up [Ella](firstName) [Lewis](lastName)'s room
+    - I need the room number for [Jack](firstName) [Lee](lastName)
+    - Find where [Zoe](firstName) [Walker](lastName) is located
+    - Provide the dorm or room for [Ryan](firstName) [Hall](lastName)
+    - Which room is [Henry](firstName) [Young](lastName) assigned to?
+    - Where can I find [William](firstName) [Scott](lastName)?
+    - Show the location details for [Daisy](firstName) [King](lastName)
+    - Check the room location of [Abigail](firstName) [Baker](lastName)
+    - Where is the tenant with Object ID [60d21b4667d0d8992e610c85](_id) staying?
+    - Which room is assigned to Object ID [60d21b4967d0d8992e610c86](_id)?
+    - Can you tell me the room for tenant ID [60d21b4567d0d8992e610c87](_id)?
+    - What dorm is the tenant with ID [60d21b4867d0d8992e610c88](_id) assigned to?
+    - Where is the person linked to this ID [60d21b4a67d0d8992e610c89](_id)?
+    - Show the assigned room for Object ID [60d21b4b67d0d8992e610c8a](_id)
+    - Where exactly is the tenant with this ID [60d21b4c67d0d8992e610c8b](_id) staying?
+    - What location is associated with ID [60d21b4d67d0d8992e610c8c](_id)?
+    - Find the room for tenant ID [60d21b4e67d0d8992e610c8d](_id)
+    - I need the room assignment for this Object ID [60d21b4f67d0d8992e610c8e](_id)
+    - Where can I find the tenant linked to ID [60d21b5067d0d8992e610c8f](_id)?
+    - Provide details for the location of tenant with ID [60d21b5167d0d8992e610c90](_id)
+    - Show the dorm or room linked to Object ID [60d21b5267d0d8992e610c91](_id)
+    - Who is assigned to the room under ID [60d21b5367d0d8992e610c92](_id)?
+    - Can you find the room for the person with ID [60d21b5467d0d8992e610c93](_id)?
+    - Look up the location for tenant ID [60d21b5567d0d8992e610c94](_id)
+    - Access the room details for tenant by ID [60d21b5667d0d8992e610c95](_id)
+    - Which dorm is associated with tenant ID [60d21b5767d0d8992e610c96](_id)?
+    - Locate the tenant with this unique ID [60d21b5867d0d8992e610c97](_id)
+    - Check the dorm for tenant with Object ID [60d21b5967d0d8992e610c98](_id)
+    - Retrieve the room for tenant by database ID [60d21b5a67d0d8992e610c99](_id)
+    - Show the room or dorm for tenant by ID [60d21b5b67d0d8992e610c9a](_id)
+    - Where is the tenant under identifier [60d21b5c67d0d8992e610c9b](_id)?
+    - Look up the dorm linked to tenant ID [60d21b5d67d0d8992e610c9c](_id)
+    - Pull up location details for tenant with ID [60d21b5e67d0d8992e610c9d](_id)
+    - Show room assignment for the tenant with identifier [60d21b5f67d0d8992e610c9e](_id)
+    - Can you locate the tenant associated with ID [60d21b6067d0d8992e610c9f](_id)?
+    - Which dorm is this ID [60d21b6167d0d8992e610c9g](_id) linked to?
+    - Provide room information for tenant tagged with ID [60d21b6267d0d8992e610c9h](_id)
+    - What room is assigned to the person with ID [60d21b6367d0d8992e610c9i](_id)?
+    - Who are in the room [25](roomNumber)?
+    - Which people are inside room [16](roomNumber)?
+    - Who is staying in room [42](roomNumber)?
+    - Show me the list of people in room [18](roomNumber)
+    - Can you find out who is in room [33](roomNumber)?
+    - Who is currently assigned to room [8](roomNumber)?
+    - Which tenants are in room [10](roomNumber)?
+    - Locate the tenants in room [27](roomNumber)
+    - Who all are staying in room [15](roomNumber)?
+    - Give me a list of people inside room [20](roomNumber)
+    - Tell me the occupants of room [5](roomNumber)
+    - Who occupies room [32](roomNumber)?
+    - Find the tenants assigned to room [9](roomNumber)
+    - Can you show who is in room [50](roomNumber)?
+    - Retrieve occupants for room [22](roomNumber)
+    - Show me everyone in room [17](roomNumber)
+    - What tenants are located in room [7](roomNumber)?
+    - Pull up the names of people staying in room [11](roomNumber)
+    - Who are the current residents in room [30](roomNumber)?
+    - Is anyone staying in room [3](roomNumber)?
+    - Which people are registered in room [45](roomNumber)?
+    - Do you have the list of people in room [6](roomNumber)?
+    - Check for tenants in room [29](roomNumber)
+    - Are there any occupants in room [2](roomNumber)?
+    - Who has been assigned to room [21](roomNumber)?
+    - Where is [Sophia](firstName) [Green](lastName) staying?
+    - Which room is [Mason](firstName) [Johnson](lastName) assigned to?
+    - Can you tell me the room for [Aiden](firstName) [Lee](lastName)?
+    - Show the location for [Lucas](firstName) [Anderson](lastName)
+    - Which dorm is [Ella](firstName) [Moore](lastName) in?
+    - Where is [Jacob](firstName) [Clark](lastName) currently staying?
+    - Tell me where [Amelia](firstName) [Parker](lastName) is assigned
+    - I need the room of [Daniel](firstName) [Scott](lastName)
+    - Show the assigned room for [Oliver](firstName) [Gonzalez](lastName)
+    - Find out the dorm for [Ava](firstName) [Morris](lastName)
+    - Which dorm is [Jack](firstName) [Ramirez](lastName) located in?
+    - Where can I find [Leah](firstName) [Mitchell](lastName)?
+    - What room is [Evan](firstName) assigned to?
+    - Who is staying in room [14](roomNumber)?
+    - Which people are inside room [22](roomNumber)?
+    - Who occupies room [7](roomNumber)?
+    - List the tenants in room [13](roomNumber)
+    - Show the people assigned to room [19](roomNumber)
+    - Is there anyone in room [26](roomNumber)?
+    - Which individuals are in room [4](roomNumber)?
+    - Retrieve names of those staying in room [31](roomNumber)
+    - Can you tell me who is in room [9](roomNumber)?
+    - Are there any tenants in room [20](roomNumber)?
+    - Who are the current residents in room [11](roomNumber)?
+    - Find the people registered in room [35](roomNumber)
+    - Who all are in room [8](roomNumber)?
+    - Locate the occupants of room [6](roomNumber)
+    - What tenants are in room [24](roomNumber)?
+    - Who has been assigned to room [12](roomNumber)?
+    - Give me a list of residents in room [16](roomNumber)

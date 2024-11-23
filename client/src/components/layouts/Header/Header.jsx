@@ -37,7 +37,7 @@ const Header = () => {
         <div className={`${styles.container} position-relative d-flex align-items-center justify-content-between`}>
           <Link to="/tenant" className={styles.logoLink}>
             <img
-              src={require('E:/dorm/client/src/Images/icons/logo.png')} // Update the path to your image
+              src={require('../../../Images/icons/logo.png')} // Update the path to your image
               alt="Logo"
               className={styles.logo}
             />
