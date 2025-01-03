@@ -1,15 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { User } from 'lucide-react';
- 
+import axios from 'axios';
 
 const Profile = () => {
+    const userId = localStorage.getItem("_id"); // Retrieve userId from localStorage
     const [profile, setProfile] = useState({
-        fullName: '',
-        tenantId: '',
+        firstName: '',
+        lastName: '',
         roomNo: '',
         address: '',
         birthdate: '',
-        email: ''
+        gender: '',
+        email: '',
+        phoneNumber: '',
+        password: '',
+        profileImage: ''
     });
     const [profileImage, setProfileImage] = useState(null);
     const [showPasswordFields, setShowPasswordFields] = useState(false); // Show/Hide password fields
@@ -17,7 +22,42 @@ const Profile = () => {
         oldPassword: '',
         newPassword: ''
     });
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        // Fetch user data when component mounts
+        const fetchUserData = async () => {
+            try {
+                console.log(`Fetching user data for userId: ${userId}`);
+                const response = await axios.get(`http://localhost:8080/api/users/${userId}`);
+                const userData = response.data;
+                setProfile({
+                    firstName: userData.firstName,
+                    lastName: userData.lastName,
+                    roomNo: userData.roomNo,
+                    address: userData.address,
+                    birthdate: userData.birthdate.split('T')[0], // Format birthdate correctly
+                    gender: userData.gender,
+                    email: userData.email,
+                    phoneNumber: userData.phoneNumber,
+                    password: '', // Do not pre-fill password
+                    profileImage: userData.profileImage
+                });
+                if (userData.profileImage) {
+                    setProfileImage(userData.profileImage);
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+                setError('Something went wrong! Please try again.');
+            }
+        };
+
+        if (userId) {
+            fetchUserData();
+        }
+    }, [userId]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -38,17 +78,53 @@ const Profile = () => {
     const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (file && file.type.substr(0, 5) === "image") {
-            setProfileImage(URL.createObjectURL(file));
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setProfileImage(reader.result); // Set the base64 string as profileImage
+            };
+            reader.readAsDataURL(file);
         } else {
             setProfileImage(null);
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Updated profile:', profile);
-        console.log('Passwords:', passwords);
-        // TODO: Implement API call to update profile and passwords
+        setError('');
+        setSuccess('');
+        try {
+            const updateData = {
+                firstName: profile.firstName,
+                lastName: profile.lastName,
+                roomNo: profile.roomNo,
+                address: profile.address,
+                birthdate: profile.birthdate,
+                gender: profile.gender,
+                email: profile.email,
+                phoneNumber: profile.phoneNumber,
+                profileImage: profileImage, // Include the base64 string
+            };
+            if (showPasswordFields) {
+                updateData.oldPassword = passwords.oldPassword;
+                updateData.newPassword = passwords.newPassword;
+            }
+
+            console.log(`Updating user data for userId: ${userId}`);
+            const response = await axios.put(`http://localhost:8080/api/users/${userId}`, updateData);
+
+            if (response.status === 200) {
+                console.log('Profile updated successfully');
+                setSuccess('Profile updated successfully');
+
+                // Reload the page to reflect the updated profile information
+                window.location.reload();
+            } else {
+                setError('Failed to update profile. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            setError('Something went wrong! Please try again.');
+        }
     };
 
     const handleCancelPasswordChange = () => {
@@ -62,13 +138,15 @@ const Profile = () => {
                 My Profile
             </div>
             <form onSubmit={handleSubmit} className="p-6">
+                {error && <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>}
+                {success && <div className="bg-green-100 text-green-700 p-4 mb-4 rounded">{success}</div>}
                 <div className="flex items-center justify-between mb-6">
                     <div
                         className="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center cursor-pointer overflow-hidden"
                         onClick={() => fileInputRef.current.click()}
                     >
                         {profileImage ? (
-                            <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                            <img src={typeof profileImage === 'string' ? profileImage : URL.createObjectURL(profileImage)} alt="Profile" className="w-full h-full object-cover" />
                         ) : (
                             <User size={48} className="text-gray-400" />
                         )}
@@ -82,42 +160,27 @@ const Profile = () => {
                     </div>
                     <div className="flex-grow ml-6">
                         <div className="bg-gray-100 p-3 rounded">
-                            <label className="text-gray-500 block mb-1" htmlFor="fullName">Full Name</label>
+                            <label className="text-gray-500 block mb-1" htmlFor="firstName">First Name</label>
                             <input
-                                id="fullName"
-                                name="fullName"
-                                value={profile.fullName}
+                                id="firstName"
+                                name="firstName"
+                                value={profile.firstName}
                                 onChange={handleChange}
                                 className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500"
-                                placeholder="Enter your full name"
+                                placeholder="Enter your first name"
                             />
                         </div>
-                    </div>
-                </div>
-
-                {/* Tenant ID and Room No */}
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-gray-100 p-3 rounded">
-                        <label className="text-gray-500 block mb-1" htmlFor="tenantId">Tenant ID</label>
-                        <input
-                            id="tenantId"
-                            name="tenantId"
-                            value={profile.tenantId}
-                            onChange={handleChange}
-                            className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500"
-                            placeholder="Enter tenant ID"
-                        />
-                    </div>
-                    <div className="bg-gray-100 p-3 rounded">
-                        <label className="text-gray-500 block mb-1" htmlFor="roomNo">Room No.</label>
-                        <input
-                            id="roomNo"
-                            name="roomNo"
-                            value={profile.roomNo}
-                            onChange={handleChange}
-                            className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500"
-                            placeholder="Enter room number"
-                        />
+                        <div className="bg-gray-100 p-3 rounded">
+                            <label className="text-gray-500 block mb-1" htmlFor="lastName">Last Name</label>
+                            <input
+                                id="lastName"
+                                name="lastName"
+                                value={profile.lastName}
+                                onChange={handleChange}
+                                className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500"
+                                placeholder="Enter your last name"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -156,6 +219,19 @@ const Profile = () => {
                         onChange={handleChange}
                         className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500"
                         placeholder="Enter your email"
+                    />
+                </div>
+
+                {/* Room No */}
+                <div className="bg-gray-100 p-3 rounded mb-4">
+                    <label className="text-gray-500 block mb-1" htmlFor="roomNo">Room No</label>
+                    <input
+                        id="roomNo"
+                        name="roomNo"
+                        value={profile.roomNo}
+                        onChange={handleChange}
+                        className="w-full bg-white border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-teal-500"
+                        placeholder="Enter your room number"
                     />
                 </div>
 

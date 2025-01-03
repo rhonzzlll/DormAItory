@@ -28,7 +28,7 @@ import {
   TableRow,
 } from '../../components/layouts/ui/table';
 import { Alert, AlertDescription } from '../../components/layouts/ui/alert';
-import  Button  from '../../components/layouts/ui/Button';
+import Button from '../../components/layouts/ui/Button';
 import {
   Dialog,
   DialogContent,
@@ -53,7 +53,6 @@ const DormitoryManagementGrid = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showRoomDialog, setShowRoomDialog] = useState(false);
-  const [showRoomEditDialog, setShowRoomEditDialog] = useState(false);
   const [showTenantDialog, setShowTenantDialog] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [editingRoom, setEditingRoom] = useState(false);
@@ -75,7 +74,8 @@ const DormitoryManagementGrid = () => {
   const [formData, setFormData] = useState({
     _id: undefined,
     userId: undefined,
-    name: '',
+    firstName: '',
+    lastName: '',
     contactNumber: '',
     email: '',
     rentAmount: '',
@@ -84,6 +84,7 @@ const DormitoryManagementGrid = () => {
     paymentStatus: 'PENDING',
     roomId: null
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     fetchRooms();
@@ -92,7 +93,7 @@ const DormitoryManagementGrid = () => {
   const fetchRooms = async () => {
     try {
       const response = await axios.get('http://localhost:8080/api/dorms');
-      setRooms(response.data.dorms);
+      setRooms(response.data.dorms.sort((a, b) => a.roomNumber - b.roomNumber));
     } catch (error) {
       console.error('Error fetching all dorms:', error);
     }
@@ -111,9 +112,9 @@ const DormitoryManagementGrid = () => {
   };
 
   const handleOpenTenantDialog = (roomId, tenant = null) => {
+    const room = rooms.find(room => room._id === roomId);
     if (tenant) {
       setEditingTenant(tenant);
-      console.log(tenant);  
       setFormData({
         ...tenant,
         userId: tenant.id.userId,
@@ -123,12 +124,15 @@ const DormitoryManagementGrid = () => {
       });
     } else {
       setEditingTenant(null);
+      const rentAmount = (room.price + room.electricity + room.water).toString();
       setFormData({
         _id: undefined,
         userId: undefined,
         firstName: '',
         lastName: '',
-        rentAmount: 0,
+        contactNumber: '',
+        email: '',
+        rentAmount,
         startDate: '',
         endDate: '',
         paymentStatus: 'pending',
@@ -243,7 +247,7 @@ const DormitoryManagementGrid = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       if (editingTenant) {
         await axios.post("http://localhost:8080/api/tenants/update", {
@@ -305,6 +309,13 @@ const DormitoryManagementGrid = () => {
     };
   };
 
+  const tenantsPerPage = 5;
+  const totalPages = Math.ceil(rooms.length / tenantsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -324,12 +335,12 @@ const DormitoryManagementGrid = () => {
               <CardDescription>Manage rooms and tenants efficiently</CardDescription>
             </div>
             <Button
-            className="ml-auto flex items-center gap-2"
-            onClick={handleOpenRoomDialog}
-          >
-            <Plus className="w-4 h-4" />
-            Add Room
-          </Button>
+              className="ml-auto flex items-center gap-2"
+              onClick={handleOpenRoomDialog}
+            >
+              <Plus className="w-4 h-4" />
+              Add Room
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -340,7 +351,7 @@ const DormitoryManagementGrid = () => {
           )}
 
           <div className="space-y-4">
-            {rooms.map(room => (
+            {rooms.slice((currentPage - 1) * tenantsPerPage, currentPage * tenantsPerPage).map(room => (
               <Card key={room._id} className="overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-center justify-between">
@@ -360,17 +371,16 @@ const DormitoryManagementGrid = () => {
                       <div>
                         <h3 className="text-lg font-semibold">Room {room.roomNumber}</h3>
                         <p className="text-sm text-gray-600">
-                          Base Price: ₱{room.price.toLocaleString()} | 
+                          Room Price: ₱{room.price.toLocaleString()} |
                           Capacity: {room.capacity} beds
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        getOccupancyStatus(room).color === 'text-green-600' 
-                          ? 'bg-green-100' 
-                          : 'bg-red-100'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getOccupancyStatus(room).color === 'text-green-600'
+                        ? 'bg-green-100'
+                        : 'bg-red-100'
+                        }`}>
                         {getOccupancyStatus(room).available} beds available
                       </span>
                       <Button
@@ -423,11 +433,10 @@ const DormitoryManagementGrid = () => {
                               <TableCell>{new Date(tenant.startDate).toLocaleDateString()}</TableCell>
                               <TableCell>{new Date(tenant.endDate).toLocaleDateString()}</TableCell>
                               <TableCell>
-                                <span className={`px-2 py-1 rounded-full text-sm ${
-                                  tenant.paymentStatus === 'paid'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}>
+                                <span className={`px-2 py-1 rounded-full text-sm ${tenant.paymentStatus === 'paid'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
                                   {tenant.paymentStatus.charAt(0).toUpperCase() + tenant.paymentStatus.slice(1)}
                                 </span>
                               </TableCell>
@@ -459,6 +468,17 @@ const DormitoryManagementGrid = () => {
               </Card>
             ))}
           </div>
+          <div className="flex justify-center mt-4">
+            {Array.from({ length: totalPages }, (_, index) => (
+              <Button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`mx-1 ${currentPage === index + 1 ? 'bg-blue-500 text-white' : ''}`}
+              >
+                {index + 1}
+              </Button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
@@ -477,7 +497,7 @@ const DormitoryManagementGrid = () => {
                   id="room-number"
                   value={roomData.roomNumber}
                   onChange={(e) => handleRoomChange('roomNumber', e.target.value)}
-                  // required
+                // required
                 />
               </div>
               <div className="grid gap-2">
@@ -486,7 +506,7 @@ const DormitoryManagementGrid = () => {
                   id="capacity"
                   value={roomData.capacity}
                   onChange={(e) => handleRoomChange('capacity', e.target.value)}
-                  // required
+                // required
                 />
               </div>
               <div className="grid gap-2">
@@ -496,7 +516,7 @@ const DormitoryManagementGrid = () => {
                   type="price"
                   value={roomData.price}
                   onChange={(e) => handleRoomChange('price', e.target.value)}
-                  // required
+                // required
                 />
               </div>
               <div className="flex gap-4 items-center">
@@ -507,7 +527,7 @@ const DormitoryManagementGrid = () => {
                     type="electricity"
                     value={roomData.electricity}
                     onChange={(e) => handleRoomChange('electricity', e.target.value)}
-                    // required
+                  // required
                   />
                 </div>
                 <div className="grid gap-2">
@@ -517,7 +537,7 @@ const DormitoryManagementGrid = () => {
                     type="water"
                     value={roomData.water}
                     onChange={(e) => handleRoomChange('water', e.target.value)}
-                    // required
+                  // required
                   />
                 </div>
               </div>
@@ -528,7 +548,7 @@ const DormitoryManagementGrid = () => {
                     value={roomData.aircon}
                     onValueChange={(value) => handleRoomChange('aircon', value)}
                     className="text-left "
-                    // required
+                  // required
                   >
                     <SelectTrigger id="aircon">
                       <SelectValue placeholder="Select Availability" />
@@ -543,8 +563,10 @@ const DormitoryManagementGrid = () => {
                   <Label htmlFor="wifi">WIFI</Label>
                   <Select
                     value={roomData.wifi}
+
+
+
                     onValueChange={(value) => handleRoomChange('wifi', value)}
-                    // required
                   >
                     <SelectTrigger id="wifi">
                       <SelectValue placeholder="Select Availability" />
@@ -560,7 +582,6 @@ const DormitoryManagementGrid = () => {
                   <Select
                     value={roomData.bathroom}
                     onValueChange={(value) => handleRoomChange('bathroom', value)}
-                    // required
                   >
                     <SelectTrigger id="bathroom">
                       <SelectValue placeholder="Select Availability" />
@@ -576,10 +597,9 @@ const DormitoryManagementGrid = () => {
                 <Label htmlFor="description">Description</Label>
                 <Input
                   id="description"
-                  type="description"
+                  type="text"
                   value={roomData.description}
                   onChange={(e) => handleRoomChange('description', e.target.value)}
-                  // required
                 />
               </div>
             </div>
@@ -594,6 +614,7 @@ const DormitoryManagementGrid = () => {
           </form>
         </DialogContent>
       </Dialog>
+
       <Dialog open={showTenantDialog} onOpenChange={setShowTenantDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -603,15 +624,17 @@ const DormitoryManagementGrid = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-                <Label htmlFor="userId">User Id</Label>
-                <Input
-                  id="userId"
-                  type="text"
-                  value={formData.userId}
-                  onChange={(e) => handleInputChange('userId', e.target.value)}
-                />
-              </div>
+              {editingTenant && (
+                <div className="grid gap-2">
+                  <Label htmlFor="userId">User Id</Label>
+                  <Input
+                    id="userId"
+                    type="text"
+                    value={formData.userId}
+                    onChange={(e) => handleInputChange('userId', e.target.value)}
+                  />
+                </div>
+              )}
               <div className="flex gap-x-2 items-center">
                 <div className="flex-grow grid gap-2">
                   <Label htmlFor="firstName">First Name</Label>

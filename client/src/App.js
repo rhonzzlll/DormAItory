@@ -12,6 +12,8 @@ import Footer from './components/layouts/Footer/Footer';
 import RoomList from './pages/TenantPage/RoomList';
 import RoomView from './pages/TenantPage/RoomView';  // Import RoomView component
 import VisitorManagement from './pages/TenantPage/VisitorManagement';
+import VisitorLogs from './pages/TenantPage/VisitorLogs'; // Import VisitorLogs component
+import MaintenanceLogs from './pages/TenantPage/MaintenanceLogs'; // Import MaintenanceLogs component
 import Records from './pages/TenantPage/Records';
 import Utilities from './pages/TenantPage/Utilities';
 import ContactAdmin from './pages/TenantPage/ContactAdmin';
@@ -44,6 +46,9 @@ function App() {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
   const isAdminDashboard = location.pathname.startsWith('/admin');
   const isTenantPageWithSidebar = location.pathname.startsWith('/tenant') && location.pathname !== '/tenant';
+
+  // Assume tenantId is obtained from authentication context or similar
+  const tenantId = "exampleTenantId"; // Replace with actual tenant ID retrieval logic
 
   return (
     <MaintenanceProvider>
@@ -78,10 +83,12 @@ function App() {
             <Route path="/tenant/room-list" element={<RoomList />} />
             <Route path="/tenant/room-view/:id" element={<RoomView />} />
             <Route path="/tenant/records" element={<Records />} />
-            <Route path="/tenant/visitor-management" element={<VisitorManagement />} />
+            <Route path="/tenant/visitor-management" element={<VisitorManagement tenantId={tenantId} />} />
+            <Route path="/tenant/visitor-management/visitor-logs" element={<VisitorLogs tenantId={tenantId} />} />
+            <Route path="/tenant/maintenance-request/maintenance-logs" element={<MaintenanceLogs tenantId={tenantId} />} />
             <Route path="/tenant/utilities" element={<Utilities />} />
             <Route path="/tenant/contact-admin" element={<ContactAdmin />} />
-            <Route path="/tenant/maintenance-request" element={<MaintenanceRequest />} />
+            <Route path="/tenant/maintenance-request" element={<MaintenanceRequest tenantId={tenantId} />} />
             <Route path="/tenant/payment-options" element={<PaymentOptions />} />
             <Route path="/tenant/chatbot" element={<ChatBot />} />
             <Route path="/profile" element={<Profile />} />

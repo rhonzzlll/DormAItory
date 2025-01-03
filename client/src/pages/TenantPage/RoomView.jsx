@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 import { 
   MapPin, 
   Bed, 
@@ -14,6 +18,9 @@ import Button from '../../components/layouts/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/layouts/ui/Card';
 import { Alert, AlertDescription } from '../../components/layouts/ui/alert';
 import { Textarea } from '../../components/layouts/ui/textarea';
+
+// Import Swiper modules
+import 'swiper/css/autoplay';
 
 const RoomView = () => {
   const { id } = useParams();
@@ -96,14 +103,40 @@ const RoomView = () => {
     <div className="container mx-auto p-4">
       <Card className="overflow-hidden">
         <div className="relative">
-          <img
-            src={room.images && room.images.length > 0 ? room.images[0] : ''}
-            alt={`Room ${room.roomNumber}`}
-            className="w-full h-96 object-cover"
-          />
+          {room.images && room.images.length > 0 ? (
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              spaceBetween={0}
+              slidesPerView={1}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              pagination={{ 
+                clickable: true,
+                dynamicBullets: true 
+              }}
+              className="h-96 w-full"
+            >
+              {room.images.map((image, index) => (
+                <SwiperSlide key={index} className="w-full h-full">
+                  <img
+                    src={image}
+                    alt={`Room ${room.roomNumber} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="h-96 bg-gray-200 flex items-center justify-center">
+              <p className="text-gray-500">No images available</p>
+            </div>
+          )}
+          
           <button
             onClick={handleShare}
-            className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
           >
             <Share2 className="w-5 h-5 text-gray-600" />
           </button>
@@ -184,7 +217,7 @@ const RoomView = () => {
               CONTACT LANDLORD
             </Button>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-4">
+            <form onSubmit={handleSubmit} className="mt-4 w-full">
               <div className="mb-4">
                 <Textarea
                   value={message}
@@ -194,10 +227,10 @@ const RoomView = () => {
                   required
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <Button
                   type="submit"
-                  className="flex-1 bg-[#008db9] hover:bg-[#007a9f] text-white transition-colors"
+                  className="flex-1 bg-[#008db9] hover:bg-[#007a9f] text-white transition-colors w-full"
                 >
                   <Send size={16} className="mr-2" />
                   Send Message
@@ -205,7 +238,7 @@ const RoomView = () => {
                 <Button
                   type="button"
                   onClick={() => setShowContact(false)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 transition-colors"
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 transition-colors w-full"
                 >
                   Cancel
                 </Button>

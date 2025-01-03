@@ -1,64 +1,153 @@
-import React, { useEffect, useState } from 'react';
-import AdminContentTemplate from './AdminContentTemplate';
-import DataTable from './DataTable';
+import React, { useState, useEffect } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { Search } from 'lucide-react';
 import axios from 'axios';
 
-const AdminUsers = () => {
-  const [tenants, setTenants] = useState([]);
-  const [filteredTenants, setFilteredTenants] = useState([]);
+export default function AdminUsers() {
+  const [mergedData, setMergedData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState(null);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    const fetchTenants = async () => {
+    // Fetch all users and dorm data when component mounts
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/tenants');
-        setTenants(response.data);
-        setFilteredTenants(response.data);
+        setLoading(true);
+
+        // Fetch all users data
+        const usersResponse = await axios.get('http://localhost:8080/api/users');
+        console.log('Users Response:', usersResponse.data); // Debugging log
+        const users = Array.isArray(usersResponse.data) ? usersResponse.data : [usersResponse.data];
+
+        // Fetch all dorms data
+        const dormsResponse = await axios.get('http://localhost:8080/api/dorms');
+        console.log('Dorms Response:', dormsResponse.data); // Debugging log
+        const dorms = Array.isArray(dormsResponse.data) ? dormsResponse.data : [dormsResponse.data];
+
+        // Merge user and dorm data
+        const mergedUsers = users.map((user, index) => {
+          const dormData = dorms.find(dorm => dorm.userId === user._id) || {};
+          console.log('Dorm Data for User:', user._id, dormData); // Debugging log
+          return {
+            id: index + 1, // Incrementing ID starting from 1
+            _id: user._id,
+            fullName: `${user.firstName} ${user.lastName}`,
+            roomNo: user.roomNo || 'N/A',
+            gender: user.gender || 'N/A',
+            email: user.email,
+            phoneNumber: user.phoneNumber || 'N/A',
+            // Add any other fields you want to display
+          };
+        });
+
+        console.log('Merged Users:', mergedUsers); // Debugging log
+        setMergedData(mergedUsers);
+        setLoading(false);
       } catch (error) {
-        setError(error.response ? error.response.data : error.message);
-        console.error('Error fetching tenants:', error.response ? error.response.data : error.message);
-      } finally {
+        console.error('Error fetching data:', error);
+        setError('Failed to fetch user data. Please try again.');
         setLoading(false);
       }
     };
 
-    fetchTenants();
-  }, []);
+    fetchData();
+  }, []); // Empty dependency array means this runs once when component mounts
 
-  // Handle search input change
-  const handleSearch = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    setSearchTerm(searchValue);
+  const filteredUsers = mergedData.filter(user =>
+    Object.values(user).some(value =>
+      String(value).toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
-    const filtered = tenants.filter(tenant => 
-      Object.values(tenant).some(value => 
-        value && value.toString().toLowerCase().includes(searchValue)
-      )
-    );
-    setFilteredTenants(filtered);
+  const columns = [
+    { field: 'id', headerName: 'ID', flex: 1, minWidth: 50 },
+    { field: 'fullName', headerName: 'Full Name', flex: 1, minWidth: 150 },
+    { field: 'roomNo', headerName: 'Room No.', flex: 1, minWidth: 100 },
+    { field: 'gender', headerName: 'Gender', flex: 1, minWidth: 100 },
+    { field: 'email', headerName: 'Email', flex: 1, minWidth: 150 },
+    { field: 'phoneNumber', headerName: 'Phone Number', flex: 1, minWidth: 150 },
+  ];
+
+  const handleError = (message) => {
+    setError(message);
+    setTimeout(() => setError(null), 5000);
+  };
+
+  const handleSuccess = (message) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(null), 5000);
   };
 
   return (
-    <AdminContentTemplate title="Admin Users">
-      {/* Container for search input with flex layout */}
-      <div className="flex justify-end mb-4">
-        <input
-          type="text"
+    <Paper style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', gap: '16px' }}>
+        <TextField
           placeholder="Search tenants..."
+          variant="outlined"
+          size="small"
           value={searchTerm}
-          onChange={handleSearch}
-          className="p-2 border border-gray-300 rounded-md w-64"
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: <Search style={{ marginRight: '8px' }} />
+          }}
         />
       </div>
 
-      {loading && <div className="loading">Loading tenants...</div>}
-      {error && <div className="error">{error}</div>}
-      {!loading && filteredTenants.length === 0 && <div>No tenants found.</div>}
-      {!loading && filteredTenants.length > 0 && <DataTable rows={filteredTenants} />}
-    </AdminContentTemplate>
-  );
-};
+      <DataGrid
+        rows={filteredUsers}
+        columns={columns}
+        pageSize={pageSize}
+        onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+        rowsPerPageOptions={[5, 10, 20, 50]}
+        loading={loading}
+        density="compact"
+        autoHeight
+        disableColumnMenu
+        getRowId={(row) => row._id}
+        sx={{
+          '& .MuiDataGrid-cell': {
+            padding: '8px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          },
+          '& .MuiDataGrid-columnHeader': {
+            padding: '8px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }
+        }}
+      />
 
-export default AdminUsers;
+      <Snackbar
+        open={!!error}
+        autoHideDuration={5000}
+        onClose={() => setError(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!success}
+        autoHideDuration={5000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert severity="success" onClose={() => setSuccess(null)}>
+          {success}
+        </Alert>
+      </Snackbar>
+    </Paper>
+  );
+}

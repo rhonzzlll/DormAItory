@@ -1,27 +1,29 @@
 import React, { useContext, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './Header.module.css'; // Update path as needed
 import { UserContext } from '../../../redux/UserContext'; // Adjust the path to UserContext
 
 const Header = () => {
-  const { user } = useContext(UserContext); // Get user from UserContext
+  const { user, logout } = useContext(UserContext); // Get user and logout from UserContext
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate(); // Use navigate to redirect
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
   const handleLogout = () => {
+    logout();
     console.log("Logged out");
-    // Implement logout functionality here
+    navigate('/login'); // Redirect to login page after logout
   };
 
   return (
-    <header className={`${styles.header} fixed-top`}>
+    <header id="header" className={`${styles.header} header fixed-top`}>
       {/* Top Bar */}
-      <div className={`${styles.topBar} d-flex align-items-center`}>
-        <div className={`${styles.container} d-flex justify-content-center justify-content-md-between`}>
-          <div className={`${styles.contactInfo} d-flex align-items-center`}>
+      <div className={`${styles.topBar} topbar d-flex align-items-center`}>
+        <div className={`${styles.container} container d-flex justify-content-center justify-content-md-between`}>
+          <div className={`${styles.contactInfo} contact-info d-flex align-items-center`}>
             <i className="bi bi-pin-map d-flex align-items-center">
               Arlegui Dormitory, Arlegui St., Quiapo, Manila
             </i>
@@ -34,8 +36,8 @@ const Header = () => {
 
       {/* Main Header */}
       <div className={`${styles.mainHeader} branding d-flex align-items-center`}>
-        <div className={`${styles.container} position-relative d-flex align-items-center justify-content-between`}>
-          <Link to="/tenant" className={styles.logoLink}>
+        <div className={`${styles.container} container position-relative d-flex align-items-center justify-content-between`}>
+          <Link to="/tenant" className={`${styles.logoLink} logo d-flex align-items-center`}>
             <img
               src={require('../../../Images/icons/logo.png')} // Update the path to your image
               alt="Logo"
@@ -43,13 +45,14 @@ const Header = () => {
             />
           </Link>
 
-          <nav className={styles.navigation}>
+          <nav id="navmenu" className={`${styles.navigation} navmenu`}>
             <ul>
-              <li><a href="#hero" className={`${styles.active} a`}>Services</a></li>
+              <li><a href="#hero" className={`${styles.active} active`}>Services</a></li>
               <li><a href="#call-to-action">DormBot</a></li>
               <li><a href="#cal-and-announcements">Calendar and Announcements</a></li>
               <li><a href="/profile">Profile</a></li>
             </ul>
+            <i className="mobile-nav-toggle d-xl-none bi bi-list"></i>
           </nav>
 
           {/* User Dropdown */}

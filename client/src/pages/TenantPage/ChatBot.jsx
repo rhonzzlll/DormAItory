@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Trash2 } from 'lucide-react';
 
 const DormBot = () => {
     const userId = localStorage.getItem("_id");
     const [chatroomId, setChatroomId] = useState(undefined);
-    const [messages, setMessages] = useState(undefined);
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [prompts, setPrompts] = useState(undefined);
+    const [prompts, setPrompts] = useState([]);
     const messagesEndRef = useRef(null);
 
     const scrollToBottom = () => {
@@ -49,6 +49,11 @@ const DormBot = () => {
                 scrollToBottom();
             }, 1500);
         }
+    };
+
+    const handleClear = () => {
+        setMessages([]);
+        setIsTyping(false);
     };
 
     useEffect(() => {
@@ -115,7 +120,7 @@ const DormBot = () => {
             </div>
 
             <div ref={messagesEndRef} className="h-96 overflow-y-auto p-4 bg-gray-100">
-                {messages ? messages.map((message, index) => (
+                {messages.length > 0 ? messages.map((message, index) => (
                     <div
                         key={index}
                         className={`mb-4 flex ${message.sender === userId ? 'justify-end' : 'justify-start'}`}
@@ -141,7 +146,7 @@ const DormBot = () => {
 
             <div className="p-4 bg-gray-200">
                 <div className="flex flex-wrap gap-2 mb-2">
-                    {prompts ? prompts.map((prompt, index) => (
+                    {prompts.slice(0, 4).map((prompt, index) => (
                         <button
                             key={index}
                             onClick={() => handleSend(prompt.query)}
@@ -150,31 +155,7 @@ const DormBot = () => {
                         >
                             {prompt.query}
                         </button>
-                    )) : (
-                        <>
-                            <button
-                                className="bg-teal-600 text-white px-3 py-1 rounded-full text-sm transition-colors w-full"
-                                style={{ maxWidth: ((Math.random() * 10) + 5) + "rem"}}
-                                disabled="true"
-                            >
-                                &nbsp;
-                            </button>
-                            <button
-                                className="bg-teal-600 text-white px-3 py-1 rounded-full text-sm transition-colors w-full"
-                                style={{ maxWidth: ((Math.random() * 10) + 5) + "rem"}}
-                                disabled="true"
-                            >
-                                &nbsp;
-                            </button>
-                            <button
-                                className="bg-teal-600 text-white px-3 py-1 rounded-full text-sm transition-colors w-full"
-                                style={{ maxWidth: ((Math.random() * 10) + 5) + "rem"}}
-                                disabled="true"
-                            >
-                                &nbsp;
-                            </button>
-                        </>
-                    )}
+                    ))}
                 </div>
                 <div className="flex items-center">
                     <input
@@ -192,6 +173,12 @@ const DormBot = () => {
                         disabled={isTyping}
                     >
                         <Send size={20} />
+                    </button>
+                    <button
+                        onClick={handleClear}
+                        className="bg-red-600 text-white p-2 rounded-r-lg hover:bg-red-700 transition-colors ml-2"
+                    >
+                        <Trash2 size={20} />
                     </button>
                 </div>
             </div>

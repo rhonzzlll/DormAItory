@@ -44,6 +44,10 @@ export default function AdminMaintenance() {
     fetchRequests();
   }, []);
 
+  useEffect(() => {
+    filterRequests();
+  }, [searchTerm, requests]);
+
   const filterRequests = () => {
     const filtered = requests.filter(request => 
       Object.values(request).some(value => 
@@ -60,7 +64,7 @@ export default function AdminMaintenance() {
       
       const { requests } = response.data.data;
 
-      // setRequests(requests);
+      setRequests(requests);
       setFilteredRequests(requests);
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
@@ -68,25 +72,28 @@ export default function AdminMaintenance() {
   };
 
   const handleStatusChange = async (requestId, newStatus) => {
-    const req = await axios.post("http://localhost:8080/api/maintenancerequest/update/status", {
-      _id: requestId,
-      status: newStatus
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
+    try {
+      const req = await axios.post("http://localhost:8080/api/maintenancerequest/update/status", {
+        _id: requestId,
+        status: newStatus
+      }, {
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        }
+      });
+
+      if (req.status === 200) {
+        setRequests(prevRequests =>
+          prevRequests.map(req =>
+              req._id === requestId ? { ...req, status: newStatus } : req
+          )
+        );
+        fetchRequests();
       }
-    });
-
-    if (req.status === 200) {
-      setRequests(prevRequests =>
-        prevRequests.map(req =>
-            req._id === requestId ? { ...req, status: newStatus } : req
-        )
-      );
+    } catch (error) {
+      console.error('Error updating status:', error);
     }
-
-    fetchRequests();
   };
 
   const handleInputChange = (e) => {
@@ -100,18 +107,18 @@ export default function AdminMaintenance() {
   const handleOpen = (request = {}) => {
     setIsEdit(!!request._id);
 
-    if (isEdit) {
+    if (request._id) {
       setSelectedRequest({
-        _id: request?.["_id"],
-        userId: request?.tenant[0].info[0]._id,
-        firstName: request?.tenant[0].info[0].firstName,
-        lastName: request?.tenant[0].info[0].lastName,
-        tenantId: request?.["tenantId"],
-        roomNo: request?.tenant[0].info[0].roomNo,
-        concernType: request?.["concernType"],
-        specificationOfConcern: request?.["specificationOfConcern"],
-        status: request?.["status"],
-        createdAt: moment(request["dateSubmitted"]).format("YYYY-MM-DD"),
+        _id: request._id,
+        userId: request.tenant[0].info[0]._id,
+        firstName: request.tenant[0].info[0].firstName,
+        lastName: request.tenant[0].info[0].lastName,
+        tenantId: request.tenantId,
+        roomNo: request.tenant[0].info[0].roomNo,
+        concernType: request.concernType,
+        specificationOfConcern: request.specificationOfConcern,
+        status: request.status,
+        createdAt: moment(request.dateSubmitted).format("YYYY-MM-DD"),
       });
     } else {
       setSelectedRequest({
@@ -147,22 +154,22 @@ export default function AdminMaintenance() {
     try {
       if (isEdit) {
         await axios.post('http://localhost:8080/api/maintenancerequest/update', {
-          _id: selectedRequest["_id"],
-          firstName: selectedRequest?.tenant[0].info[0].firstName,
-          lastName: selectedRequest?.tenant[0].info[0].lastName,
-          concernType: selectedRequest["concernType"],
-          specificationOfConcern: selectedRequest["specificationOfConcern"],
-          status: selectedRequest["status"],
-          createdAt: selectedRequest["dateSubmitted"]
+          _id: selectedRequest._id,
+          firstName: selectedRequest.firstName,
+          lastName: selectedRequest.lastName,
+          concernType: selectedRequest.concernType,
+          specificationOfConcern: selectedRequest.specificationOfConcern,
+          status: selectedRequest.status,
+          createdAt: selectedRequest.createdAt
         });
       } else {
         await axios.post('http://localhost:8080/api/maintenancerequest/create', {
           firstName: selectedRequest.firstName,
           lastName: selectedRequest.lastName,
-          concernType: selectedRequest["concernType"],
-          specificationOfConcern: selectedRequest["specificationOfConcern"],
-          status: selectedRequest["status"],
-          createdAt: selectedRequest["createdAt"]
+          concernType: selectedRequest.concernType,
+          specificationOfConcern: selectedRequest.specificationOfConcern,
+          status: selectedRequest.status,
+          createdAt: selectedRequest.createdAt
         });
       }
 

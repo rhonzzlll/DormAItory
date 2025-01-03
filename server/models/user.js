@@ -13,8 +13,9 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     phoneNumber: { type: String, required: true },
     password: { type: String, required: true },
-    profileImage: { type: String },
+    profileImage: { type: String }, // Ensure this field is included
     role: { type: String, enum: ['admin', 'tenant'], default: 'tenant' },
+    sentPayments: [{ type: mongoose.Types.ObjectId, ref: 'Payment' }] // Field to store sent payments
 }, { timestamps: true });
 
 // Hash password before saving

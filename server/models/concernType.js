@@ -8,7 +8,6 @@ const concernTypeSchema = new mongoose.Schema({
   },
   description: String,
 });
-
-const ConcernType = require('../models/ConcernType');
+ 
 
 module.exports = ConcernType;

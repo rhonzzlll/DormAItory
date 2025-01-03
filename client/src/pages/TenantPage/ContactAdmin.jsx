@@ -1,26 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/layouts/ui/Card';
-import  Button  from '../../components/layouts//ui/Button';
-import { Input } from '../../components/layouts//ui/Input';
+import Button from '../../components/layouts/ui/Button';
+import { Input } from '../../components/layouts/ui/Input';
 import { Badge } from '../../components/layouts/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts//ui/Select';
-import { MessageCircle, Clock, MapPin, Phone, User, Send, Plus, Filter } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts/ui/Select';
+import { MessageCircle, Clock, MapPin, Phone, User, Send, Plus, Filter, X, Trash } from 'lucide-react';
 
 const MESSAGE_CATEGORIES = [
   "General Inquiry",
   "Maintenance Request",
   "Billing Issue",
-  "Security Concern"
+  "Room Change"
 ];
 
-const ADMIN_INFO = {
-  name: "Admin",
-  contact: "+63 945 840 5527",
-  location: "Arlegui Dormitory, Arlegui St., Quiapo, Manila",
-  hours: "Mon-Fri: 9:00 AM - 5:00 PM"
-};
-
-const UnifiedMessaging = ({ userRole = 'tenant' }) => {
+const TenantContacts = ({
+  userRole = 'tenant',
+}) => {
   const [messages, setMessages] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,87 +24,301 @@ const UnifiedMessaging = ({ userRole = 'tenant' }) => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [subject, setSubject] = useState("");
   const [isComposeVisible, setIsComposeVisible] = useState(false);
-  const [recipient, setRecipient] = useState("");
+  const [filters, setFilters] = useState({
+    category: "",
+    status: ""
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [tenantName, setTenantName] = useState("");
+  const [users, setUsers] = useState({});
+  const messagesEndRef = useRef(null);
 
-  // Mock message for demonstration
-  const mockMessages = [
-    {
-      id: 1,
-      sender: userRole === 'admin' ? "John Doe (Room 302)" : "Admin",
-      subject: "Maintenance Request",
-      category: "Maintenance Request",
-      content: "The sink in room 302 is leaking.",
-      status: "unread",
-      timestamp: new Date().toISOString(),
-      room: "302"
-    }
-  ];
-
-  const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedCategory || !subject.trim()) return;
-
-    const message = {
-      id: Date.now(),
-      sender: userRole === 'admin' ? 'Admin' : 'Tenant',
-      subject: subject,
-      category: selectedCategory,
-      content: newMessage,
-      status: "unread",
-      timestamp: new Date().toISOString(),
-      room: userRole === 'tenant' ? "302" : "N/A" // Replace with actual room number for tenant
+  // Fetch tenant user data
+  useEffect(() => {
+    const fetchTenantData = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/current-user');
+        const user = response.data;
+        setTenantName(`${user.firstName} ${user.lastName}`);
+      } catch (error) {
+        console.error('Error fetching tenant data:', error);
+      }
     };
 
-    setMessages([...messages, message]);
-    setNewMessage("");
-    setSubject("");
-    setSelectedCategory("");
-    setIsComposeVisible(false);
+    fetchTenantData();
+  }, []);
+
+  // Fetch users data
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/users');
+        const usersData = response.data.reduce((acc, user) => {
+          acc[user._id] = `${user.firstName} ${user.lastName}`;
+          return acc;
+        }, {});
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching users data:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Fetch messages
+  useEffect(() => {
+    const fetchMessages = async () => {
+      setLoading(true);
+      try {
+        const messagesResponse = await axios.get('http://localhost:8080/api/contact-messages');
+        const sortedMessages = messagesResponse.data.sort((a, b) =>
+          new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        setMessages(sortedMessages);
+        localStorage.setItem('messages', JSON.stringify(sortedMessages));
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        setError('Failed to fetch messages');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const savedMessages = localStorage.getItem('messages');
+    if (savedMessages) {
+      setMessages(JSON.parse(savedMessages));
+    } else {
+      fetchMessages();
+    }
+  }, []);
+
+  // Filtered and searched messages
+  const filteredMessages = useMemo(() => {
+    return messages.filter(message => {
+      const matchesSearch =
+        message.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        message.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        message.content?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory = !filters.category || message.category === filters.category;
+      const matchesStatus = !filters.status || message.status === filters.status;
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    });
+  }, [messages, searchQuery, filters]);
+
+  const handleSendMessage = async () => {
+    setLoading(true);
+    try {
+      const messagePayload = {
+        sender: tenantName, // Use tenant's full name as the sender
+        recipient: 'Admin',
+        subject,
+        category: selectedCategory,
+        content: newMessage,
+        status: 'unread',
+        fullname: tenantName, // Use tenant's full name as the current user ID
+        thread: [{
+          sender: tenantName, // Use tenant's full name as the sender
+          content: newMessage,
+          timestamp: new Date()
+        }]
+      };
+
+      if (selectedThread) {
+        // Update existing thread
+        const response = await axios.put(
+          `http://localhost:8080/api/contact-messages/${selectedThread._id}`,
+          { thread: [...selectedThread.thread, messagePayload.thread[0]] }
+        );
+
+        // Update local state
+        const updatedMessages = messages.map(msg =>
+          msg._id === selectedThread._id ? response.data : msg
+        );
+        setMessages(updatedMessages);
+        localStorage.setItem('messages', JSON.stringify(updatedMessages));
+
+        // Update selected thread
+        setSelectedThread(response.data);
+      } else {
+        // Create new message
+        const response = await axios.post(
+          'http://localhost:8080/api/contact-messages',
+          messagePayload
+        );
+
+        // Add new message to list
+        const updatedMessages = [response.data, ...messages];
+        setMessages(updatedMessages);
+        localStorage.setItem('messages', JSON.stringify(updatedMessages));
+
+        // Select the newly created message
+        setSelectedThread(response.data);
+      }
+
+      // Reset form state
+      setNewMessage("");
+      setSubject("");
+      setSelectedCategory("");
+      setIsComposeVisible(false);
+      scrollToBottom();
+    } catch (error) {
+      console.error('Error sending message:', error.response ? error.response.data : error.message);
+      setError('Failed to send message');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSelectThread = async (message) => {
+    if (message.status === 'unread') {
+      try {
+        const response = await axios.put(
+          `http://localhost:8080/api/contact-messages/${message._id}`,
+          { status: 'read' }
+        );
+
+        const updatedMessages = messages.map(msg =>
+          msg._id === message._id ? { ...msg, status: 'read' } : msg
+        );
+        setMessages(updatedMessages);
+        localStorage.setItem('messages', JSON.stringify(updatedMessages));
+      } catch (error) {
+        console.error('Error updating message status:', error);
+      }
+    }
+    setSelectedThread(message);
+    scrollToBottom();
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    setLoading(true);
+    try {
+      await axios.delete(`http://localhost:8080/api/contact-messages/${messageId}`);
+      const updatedMessages = messages.filter(message => message._id !== messageId);
+      setMessages(updatedMessages);
+      localStorage.setItem('messages', JSON.stringify(updatedMessages));
+      if (selectedThread && selectedThread._id === messageId) {
+        setSelectedThread(null);
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error.response ? error.response.data : error.message);
+      setError('Failed to delete message');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Clear filters
+  const clearFilters = () => {
+    setSearchQuery("");
+    setFilters({ category: "", status: "" });
+  };
+
+  // Error and loading handling
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">Loading messages...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-500">
+        {error}
+        <Button onClick={() => setError(null)} className="ml-4">
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
       {/* Header Section */}
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>{userRole === 'admin' ? 'Admin Message Dashboard' : 'Message Center'}</CardTitle>
+          <CardTitle>{userRole === 'tenant' ? 'Tenant Message Dashboard' : 'Message Center'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
-            <Input
-              placeholder="Search messages..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
-            <Button variant="outline">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
-            </Button>
-            <Button variant="outline" onClick={() => setIsComposeVisible(!isComposeVisible)}>
-              <Plus className="w-4 h-4 mr-2" />
-              New Message
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search messages..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Dropdowns */}
+            <Select
+              value={filters.category}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {MESSAGE_CATEGORIES.map(category => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={filters.status}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="unread">Unread</SelectItem>
+                <SelectItem value="read">Read</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(searchQuery || filters.category || filters.status) && (
+              <Button variant="outline" onClick={clearFilters}>
+                <X className="w-4 h-4 mr-2" />
+                Clear Filters
+              </Button>
+            )}
+
+            {/* New Message Button */}
+            <Button
+              onClick={() => {
+                setIsComposeVisible(true);
+                setSelectedThread(null); // Reset selected thread to ensure new message is not part of an existing thread
+              }}
+              className="group relative overflow-hidden">
+              <div className="flex items-center relative z-10">
+                <Plus className="w-4 h-4 mr-2" />
+                New Message
+              </div>
             </Button>
           </div>
-          {userRole === 'tenant' && (
-            <div className="grid grid-cols-2 gap-4 mt-4">
-              <div className="flex items-center">
-                <User className="mr-2" />
-                <span>{ADMIN_INFO.name}</span>
-              </div>
-              <div className="flex items-center">
-                <Phone className="mr-2" />
-                <span>{ADMIN_INFO.contact}</span>
-              </div>
-              <div className="flex items-center">
-                <MapPin className="mr-2" />
-                <span>{ADMIN_INFO.location}</span>
-              </div>
-              <div className="flex items-center">
-                <Clock className="mr-2" />
-                <span>{ADMIN_INFO.hours}</span>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -120,13 +330,6 @@ const UnifiedMessaging = ({ userRole = 'tenant' }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {userRole === 'admin' && (
-                <Input
-                  placeholder="Recipient (Room Number)"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                />
-              )}
               <Input
                 placeholder="Subject"
                 value={subject}
@@ -150,7 +353,7 @@ const UnifiedMessaging = ({ userRole = 'tenant' }) => {
                 onChange={(e) => setNewMessage(e.target.value)}
                 className="h-24"
               />
-              <Button onClick={handleSendMessage}>
+              <Button onClick={handleSendMessage} disabled={loading}>
                 <Send className="w-4 h-4 mr-2" />
                 Send Message
               </Button>
@@ -168,69 +371,114 @@ const UnifiedMessaging = ({ userRole = 'tenant' }) => {
               <CardTitle>Messages</CardTitle>
             </CardHeader>
             <CardContent>
-              {mockMessages.map(message => (
-                <div
-                  key={message.id}
-                  onClick={() => setSelectedThread(message)}
-                  className="p-3 hover:bg-gray-100 cursor-pointer border-b"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-medium">{message.sender}</div>
-                      <div className="text-sm text-gray-500">{message.subject}</div>
-                    </div>
-                    <Badge variant={message.status === 'unread' ? 'destructive' : 'default'}>
-                      {message.status}
-                    </Badge>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    {new Date(message.timestamp).toLocaleString()}
-                  </div>
+              {filteredMessages.length === 0 ? (
+                <div className="text-center text-gray-500 py-4">
+                  No messages found
                 </div>
-              ))}
+              ) : (
+                filteredMessages.map(message => (
+                  <div
+                    key={message._id}
+                    onClick={() => handleSelectThread(message)}
+                    className={`p-3 hover:bg-gray-100 cursor-pointer border-b ${selectedThread?._id === message._id ? 'bg-blue-50' : ''}`}>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-medium">
+                          {message.sender}
+                        </div>
+                        <div className="text-sm text-gray-500">{message.subject}</div>
+                      </div>
+                      <Badge
+                        variant={message.status === 'unread' ? 'destructive' : 'default'}>
+                        {message.status}
+                      </Badge>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMessage(message._id);
+                        }}
+                        className="text-red-500 hover:text-red-700 ml-2"
+                      >
+                        <Trash className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {new Date(message.timestamp).toLocaleString()}
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Message Thread */}
         <div className="col-span-2">
-          <Card>
+          <Card className="h-full flex flex-col">
             <CardHeader>
               <CardTitle>Conversation</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow flex flex-col">
               {selectedThread ? (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium">{selectedThread.subject}</h3>
-                      <p className="text-sm text-gray-500">
-                        From: {selectedThread.sender}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Category: {selectedThread.category}
-                      </p>
+                <div className="flex flex-col h-full">
+                  <div className="flex-grow overflow-y-auto mb-4">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{selectedThread.subject}</h3>
+                          <p className="text-sm text-gray-500">
+                            {`To: Admin`}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Category: {selectedThread.category}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Message Thread */}
+                      <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                        {selectedThread.thread.map((msg, index) => (
+                          <div
+                            key={index}
+                            className={`p-3 rounded-lg ${msg.sender === 'Admin'
+                              ? 'bg-gray-100 self-start text-left mr-auto'
+                              : 'bg-blue-50 self-end text-right ml-auto'
+                              }`}>
+                            <div className="font-medium text-sm mb-1">{users[msg.sender] || msg.sender}</div>
+                            <div>{msg.content}</div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {new Date(msg.timestamp).toLocaleString()}
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
                     </div>
                   </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    {selectedThread.content}
-                  </div>
-                  {/* Reply Form */}
+
+                  {/* Message Input */}
                   <div className="mt-4">
-                    <Input
-                      placeholder="Type your reply..."
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      className="mb-2"
-                    />
-                    <Button onClick={handleSendMessage}>
-                      <Send className="w-4 h-4 mr-2" />
-                      Send Reply
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Type your message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="flex-1 h-12"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSendMessage();
+                          }
+                        }}
+                      />
+                      <Button onClick={handleSendMessage} disabled={!newMessage.trim()}>
+                        <Send className="w-4 h-4 mr-2" />
+                        Send
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-500 py-8">
+                <div className="text-center text-gray-500 py-4">
                   Select a message to view the conversation
                 </div>
               )}
@@ -242,4 +490,4 @@ const UnifiedMessaging = ({ userRole = 'tenant' }) => {
   );
 };
 
-export default UnifiedMessaging;
+export default TenantContacts;

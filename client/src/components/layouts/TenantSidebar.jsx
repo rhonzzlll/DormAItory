@@ -230,4 +230,4 @@ const TenantSidebar = () => {
   );
 };
 
-export default TenantSidebar; 
+export default TenantSidebar;

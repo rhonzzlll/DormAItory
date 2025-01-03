@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/layouts/ui/Card';
 import { Label } from '../../components/layouts/ui/label';
 import { Input } from '../../components/layouts/ui/Input';
@@ -6,19 +7,16 @@ import Button from '../../components/layouts/ui/Button';
 import { Textarea } from '../../components/layouts/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts/ui/Select';
 import { Checkbox } from '../../components/layouts/ui/checkbox';
-import Calendar from '../../components/layouts/ui/calendar';
-import Popover, { PopoverContent, PopoverTrigger } from '../../components/layouts/ui/popover';
-import { format } from "date-fns";
-import { CalendarIcon, Clock } from "lucide-react";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+
+const API_BASE_URL = 'http://localhost:8080/api';
 
 const VisitorRegistrationForm = () => {
+  const [visitors, setVisitors] = useState([{ fullName: '', phoneNumber: '', email: '', relationship: '' }]);
   const [formData, setFormData] = useState({
-    fullName: '',
-    phoneNumber: '',
-    email: '',
-    relationship: '',
     tenantId: '',
-    tenantName: '',
     visitDate: null,
     arrivalTime: '',
     departureTime: '',
@@ -27,313 +25,367 @@ const VisitorRegistrationForm = () => {
     specialInstructions: '',
     agreeToPolicy: false
   });
-
   const [errors, setErrors] = useState({});
+  const [confirmationMessage, setConfirmationMessage] = useState('');
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user types
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+  useEffect(() => {
+    fetchTenantData();
+  }, []);
+
+  const fetchTenantData = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/tenants/get/${localStorage.getItem("_id")}`);
+      const { tenant } = response.data.data;
+
+      if (tenant && tenant.length > 0) {
+        setFormData(prevFormData => ({
+          ...prevFormData,
+          tenantId: tenant[0]["_id"]
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching tenant data:', error);
     }
   };
 
-  const handleDateSelect = (date) => {
-    setFormData(prev => ({
-      ...prev,
-      visitDate: date
-    }));
+  const handleVisitorChange = (index, event) => {
+    const { name, value } = event.target;
+    const newVisitors = [...visitors];
+    newVisitors[index][name] = value;
+    setVisitors(newVisitors);
   };
 
-  const handleRelationshipChange = (value) => {
-    setFormData(prev => ({
-      ...prev,
-      relationship: value
-    }));
+  const handleRelationshipChange = (index, value) => {
+    const newVisitors = [...visitors];
+    newVisitors[index].relationship = value;
+    setVisitors(newVisitors);
+  };
+
+  const addVisitor = () => {
+    setVisitors([...visitors, { fullName: '', phoneNumber: '', email: '', relationship: '' }]);
+  };
+
+  const removeVisitor = (index) => {
+    const newVisitors = visitors.filter((_, i) => i !== index);
+    setVisitors(newVisitors);
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleDateChange = (date) => {
+    setFormData({ ...formData, visitDate: date });
   };
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName) {
-      newErrors.fullName = 'Full name is required';
-    }
+    visitors.forEach((visitor, index) => {
+      if (!visitor.fullName) {
+        newErrors[`visitors[${index}].fullName`] = 'Full name is required';
+      }
+      if (!visitor.phoneNumber) {
+        newErrors[`visitors[${index}].phoneNumber`] = 'Phone number is required';
+      }
+      if (!visitor.relationship) {
+        newErrors[`visitors[${index}].relationship`] = 'Relationship is required';
+      }
+    });
 
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'Invalid phone number format';
-    }
-
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
-    }
-
-    if (!formData.visitDate) {
-      newErrors.visitDate = 'Visit date is required';
-    }
-
-    if (!formData.arrivalTime) {
-      newErrors.arrivalTime = 'Arrival time is required';
-    }
-
-    if (!formData.agreeToPolicy) {
-      newErrors.agreeToPolicy = 'You must agree to dormitory policies';
-    }
+    if (!formData.arrivalTime) newErrors.arrivalTime = 'Arrival time is required';
+    if (!formData.agreeToPolicy) newErrors.agreeToPolicy = 'You must agree to the policies';
 
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validateForm();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
+    const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    // Here you would typically send the form data to your backend
-    console.log('Form submitted:', formData);
-    // Add API call here
+    try {
+      await axios.post('http://localhost:8080/api/visitors/register', { visitors, ...formData });
+      setConfirmationMessage('Your visit has been successfully registered.');
+      setErrors({});
+      window.location.reload(); // Refresh the page
+    } catch (error) {
+      setConfirmationMessage('');
+      setErrors({ submit: 'Failed to register visit. Please try again.' });
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto p-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Visitor Registration Form</CardTitle>
-          <CardDescription>Please fill out all required fields to register your visit to MLQU Dormitory</CardDescription>
+    <form onSubmit={handleSubmit} className="w-full max-w-5xl mx-auto p-6">
+      <Card className="shadow-lg">
+        <CardHeader className="space-y-2 bg-blue-50 rounded-t-lg">
+          <CardTitle className="text-2xl text-black">Visitor Registration Form</CardTitle>
+          <CardDescription className="text-lg text-black">
+            Please fill out all required fields to register your visit to MLQU Dormitory
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8 p-6">
+          {/* Tenant ID Section */}
+          <div className="space-y-2">
+            <Label htmlFor="tenantId" className="text-lg text-black">Tenant ID *</Label>
+            <Input
+              id="tenantId"
+              name="tenantId"
+              value={formData.tenantId}
+              onChange={handleInputChange}
+              className={`h-12 text-lg text-black ${errors.tenantId ? 'border-red-500' : ''}`}
+              readOnly
+            />
+            {errors.tenantId &&
+              <span className="text-sm text-red-500">{errors.tenantId}</span>
+            }
+          </div>
+
           {/* Visitor Details Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Visitor Details</h3>
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold text-black border-b pb-2">Visitor Details</h3>
 
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name *</Label>
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className={errors.fullName ? 'border-red-500' : ''}
-                />
-                {errors.fullName && <span className="text-sm text-red-500">{errors.fullName}</span>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number *</Label>
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  className={errors.phoneNumber ? 'border-red-500' : ''}
-                />
-                {errors.phoneNumber && <span className="text-sm text-red-500">{errors.phoneNumber}</span>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={errors.email ? 'border-red-500' : ''}
-                />
-                {errors.email && <span className="text-sm text-red-500">{errors.email}</span>}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Relationship to Tenant *</Label>
-                <Select onValueChange={handleRelationshipChange} value={formData.relationship}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select relationship" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="family">Family</SelectItem>
-                    <SelectItem value="friend">Friend</SelectItem>
-                    <SelectItem value="colleague">Colleague</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Tenant Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Tenant Information</h3>
-
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="tenantId">Tenant ID</Label>
-                <Input
-                  id="tenantId"
-                  name="tenantId"
-                  value={formData.tenantId}
-                  onChange={handleInputChange}
-                  placeholder="Enter tenant ID if known"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tenantName">Tenant Full Name</Label>
-                <Input
-                  id="tenantName"
-                  name="tenantName"
-                  value={formData.tenantName}
-                  onChange={handleInputChange}
-                  readOnly={formData.tenantId}
-                  className="bg-gray-50"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Visit Details Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Visit Details</h3>
-            
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label>Date of Visit *</Label>
-                <Popover>
-                  <PopoverTrigger>
-                    <button
-                      type="button"
-                      className={`
-                        w-full px-3 py-2 text-left text-sm
-                        border rounded-md bg-white hover:bg-gray-50
-                        flex items-center
-                        ${!formData.visitDate ? 'text-gray-500' : 'text-gray-900'}
-                      `}
-                    >
-                      <CalendarIcon className="w-4 h-4 mr-2" />
-                      {formData.visitDate ? format(formData.visitDate, "PPP") : "Select date"}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent>
-                    <Calendar
-                      selected={formData.visitDate}
-                      onSelect={handleDateSelect}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="arrivalTime">Arrival Time *</Label>
-                <Input
-                  id="arrivalTime"
-                  name="arrivalTime"
-                  type="time"
-                  value={formData.arrivalTime}
-                  onChange={handleInputChange}
-                  className={errors.arrivalTime ? 'border-red-500' : ''}
-                />
-                {errors.arrivalTime && <span className="text-sm text-red-500">{errors.arrivalTime}</span>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="departureTime">Departure Time</Label>
-                <Input
-                  id="departureTime"
-                  name="departureTime"
-                  type="time"
-                  value={formData.departureTime}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="purpose">Purpose of Visit</Label>
-                <Textarea
-                  id="purpose"
-                  name="purpose"
-                  value={formData.purpose}
-                  onChange={handleInputChange}
-                  placeholder="Please describe the purpose of your visit"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Information Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Additional Information</h3>
-
-            <div className="grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="items">Items Carried</Label>
-                <Textarea
-                  id="items"
-                  name="items"
-                  value={formData.items}
-                  onChange={handleInputChange}
-                  placeholder="List any items you are bringing with you"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="specialInstructions">Special Instructions</Label>
-                <Textarea
-                  id="specialInstructions"
-                  name="specialInstructions"
-                  value={formData.specialInstructions}
-                  onChange={handleInputChange}
-                  placeholder="Any special instructions or requirements"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Approval & Acknowledgment Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="agreeToPolicy"
-                checked={formData.agreeToPolicy}
-                onCheckedChange={(checked) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    agreeToPolicy: checked
-                  }));
-                  if (errors.agreeToPolicy) {
-                    setErrors(prev => ({
-                      ...prev,
-                      agreeToPolicy: ''
-                    }));
+            {visitors.map((visitor, index) => (
+              <div key={index} className="grid gap-4 border p-6 rounded-lg bg-gray-50 shadow-sm">
+                <div className="space-y-2">
+                  <Label htmlFor={`fullName-${index}`} className="text-lg text-black">
+                    Full Name *
+                  </Label>
+                  <Input
+                    id={`fullName-${index}`}
+                    name="fullName"
+                    value={visitor.fullName}
+                    onChange={(e) => handleVisitorChange(index, e)}
+                    className={`h-12 text-lg text-black ${errors[`visitors[${index}].fullName`] ? 'border-red-500' : ''}`}
+                  />
+                  {errors[`visitors[${index}].fullName`] &&
+                    <span className="text-sm text-red-500">{errors[`visitors[${index}].fullName`]}</span>
                   }
-                }}
-              />
-              <Label htmlFor="agreeToPolicy" className="text-sm">
-                I agree to follow all dormitory policies and guidelines during my visit *
-              </Label>
-            </div>
-            {errors.agreeToPolicy && <span className="text-sm text-red-500">{errors.agreeToPolicy}</span>}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor={`phoneNumber-${index}`} className="text-lg text-black">
+                      Phone Number *
+                    </Label>
+                    <Input
+                      id={`phoneNumber-${index}`}
+                      name="phoneNumber"
+                      type="tel"
+                      value={visitor.phoneNumber}
+                      onChange={(e) => handleVisitorChange(index, e)}
+                      className={`h-12 text-lg text-black ${errors[`visitors[${index}].phoneNumber`] ? 'border-red-500' : ''}`}
+                    />
+                    {errors[`visitors[${index}].phoneNumber`] &&
+                      <span className="text-sm text-red-500">{errors[`visitors[${index}].phoneNumber`]}</span>
+                    }
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor={`email-${index}`} className="text-lg text-black">
+                      Email Address
+                    </Label>
+                    <Input
+                      id={`email-${index}`}
+                      name="email"
+                      type="email"
+                      value={visitor.email}
+                      onChange={(e) => handleVisitorChange(index, e)}
+                      className="h-12 text-lg text-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-lg text-black">Relationship to Tenant *</Label>
+                  <Select
+                    onValueChange={(value) => handleRelationshipChange(index, value)}
+                    value={visitor.relationship}
+                  >
+                    <SelectTrigger className={`h-12 text-lg text-black ${errors[`visitors[${index}].relationship`] ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Select relationship" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="family">Family</SelectItem>
+                      <SelectItem value="friend">Friend</SelectItem>
+                      <SelectItem value="colleague">Colleague</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors[`visitors[${index}].relationship`] &&
+                    <span className="text-sm text-red-500">{errors[`visitors[${index}].relationship`]}</span>
+                  }
+                </div>
+
+                {visitors.length > 1 && (
+                  <Button
+                    type="button"
+                    onClick={() => removeVisitor(index)}
+                    variant="destructive"
+                    className="h-12 text-lg"
+                  >
+                    Remove Visitor
+                  </Button>
+                )}
+              </div>
+            ))}
+
+            <Button
+              type="button"
+              onClick={addVisitor}
+              variant="secondary"
+              className="h-12 text-lg w-full md:w-auto"
+            >
+              Add Another Visitor
+            </Button>
           </div>
         </CardContent>
 
-        <CardFooter>
-          <Button type="submit" className="w-full">
+        <CardContent className="space-y-6">
+          <h3 className="text-xl font-semibold text-black border-b pb-2">Visit Details</h3>
+          <div className="space-y-2">
+            <Label>Date of Visit</Label>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                label="Select date"
+                value={formData.visitDate}
+                onChange={handleDateChange}
+                renderInput={(params) => <Input {...params} />}
+              />
+            </LocalizationProvider>
+          </div>
+        </CardContent>
+
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="arrivalTime" className="text-lg text-black">Arrival Time *</Label>
+              <Input
+                id="arrivalTime"
+                name="arrivalTime"
+                type="time"
+                value={formData.arrivalTime}
+                onChange={handleInputChange}
+                className={`h-12 text-lg text-black ${errors.arrivalTime ? 'border-red-500' : ''}`}
+              />
+              {errors.arrivalTime &&
+                <span className="text-sm text-red-500">{errors.arrivalTime}</span>
+              }
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="departureTime" className="text-lg text-black">Departure Time</Label>
+              <Input
+                id="departureTime"
+                name="departureTime"
+                type="time"
+                value={formData.departureTime}
+                onChange={handleInputChange}
+                className="h-12 text-lg text-black"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="purpose" className="text-lg text-black">Purpose of Visit</Label>
+            <Textarea
+              id="purpose"
+              name="purpose"
+              value={formData.purpose}
+              onChange={handleInputChange}
+              placeholder="Please describe the purpose of your visit"
+              className="min-h-[100px] text-lg text-black"
+            />
+          </div>
+        </CardContent>
+
+        {/* Additional Information Section */}
+        <CardContent className="space-y-6">
+          <h3 className="text-xl font-semibold text-black border-b pb-2">Additional Information</h3>
+
+          <div className="grid gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="items" className="text-lg text-black">Items Carried</Label>
+              <Textarea
+                id="items"
+                name="items"
+                value={formData.items}
+                onChange={handleInputChange}
+                placeholder="List any items you are bringing with you"
+                className="min-h-[100px] text-lg text-black"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="specialInstructions" className="text-lg text-black">Special Instructions</Label>
+              <Textarea
+                id="specialInstructions"
+                name="specialInstructions"
+                value={formData.specialInstructions}
+                onChange={handleInputChange}
+                placeholder="Any special instructions or requirements"
+                className="min-h-[100px] text-lg text-black"
+              />
+            </div>
+          </div>
+        </CardContent>
+
+        {/* Approval & Acknowledgment Section */}
+        <CardContent className="space-y-4 bg-blue-50 p-6 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <Checkbox
+              id="agreeToPolicy"
+              checked={formData.agreeToPolicy}
+              onCheckedChange={(checked) => {
+                setFormData(prev => ({
+                  ...prev,
+                  agreeToPolicy: checked
+                }));
+                if (errors.agreeToPolicy) {
+                  setErrors(prev => ({
+                    ...prev,
+                    agreeToPolicy: ''
+                  }));
+                }
+              }}
+              className="h-6 w-6"
+            />
+            <Label htmlFor="agreeToPolicy" className="text-lg text-black">
+              I agree to follow all dormitory policies and guidelines during my visit *
+            </Label>
+          </div>
+          {errors.agreeToPolicy &&
+            <span className="text-sm text-red-500 block mt-2">{errors.agreeToPolicy}</span>
+          }
+        </CardContent>
+
+        <CardFooter className="px-6 pb-6">
+          <Button
+            type="submit"
+            className="w-full h-14 text-xl bg-blue-600 hover:bg-blue-700 text-white"
+          >
             Confirm Visit
           </Button>
         </CardFooter>
       </Card>
+
+      {confirmationMessage && (
+        <div className="mt-6 p-6 bg-green-100 text-green-700 rounded-lg text-lg text-center">
+          {confirmationMessage}
+        </div>
+      )}
+
+      {errors.submit && (
+        <div className="mt-6 p-6 bg-red-100 text-red-700 rounded-lg text-lg text-center">
+          {errors.submit}
+        </div>
+      )}
     </form>
   );
 };
