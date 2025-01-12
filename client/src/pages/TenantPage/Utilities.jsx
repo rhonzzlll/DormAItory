@@ -11,53 +11,100 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip
+  Chip,
+  TablePagination,
+  TextField,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
+import { LocalizationProvider, DatePicker } from '@mui/lab';
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
-const TenantDuesTable = () => {
+const TenantDetails = () => {
   const [tenantData, setTenantData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchTenantData();
+  }, [startDate, endDate]);
 
-    // Optionally, set up polling or WebSocket to listen for changes
-    const interval = setInterval(fetchTenantData, 60000); // Poll every 60 seconds
-    return () => clearInterval(interval);
-  }, []);
+  useEffect(() => {
+    handleSearch();
+  }, [searchQuery, tenantData]);
 
   const fetchTenantData = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/tenants`);
-      const { tenants } = response.data.data;
+      const response = await axios.get(`${API_BASE_URL}/dorms`);
+      console.log('API Response:', response.data); // Debugging log
+      const { dorms } = response.data;
 
-      const tenantDetails = tenants.map(t => ({
-        fullName: `${t.user[0].info[0].firstName} ${t.user[0].info[0].lastName}`,
-        roomNumber: t.user[0].roomNumber,
-        rent: t.rent,
-        electricity: t.electricity,
-        water: t.water,
-        totalMonthlyDues: t.totalMonthlyDues,
-        startDate: t.startDate,
-        endDate: t.endDate,
-        status: t.status
-      }));
+      const tenantDetails = dorms.flatMap(dorm =>
+        dorm.tenants.map(t => ({
+          tenantId: t.id._id,
+          userId: t.id.userId,
+          fullName: `${t.firstName} ${t.lastName}`,
+          roomNumber: dorm.roomNumber,
+          rent: t.rentAmount,
+          electricity: dorm.electricity,
+          water: dorm.water,
+          totalMonthlyDues: t.rentAmount + dorm.electricity + dorm.water,
+          startDate: t.startDate,
+          endDate: t.endDate,
+          status: t.paymentStatus
+        }))
+      );
 
-      setTenantData(tenantDetails);
+      const filteredTenantDetails = tenantDetails.filter(tenant => {
+        const tenantStartDate = new Date(tenant.startDate);
+        const tenantEndDate = new Date(tenant.endDate);
+        return (
+          (!startDate || tenantStartDate >= startDate) &&
+          (!endDate || tenantEndDate <= endDate)
+        );
+      });
+
+      console.log('Processed Tenant Data:', filteredTenantDetails); // Debugging log
+      setTenantData(filteredTenantDetails);
+      setFilteredData(filteredTenantDetails);
     } catch (error) {
       console.error('Error fetching tenant data:', error);
     }
   };
 
+  const handleSearch = () => {
+    const lowercasedQuery = searchQuery.toLowerCase();
+    const filtered = tenantData.filter(tenant =>
+      tenant.fullName.toLowerCase().includes(lowercasedQuery) ||
+      tenant.roomNumber.toLowerCase().includes(lowercasedQuery) ||
+      tenant.status.toLowerCase().includes(lowercasedQuery)
+    );
+    setFilteredData(filtered);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Paid':
+      case 'paid':
         return 'success';
-      case 'Pending':
+      case 'pending':
         return 'warning';
-      case 'Overdue':
+      case 'overdue':
         return 'error';
       default:
         return 'default';
@@ -68,7 +115,7 @@ const TenantDuesTable = () => {
     <Card
       elevation={4}
       sx={{
-        maxWidth: 1000,
+        maxWidth: 1500,
         margin: 'auto',
         borderRadius: 3
       }}
@@ -80,21 +127,58 @@ const TenantDuesTable = () => {
             color="primary"
             fontWeight="bold"
           >
-            Monthly Tenant Dues
+            Tenant Details
           </Typography>
         }
-        subheader="Detailed breakdown of tenant payments"
+        subheader="Detailed breakdown of tenant details"
         sx={{
           backgroundColor: 'background.default',
           borderBottom: '1px solid',
           borderColor: 'divider'
         }}
+        action={
+          <TextField
+            variant="outlined"
+            size="small"
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton>
+                    {/* Replace with a different search icon if needed */}
+                    <span role="img" aria-label="search">🔍</span>
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+        }
       />
       <CardContent sx={{ p: 0 }}>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+            <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              renderInput={(params) => <TextField {...params} />}
+            />
+            <DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={(newValue) => setEndDate(newValue)}
+              renderInput={(params) => <TextField {...params} />}
+            />
+          </div>
+        </LocalizationProvider>
         <TableContainer component={Paper} elevation={0}>
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: 'action.hover' }}>
+                <TableCell sx={{ fontWeight: 'bold' }}>Tenant ID</TableCell>
+                <TableCell sx={{ fontWeight: 'bold' }}>Full Name</TableCell>
                 <TableCell sx={{ fontWeight: 'bold' }}>Room Number</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Rent</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 'bold' }}>Electricity</TableCell>
@@ -106,14 +190,14 @@ const TenantDuesTable = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tenantData.length === 0 ? (
+              {filteredData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={10} align="center">
                     No tenant data available
                   </TableCell>
                 </TableRow>
               ) : (
-                tenantData.map((tenant, index) => (
+                filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((tenant, index) => (
                   <TableRow
                     key={index}
                     sx={{
@@ -121,15 +205,16 @@ const TenantDuesTable = () => {
                       '&:hover': { backgroundColor: 'action.hover' }
                     }}
                   >
+                    <TableCell>{tenant.tenantId}</TableCell>
+                    <TableCell>{tenant.fullName}</TableCell>
                     <TableCell>{tenant.roomNumber}</TableCell>
                     <TableCell align="right">₱{tenant.rent?.toLocaleString()}</TableCell>
                     <TableCell align="right">₱{tenant.electricity?.toLocaleString()}</TableCell>
                     <TableCell align="right">₱{tenant.water?.toLocaleString()}</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                      ₱{tenant.totalMonthlyDues?.toLocaleString()}
-                    </TableCell>
-                    <TableCell align="right">{tenant.startDate}</TableCell>
-                    <TableCell align="right">{tenant.endDate}</TableCell>
+                      ₱{tenant.totalMonthlyDues?.toLocaleString()}</TableCell>
+                    <TableCell align="right">{new Date(tenant.startDate).toLocaleDateString()}</TableCell>
+                    <TableCell align="right">{new Date(tenant.endDate).toLocaleDateString()}</TableCell>
                     <TableCell align="right">
                       <Chip
                         label={tenant.status}
@@ -144,9 +229,18 @@ const TenantDuesTable = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredData.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
       </CardContent>
     </Card>
   );
 };
 
-export default TenantDuesTable;
+export default TenantDetails;

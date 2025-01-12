@@ -2,11 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
-import { Search } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import moment from "moment";
+import Pagination from '@mui/material/Pagination';
+import PaginationItem from '@mui/material/PaginationItem';
 
 const STATUS_COLORS = {
   pending: '#FFA500',  // Orange
@@ -122,7 +126,29 @@ export default function MaintenanceLogs() {
   ];
 
   return (
-    <Paper style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+    <Paper
+      elevation={4}
+      sx={{
+        maxWidth: 1500,
+        margin: 'auto',
+        borderRadius: 3,
+        height: 'calc(100vh - 200px)',
+        width: '100%'
+      }}
+    >
+      <Box sx={{ padding: '16px' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h5" color="primary" fontWeight="bold">
+            Maintenance Logs
+          </Typography>
+          <IconButton color="primary">
+            <Settings size={24} />
+          </IconButton>
+        </Box>
+        <Typography variant="body2" color="textSecondary" sx={{ marginTop: '8px' }}>
+          This page provides a detailed overview of all maintenance requests submitted by tenants. You can search, filter, and view the status of each request.
+        </Typography>
+      </Box>
       <Box sx={{ padding: '16px' }}>
         <TextField
           placeholder="Search requests..."
@@ -152,6 +178,17 @@ export default function MaintenanceLogs() {
         disableExtendRowFullWidth
         disableColumnMenu
         disableSelectionOnClick
+        components={{
+          Pagination: (props) => (
+            <Pagination
+              {...props}
+              count={Math.ceil(filteredRequests.length / pageSize)}
+              color="primary"
+              renderItem={(item) => <PaginationItem {...item} />}
+              sx={{ justifyContent: 'flex-start', padding: '16px' }}
+            />
+          )
+        }}
         sx={{
           '& .MuiDataGrid-cell': {
             padding: '8px',

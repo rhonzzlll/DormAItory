@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
-import { Search } from 'lucide-react';
+import { Search, User } from 'lucide-react';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
+import Typography from '@mui/material/Typography';
+import IconButton from '@mui/material/IconButton';
 import moment from 'moment';
 
 const STATUS_COLORS = {
@@ -183,7 +185,29 @@ const VisitorLogs = () => {
   ];
 
   return (
-    <Paper style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+    <Paper
+      elevation={4}
+      sx={{
+        maxWidth: 1500,
+        margin: 'auto',
+        borderRadius: 3,
+        height: 'calc(100vh - 200px)',
+        width: '100%'
+      }}
+    >
+      <Box sx={{ padding: '16px' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h5" color="primary" fontWeight="bold">
+            Visitor Logs
+          </Typography>
+          <IconButton color="primary">
+            <User size={24} />
+          </IconButton>
+        </Box>
+        <Typography variant="body2" color="textSecondary" sx={{ marginTop: '8px' }}>
+          This page provides a detailed overview of all visitor logs for tenants. You can search, filter, and view the status of each visitor.
+        </Typography>
+      </Box>
       <Box sx={{ padding: '16px' }}>
         <TextField
           placeholder="Search visitors..."

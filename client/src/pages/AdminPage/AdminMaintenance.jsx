@@ -10,10 +10,11 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
-import { Pencil, Trash2, UserPlus, Search } from 'lucide-react';
+import { Pencil, Trash2, UserPlus, Search, Users } from 'lucide-react';
 import axios from 'axios';
 import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
+import Typography from '@mui/material/Typography';
 import moment from "moment";
 
 const STATUS_OPTIONS = [
@@ -268,6 +269,13 @@ export default function AdminMaintenance() {
 
   return (
     <Paper sx={{ height: 650, width: '100%', p: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Users size={40} />
+        <Box sx={{ ml: 2 }}>
+          <Typography variant="h4">Admin Maintenance</Typography>
+          <Typography variant="body1">Manage and track maintenance requests efficiently.</Typography>
+        </Box>
+      </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'center' }}>
         <Button
           variant="contained"

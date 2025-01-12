@@ -1,7 +1,8 @@
 import { MaintenanceProvider } from './redux/MaintenanceContext';  // Correct import path
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 // Tenant Pages
 import Login from './pages/Login';
@@ -41,6 +42,8 @@ import AdminManageRooms from './pages/AdminPage/AdminManageRooms';
 // Tenant Sidebar
 import TenantSidebar from './components/layouts/TenantSidebar';
 
+const clientId = "949553693113-0ge0ak1tr940too033kavmkfb1iedbfh.apps.googleusercontent.com"; // Replace with your actual Google client ID
+
 function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
@@ -51,55 +54,57 @@ function App() {
   const tenantId = "exampleTenantId"; // Replace with actual tenant ID retrieval logic
 
   return (
-    <MaintenanceProvider>
-      {!isAuthPage && !isAdminDashboard && <Header />}
-      <div className="flex">
-        {isTenantPageWithSidebar && <TenantSidebar />}
-        <div className="flex-1">
-          <Routes>
-            {/* Authentication Pages */}
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+    <GoogleOAuthProvider clientId={clientId}>
+      <MaintenanceProvider>
+        {!isAuthPage && !isAdminDashboard && <Header />}
+        <div className="flex">
+          {isTenantPageWithSidebar && <TenantSidebar />}
+          <div className="flex-1">
+            <Routes>
+              {/* Authentication Pages */}
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/login" element={<Login />} />
 
-            {/* Admin Dashboard Routes */}
-            <Route path="/admin" element={<AdminDashboardLayout />}>
-              <Route index element={<DashboardContent />} />
-              <Route path="rooms" element={<AdminRooms />} />
-              <Route path="visitors" element={<AdminVisitors />} />
-              <Route path="utilities" element={<AdminUtilities />} />
-              <Route path="contacts" element={<AdminContacts />} />
-              <Route path="maintenance" element={<AdminMaintenance />} />
-              <Route path="payments" element={<AdminPayments />} />
-              <Route path="records" element={<AdminRecords />} />
-              <Route path="announcements" element={<AdminAnnouncements />} />
-              <Route path="managerooms" element={<AdminManageRooms />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="chatbot" element={<AdminChatbot />} />
-              <Route path="prompts" element={<AdminChatbotPrompts />} />
-            </Route>
+              {/* Admin Dashboard Routes */}
+              <Route path="/admin" element={<AdminDashboardLayout />}>
+                <Route index element={<DashboardContent />} />
+                <Route path="rooms" element={<AdminRooms />} />
+                <Route path="visitors" element={<AdminVisitors />} />
+                <Route path="utilities" element={<AdminUtilities />} />
+                <Route path="contacts" element={<AdminContacts />} />
+                <Route path="maintenance" element={<AdminMaintenance />} />
+                <Route path="payments" element={<AdminPayments />} />
+                <Route path="records" element={<AdminRecords />} />
+                <Route path="announcements" element={<AdminAnnouncements />} />
+                <Route path="managerooms" element={<AdminManageRooms />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="chatbot" element={<AdminChatbot />} />
+                <Route path="prompts" element={<AdminChatbotPrompts />} />
+              </Route>
 
-            {/* Tenant Pages */}
-            <Route path="/tenant" element={<MainPage />} />
-            <Route path="/tenant/room-list" element={<RoomList />} />
-            <Route path="/tenant/room-view/:id" element={<RoomView />} />
-            <Route path="/tenant/records" element={<Records />} />
-            <Route path="/tenant/visitor-management" element={<VisitorManagement tenantId={tenantId} />} />
-            <Route path="/tenant/visitor-management/visitor-logs" element={<VisitorLogs tenantId={tenantId} />} />
-            <Route path="/tenant/maintenance-request/maintenance-logs" element={<MaintenanceLogs tenantId={tenantId} />} />
-            <Route path="/tenant/utilities" element={<Utilities />} />
-            <Route path="/tenant/contact-admin" element={<ContactAdmin />} />
-            <Route path="/tenant/maintenance-request" element={<MaintenanceRequest tenantId={tenantId} />} />
-            <Route path="/tenant/payment-options" element={<PaymentOptions />} />
-            <Route path="/tenant/chatbot" element={<ChatBot />} />
-            <Route path="/profile" element={<Profile />} />
+              {/* Tenant Pages */}
+              <Route path="/tenant" element={<MainPage />} />
+              <Route path="/tenant/room-list" element={<RoomList />} />
+              <Route path="/tenant/room-view/:id" element={<RoomView />} />
+              <Route path="/tenant/records" element={<Records />} />
+              <Route path="/tenant/visitor-management" element={<VisitorManagement tenantId={tenantId} />} />
+              <Route path="/tenant/visitor-management/visitor-logs" element={<VisitorLogs tenantId={tenantId} />} />
+              <Route path="/tenant/maintenance-request/maintenance-logs" element={<MaintenanceLogs tenantId={tenantId} />} />
+              <Route path="/tenant/utilities" element={<Utilities />} />
+              <Route path="/tenant/contact-admin" element={<ContactAdmin />} />
+              <Route path="/tenant/maintenance-request" element={<MaintenanceRequest tenantId={tenantId} />} />
+              <Route path="/tenant/payment-options" element={<PaymentOptions />} />
+              <Route path="/tenant/chatbot" element={<ChatBot />} />
+              <Route path="/profile" element={<Profile />} />
 
-            {/* Default Redirect */}
-            <Route path="/" element={<Navigate replace to="/login" />} />
-          </Routes>
+              {/* Default Redirect */}
+              <Route path="/" element={<Navigate replace to="/login" />} />
+            </Routes>
+          </div>
         </div>
-      </div>
-      {!isAuthPage && !isAdminDashboard && <Footer />}
-    </MaintenanceProvider>
+        {!isAuthPage && !isAdminDashboard && <Footer />}
+      </MaintenanceProvider>
+    </GoogleOAuthProvider>
   );
 }
 

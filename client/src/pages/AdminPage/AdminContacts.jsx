@@ -5,7 +5,7 @@ import Button from '../../components/layouts/ui/Button';
 import { Input } from '../../components/layouts/ui/Input';
 import { Badge } from '../../components/layouts/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts/ui/Select';
-import { MessageCircle, Clock, MapPin, Phone, User, Send, Plus, Filter, X, Trash } from 'lucide-react';
+import { Send, Plus, X, Trash } from 'lucide-react';
 
 const MESSAGE_CATEGORIES = [
   "General Inquiry",
@@ -14,9 +14,7 @@ const MESSAGE_CATEGORIES = [
   "Room Change"
 ];
 
-const AdminContacts = ({
-  userRole = 'admin',
-}) => {
+const AdminContacts = ({ userRole = 'admin' }) => {
   const [messages, setMessages] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,37 +31,39 @@ const AdminContacts = ({
   const [availableUsers, setAvailableUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userNames, setUserNames] = useState({});
 
-  // Fetch messages and users
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch all users
-        const usersResponse = await axios.get('http://localhost:8080/api/users');
-        // Ensure we have all required user fields and format them properly
+        const [usersResponse, messagesResponse] = await Promise.all([
+          axios.get('http://localhost:8080/api/users'),
+          axios.get('http://localhost:8080/api/contact-messages')
+        ]);
+
         const formattedUsers = usersResponse.data.map(user => ({
           _id: user._id,
           fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        })).filter(user => user.fullName); // Only include users with names
+        })).filter(user => user.fullName);
 
         setAvailableUsers(formattedUsers);
 
-        // Fetch all messages
-        const messagesResponse = await axios.get('http://localhost:8080/api/contact-messages');
+        const userNamesMap = formattedUsers.reduce((acc, user) => {
+          acc[user._id] = user.fullName;
+          return acc;
+        }, {});
+        setUserNames(userNamesMap);
+
         const sortedMessages = messagesResponse.data.sort((a, b) =>
           new Date(b.timestamp) - new Date(a.timestamp)
         );
 
         setMessages(sortedMessages);
-        try {
-          localStorage.setItem('messages', JSON.stringify(sortedMessages));
-        } catch (e) {
-          console.warn('Failed to save messages to localStorage:', e);
-        }
+        localStorage.setItem('messages', JSON.stringify(sortedMessages));
       } catch (error) {
         console.error('Error fetching data:', error);
-        setError('Failed to fetch messages and users');
+        console.log('Failed to fetch messages and users:', error);
       } finally {
         setLoading(false);
       }
@@ -73,16 +73,14 @@ const AdminContacts = ({
     if (savedMessages) {
       setMessages(JSON.parse(savedMessages));
     }
-    // Always fetch users to ensure we have the latest data
     fetchData();
-  }, []); // Removed userRole from dependency array
+  }, []);
 
-  // Filtered and searched messages
   const filteredMessages = useMemo(() => {
     return messages.filter(message => {
       const matchesSearch =
         message.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        message.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        userNames[message.sender]?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         message.content?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = !filters.category || message.category === filters.category;
@@ -90,67 +88,50 @@ const AdminContacts = ({
 
       return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [messages, searchQuery, filters]);
+  }, [messages, searchQuery, filters, userNames]);
 
   const handleSendMessage = async () => {
     setLoading(true);
     try {
       const messagePayload = {
-        sender: 'Admin', // Use "Admin" as the current user name
+        sender: 'Admin',
         recipient: sendToAll ? 'All' : selectedRespondent,
         subject,
         category: selectedCategory,
         content: newMessage,
         status: 'unread',
-        fullname: 'Admin', // Use "Admin" as the current user ID
+        fullname: 'Admin',
         thread: [{
-          sender: 'Admin', // Use "Admin" as the current user name
+          sender: 'Admin',
           content: newMessage,
           timestamp: new Date()
         }]
       };
 
       if (selectedThread) {
-        // Update existing thread
         const response = await axios.put(
           `http://localhost:8080/api/contact-messages/${selectedThread._id}`,
           { thread: [...selectedThread.thread, messagePayload.thread[0]] }
         );
 
-        // Update local state
         const updatedMessages = messages.map(msg =>
           msg._id === selectedThread._id ? response.data : msg
         );
         setMessages(updatedMessages);
-        try {
-          localStorage.setItem('messages', JSON.stringify(updatedMessages));
-        } catch (e) {
-          console.warn('Failed to save messages to localStorage:', e);
-        }
-
-        // Update selected thread
+        localStorage.setItem('messages', JSON.stringify(updatedMessages));
         setSelectedThread(response.data);
       } else {
-        // Create new message
         const response = await axios.post(
           'http://localhost:8080/api/contact-messages',
           messagePayload
         );
 
-        // Add new message to list
         const updatedMessages = [response.data, ...messages];
         setMessages(updatedMessages);
-        try {
-          localStorage.setItem('messages', JSON.stringify(updatedMessages));
-        } catch (e) {
-          console.warn('Failed to save messages to localStorage:', e);
-        }
-
-        // Select the newly created message
+        localStorage.setItem('messages', JSON.stringify(updatedMessages));
         setSelectedThread(response.data);
       }
 
-      // Reset form state
       setNewMessage("");
       setSubject("");
       setSelectedCategory("");
@@ -160,6 +141,7 @@ const AdminContacts = ({
     } catch (error) {
       console.error('Error sending message:', error.response ? error.response.data : error.message);
       setError('Failed to send message');
+      console.log('Failed to send message:', error);
     } finally {
       setLoading(false);
     }
@@ -177,13 +159,10 @@ const AdminContacts = ({
           msg._id === message._id ? { ...msg, status: 'read' } : msg
         );
         setMessages(updatedMessages);
-        try {
-          localStorage.setItem('messages', JSON.stringify(updatedMessages));
-        } catch (e) {
-          console.warn('Failed to save messages to localStorage:', e);
-        }
+        localStorage.setItem('messages', JSON.stringify(updatedMessages));
       } catch (error) {
         console.error('Error updating message status:', error);
+        console.log('Error updating message status:', error);
       }
     }
     setSelectedThread(message);
@@ -195,29 +174,24 @@ const AdminContacts = ({
       await axios.delete(`http://localhost:8080/api/contact-messages/${messageId}`);
       const updatedMessages = messages.filter(message => message._id !== messageId);
       setMessages(updatedMessages);
-      try {
-        localStorage.setItem('messages', JSON.stringify(updatedMessages));
-      } catch (e) {
-        console.warn('Failed to save messages to localStorage:', e);
-      }
+      localStorage.setItem('messages', JSON.stringify(updatedMessages));
       if (selectedThread && selectedThread._id === messageId) {
         setSelectedThread(null);
       }
     } catch (error) {
       console.error('Error deleting message:', error.response ? error.response.data : error.message);
       setError('Failed to delete message');
+      console.log('Failed to delete message:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Clear filters
   const clearFilters = () => {
     setSearchQuery("");
     setFilters({ category: "", status: "" });
   };
 
-  // Error and loading handling
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -226,20 +200,13 @@ const AdminContacts = ({
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-red-500">
-        {error}
-        <Button onClick={() => setError(null)} className="ml-4">
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      {/* Header Section */}
+      {error && (
+        <div className="text-red-500 mb-4">
+          {error}
+        </div>
+      )}
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>{userRole === 'admin' ? 'Admin Message Dashboard' : 'Message Center'}</CardTitle>
@@ -263,7 +230,6 @@ const AdminContacts = ({
               )}
             </div>
 
-            {/* Filter Dropdowns */}
             <Select
               value={filters.category}
               onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
@@ -300,11 +266,10 @@ const AdminContacts = ({
               </Button>
             )}
 
-            {/* New Message Button */}
             <Button
               onClick={() => {
                 setIsComposeVisible(true);
-                setSelectedThread(null); // Reset selected thread to ensure new message is not part of an existing thread
+                setSelectedThread(null);
               }}
               className="group relative overflow-hidden">
               <div className="flex items-center relative z-10">
@@ -316,7 +281,6 @@ const AdminContacts = ({
         </CardContent>
       </Card>
 
-      {/* Compose New Message Section */}
       {isComposeVisible && (
         <Card className="mb-4">
           <CardHeader>
@@ -392,9 +356,7 @@ const AdminContacts = ({
         </Card>
       )}
 
-      {/* Messages Grid */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Message List */}
         <div className="col-span-1">
           <Card>
             <CardHeader>
@@ -414,7 +376,7 @@ const AdminContacts = ({
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="font-medium">
-                          {userRole === 'admin' ? message.sender : message.recipient}
+                          {userNames[message.sender] || message.sender}
                         </div>
                         <div className="text-sm text-gray-500">{message.subject}</div>
                       </div>
@@ -442,7 +404,6 @@ const AdminContacts = ({
           </Card>
         </div>
 
-        {/* Message Thread */}
         <div className="col-span-2">
           <Card className="h-full flex flex-col">
             <CardHeader>
@@ -458,7 +419,7 @@ const AdminContacts = ({
                           <h3 className="font-medium">{selectedThread.subject}</h3>
                           <p className="text-sm text-gray-500">
                             {userRole === 'admin'
-                              ? `From: ${selectedThread.sender} (Room ${selectedThread.room})`
+                              ? `From: ${userNames[selectedThread.sender]}`
                               : `To: Admin`}
                           </p>
                           <p className="text-sm text-gray-500">
@@ -467,15 +428,14 @@ const AdminContacts = ({
                         </div>
                       </div>
 
-                      {/* Message Thread */}
                       <div className="space-y-4 max-h-[400px] overflow-y-auto">
                         {selectedThread.thread.map((msg, index) => (
                           <div
                             key={index}
-                            className={`p-3 rounded-lg ${msg.sender === 'Admin' || msg.sender === 'Admin'
+                            className={`p-3 rounded-lg ${msg.sender === 'Admin'
                               ? 'bg-blue-50 self-end text-right ml-auto'
                               : 'bg-gray-100 self-start text-left mr-auto'}`}>
-                            <div className="font-medium text-sm mb-1">{msg.sender === 'Admin' ? 'Admin' : msg.sender}</div>
+                            <div className="font-medium text-sm mb-1">{msg.sender === 'Admin' ? 'Admin' : userNames[msg.sender]}</div>
                             <div>{msg.content}</div>
                             <div className="text-xs text-gray-500 mt-1">
                               {new Date(msg.timestamp).toLocaleString()}
@@ -486,7 +446,6 @@ const AdminContacts = ({
                     </div>
                   </div>
 
-                  {/* Message Input */}
                   <div className="mt-4">
                     <div className="flex space-x-2">
                       <Input

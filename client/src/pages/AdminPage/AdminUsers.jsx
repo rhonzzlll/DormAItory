@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { Search } from 'lucide-react';
+import { Users, Search } from 'lucide-react';
 import axios from 'axios';
 
 export default function AdminUsers() {
@@ -87,6 +87,13 @@ export default function AdminUsers() {
 
   return (
     <Paper style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '16px', gap: '16px' }}>
+        <Users size={32} />
+        <div>
+          <h1>List of Tenants</h1>
+          <p>Below is a list of all tenants currently residing in the dorms.</p>
+        </div>
+      </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', gap: '16px' }}>
         <TextField
           placeholder="Search tenants..."

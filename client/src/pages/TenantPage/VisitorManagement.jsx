@@ -10,6 +10,7 @@ import { Checkbox } from '../../components/layouts/ui/checkbox';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 const API_BASE_URL = 'http://localhost:8080/api';
 
@@ -27,6 +28,8 @@ const VisitorRegistrationForm = () => {
   });
   const [errors, setErrors] = useState({});
   const [confirmationMessage, setConfirmationMessage] = useState('');
+  const [roomAssigned, setRoomAssigned] = useState(true);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     fetchTenantData();
@@ -42,9 +45,18 @@ const VisitorRegistrationForm = () => {
           ...prevFormData,
           tenantId: tenant[0]["_id"]
         }));
+        if (!tenant[0].user[0].roomNumber) {
+          setRoomAssigned(false);
+          setOpenDialog(true);
+        }
+      } else {
+        setRoomAssigned(false);
+        setOpenDialog(true);
       }
     } catch (error) {
       console.error('Error fetching tenant data:', error);
+      setRoomAssigned(false);
+      setOpenDialog(true);
     }
   };
 
@@ -119,6 +131,33 @@ const VisitorRegistrationForm = () => {
       setErrors({ submit: 'Failed to register visit. Please try again.' });
     }
   };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+  };
+
+  if (!roomAssigned) {
+    return (
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">{"Visitor Registration"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            You cannot request visitors without room assignment. Please contact the administration for room assignment.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary" autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-5xl mx-auto p-6">

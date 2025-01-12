@@ -35,7 +35,7 @@ const TenantSidebar = () => {
         title: 'Rooms', path: '/tenant/room-list', icon: <BedDouble className="w-5 h-5" />,
         submenu: [
           { title: 'Room List', path: '/tenant/room-list' },
-          { title: 'My Room', path: '/tenant/room-view/my-room' }
+        
         ]
       }
     ],

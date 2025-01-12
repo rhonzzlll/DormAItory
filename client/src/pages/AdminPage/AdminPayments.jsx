@@ -25,8 +25,7 @@ import {
   Edit,
   Trash2,
   Plus,
-  Download,
-  Search
+  Download
 } from 'lucide-react';
 import { toast } from '../../components/layouts/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts/ui/Select';
@@ -503,7 +502,7 @@ const AdminPaymentManagement = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Payment Management</h1>
+      <h1 className="text-3xl font-bold mb-6">Admin Payment Management</h1>
       {renderPaymentMethodCard()}
       {renderPaymentRecordsTable()}
       {renderEditMethodDialog()}

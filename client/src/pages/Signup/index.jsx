@@ -105,7 +105,7 @@ const Signup = () => {
       const currentData = { ...data };
       delete currentData.agreeToEULA; // Remove EULA flag before sending to backend
 
-      currentData["birthdate"] = new Date(`${data.birthdate.day} ${data.birthdate.month} ${data.birthdate.year}`);
+      currentData["birthdate"] = new Date(`${data.birthdate.year}-${data.birthdate.month}-${data.birthdate.day}`);
 
       const { data: res } = await axios.post(url, currentData);
       navigate('/login');
@@ -120,6 +120,13 @@ const Signup = () => {
       }
     }
   };
+
+  const days = Array.from({ length: 31 }, (_, i) => i + 1);
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
 
   return (
     <div className={styles.signup_container}>
@@ -166,15 +173,21 @@ const Signup = () => {
               <div className={styles.date_group}>
                 <select name="day" value={data.birthdate.day} onChange={handleChange}>
                   <option value="">Day</option>
-                  {/* Add day options here */}
+                  {days.map(day => (
+                    <option key={day} value={day}>{day}</option>
+                  ))}
                 </select>
                 <select name="month" value={data.birthdate.month} onChange={handleChange}>
                   <option value="">Month</option>
-                  {/* Add month options here */}
+                  {months.map((month, index) => (
+                    <option key={month} value={index + 1}>{month}</option>
+                  ))}
                 </select>
                 <select name="year" value={data.birthdate.year} onChange={handleChange}>
                   <option value="">Year</option>
-                  {/* Add year options here */}
+                  {years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
                 </select>
               </div>
               {errors.birthdate && <div className={styles.error_msg}>{errors.birthdate}</div>}
@@ -185,7 +198,7 @@ const Signup = () => {
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
-                <option value="other">Other</option>
+
               </select>
               {errors.gender && <div className={styles.error_msg}>{errors.gender}</div>}
             </div>
@@ -242,10 +255,60 @@ const Signup = () => {
                   onChange={handleChange}
                   required
                 />
-                I agree to the <button type="button" className={styles.eula_link} onClick={() => alert('EULA Details')}>
-                  End User License Agreement
-                </button>
+                I agree to the End User License Agreement (EULA)
               </label>
+              <div className={styles.eula_container}>
+                <h2>End User License Agreement (EULA)</h2>
+                <p>Last Updated: January 11, 2025</p>
+                <p>This End User License Agreement ("Agreement") is a legal agreement between you ("User" or "You") and Technological Institute of the Philippines Dormitory Management Team ("Company," "We," "Us," or "Our") for the use of the dormAItory ("System"). By accessing or using the System, you agree to be bound by the terms of this Agreement. If you do not agree to these terms, you must not use the System.</p>
+                <h3>1. License Grant</h3>
+                <p>1.1 The Company grants you a limited, non-exclusive, non-transferable, revocable license to access and use the System solely for personal, non-commercial purposes, subject to the terms of this Agreement.</p>
+                <h3>2. Data Collection and Usage</h3>
+                <p>2.1 The System collects personal data, including but not limited to:</p>
+                <ul>
+                  <li>Full name</li>
+                  <li>Contact information (email, phone number)</li>
+                  <li>Address</li>
+                  <li>Tenant ID</li>
+                  <li>Payment details</li>
+                  <li>Visitor information</li>
+                  <li>Maintenance requests</li>
+                  <li>Other information provided for dormitory management purposes.</li>
+                </ul>
+                <p>2.2 This data will be used for the following purposes:</p>
+                <ul>
+                  <li>Managing your dormitory account</li>
+                  <li>Processing payments and tracking transaction history</li>
+                  <li>Enhancing user experience through personalized services</li>
+                  <li>Maintaining security and monitoring visitor access</li>
+                  <li>Conducting analytics for service improvement.</li>
+                </ul>
+                <p>2.3 We are committed to safeguarding your data in compliance with applicable data protection laws.</p>
+                <h3>3. User Responsibilities</h3>
+                <p>3.1 You agree not to:</p>
+                <ul>
+                  <li>Share your login credentials with others.</li>
+                  <li>Use the System for any unlawful or unauthorized purpose.</li>
+                  <li>Tamper with or disrupt the System's functionality.</li>
+                </ul>
+                <p>3.2 You are responsible for the accuracy of the data you provide. Any incorrect or outdated information may impact the functionality of the System.</p>
+                <h3>4. Data Safekeeping</h3>
+                <p>4.1 The Company implements industry-standard security measures to protect your data. However, you acknowledge that no system is entirely secure, and the Company cannot guarantee absolute protection against unauthorized access or data breaches.</p>
+                <p>4.2 In case of a data breach, the Company will notify affected users as required by applicable laws.</p>
+                <h3>5. Ownership and Intellectual Property</h3>
+                <p>5.1 The System, including its software, designs, logos, and content, is the property of the Company and is protected by intellectual property laws. You may not copy, modify, distribute, or reverse-engineer any part of the System.</p>
+                <h3>6. Termination</h3>
+                <p>6.1 The Company reserves the right to terminate or suspend your access to the System at any time, with or without notice, for violation of this Agreement.</p>
+                <p>6.2 Upon termination, your license to use the System will be revoked, and your account may be deleted.</p>
+                <h3>7. Limitation of Liability</h3>
+                <p>7.1 To the extent permitted by law, the Company shall not be liable for:</p>
+                <ul>
+                  <li>Any indirect, incidental, or consequential damages arising from your use of the System.</li>
+                  <li>Loss or corruption of data due to unauthorized access or technical issues.</li>
+                </ul>
+                <p>This Agreement shall be governed by and construed in accordance with the laws of the Philippines.</p>
+                <p>For questions or disputes about this agreement, please contact us at mrsantos@tip.edu.ph.</p>
+              </div>
               {errors.agreeToEULA && <div className={styles.error_msg}>{errors.agreeToEULA}</div>}
             </div>
             {error && <div className={styles.error_msg}>{error}</div>}

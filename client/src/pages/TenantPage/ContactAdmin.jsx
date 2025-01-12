@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/layouts/ui/Card';
 import Button from '../../components/layouts/ui/Button';
 import { Input } from '../../components/layouts/ui/Input';
 import { Badge } from '../../components/layouts/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts/ui/Select';
-import { MessageCircle, Clock, MapPin, Phone, User, Send, Plus, Filter, X, Trash } from 'lucide-react';
+import { Send, Plus, X, Trash } from 'lucide-react';
 
 const MESSAGE_CATEGORIES = [
   "General Inquiry",
@@ -14,9 +14,7 @@ const MESSAGE_CATEGORIES = [
   "Room Change"
 ];
 
-const TenantContacts = ({
-  userRole = 'tenant',
-}) => {
+const ContactAdmin = ({ userRole = 'tenant' }) => {
   const [messages, setMessages] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,59 +27,38 @@ const TenantContacts = ({
     status: ""
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [tenantName, setTenantName] = useState("");
-  const [users, setUsers] = useState({});
-  const messagesEndRef = useRef(null);
+  const [userNames, setUserNames] = useState({});
 
-  // Fetch tenant user data
   useEffect(() => {
-    const fetchTenantData = async () => {
+    const fetchData = async () => {
+      setLoading(true);
+      const userId = localStorage.getItem("_id");
       try {
-        const response = await axios.get('http://localhost:8080/api/current-user');
-        const user = response.data;
-        setTenantName(`${user.firstName} ${user.lastName}`);
-      } catch (error) {
-        console.error('Error fetching tenant data:', error);
-      }
-    };
+        const [usersResponse, messagesResponse] = await Promise.all([
+          axios.get('http://localhost:8080/api/users'),
+          axios.get('http://localhost:8080/api/contact-messages')
+        ]);
 
-    fetchTenantData();
-  }, []);
+        const formattedUsers = usersResponse.data.map(user => ({
+          _id: user._id,
+          fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        })).filter(user => user.fullName);
 
-  // Fetch users data
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get('http://localhost:8080/api/users');
-        const usersData = response.data.reduce((acc, user) => {
-          acc[user._id] = `${user.firstName} ${user.lastName}`;
+        const userNamesMap = formattedUsers.reduce((acc, user) => {
+          acc[user._id] = user.fullName;
           return acc;
         }, {});
-        setUsers(usersData);
-      } catch (error) {
-        console.error('Error fetching users data:', error);
-      }
-    };
+        setUserNames(userNamesMap);
 
-    fetchUsers();
-  }, []);
-
-  // Fetch messages
-  useEffect(() => {
-    const fetchMessages = async () => {
-      setLoading(true);
-      try {
-        const messagesResponse = await axios.get('http://localhost:8080/api/contact-messages');
-        const sortedMessages = messagesResponse.data.sort((a, b) =>
+        const userMessages = messagesResponse.data.filter(message => message.sender === userId || message.recipient === userId);
+        const sortedMessages = userMessages.sort((a, b) =>
           new Date(b.timestamp) - new Date(a.timestamp)
         );
 
         setMessages(sortedMessages);
         localStorage.setItem('messages', JSON.stringify(sortedMessages));
       } catch (error) {
-        console.error('Error fetching messages:', error);
-        setError('Failed to fetch messages');
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
@@ -90,17 +67,15 @@ const TenantContacts = ({
     const savedMessages = localStorage.getItem('messages');
     if (savedMessages) {
       setMessages(JSON.parse(savedMessages));
-    } else {
-      fetchMessages();
     }
+    fetchData();
   }, []);
 
-  // Filtered and searched messages
   const filteredMessages = useMemo(() => {
     return messages.filter(message => {
       const matchesSearch =
         message.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        message.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        userNames[message.sender]?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         message.content?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCategory = !filters.category || message.category === filters.category;
@@ -108,72 +83,74 @@ const TenantContacts = ({
 
       return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [messages, searchQuery, filters]);
+  }, [messages, searchQuery, filters, userNames]);
 
+  
   const handleSendMessage = async () => {
     setLoading(true);
+    const userId = localStorage.getItem("_id");
+    const userFullName = userNames[userId];
     try {
       const messagePayload = {
-        sender: tenantName, // Use tenant's full name as the sender
+        sender: userId,
         recipient: 'Admin',
         subject,
         category: selectedCategory,
         content: newMessage,
         status: 'unread',
-        fullname: tenantName, // Use tenant's full name as the current user ID
+        fullname: userFullName, // Ensure fullname is included
+        senderFullName: userFullName,
         thread: [{
-          sender: tenantName, // Use tenant's full name as the sender
+          sender: userId,
+          senderFullName: userFullName,
           content: newMessage,
           timestamp: new Date()
         }]
       };
-
+  
+      console.log('Sending message payload:', messagePayload);
+  
       if (selectedThread) {
-        // Update existing thread
         const response = await axios.put(
           `http://localhost:8080/api/contact-messages/${selectedThread._id}`,
           { thread: [...selectedThread.thread, messagePayload.thread[0]] }
         );
-
-        // Update local state
+  
+        console.log('Response from server (update):', response.data);
+  
         const updatedMessages = messages.map(msg =>
           msg._id === selectedThread._id ? response.data : msg
         );
         setMessages(updatedMessages);
         localStorage.setItem('messages', JSON.stringify(updatedMessages));
-
-        // Update selected thread
         setSelectedThread(response.data);
       } else {
-        // Create new message
         const response = await axios.post(
           'http://localhost:8080/api/contact-messages',
           messagePayload
         );
-
-        // Add new message to list
+  
+        console.log('Response from server (create):', response.data);
+  
         const updatedMessages = [response.data, ...messages];
         setMessages(updatedMessages);
         localStorage.setItem('messages', JSON.stringify(updatedMessages));
-
-        // Select the newly created message
         setSelectedThread(response.data);
       }
-
-      // Reset form state
+  
       setNewMessage("");
       setSubject("");
       setSelectedCategory("");
       setIsComposeVisible(false);
-      scrollToBottom();
     } catch (error) {
       console.error('Error sending message:', error.response ? error.response.data : error.message);
-      setError('Failed to send message');
+      if (error.response) {
+        console.error('Error details:', error.response.data);
+      }
     } finally {
       setLoading(false);
     }
   };
-
   const handleSelectThread = async (message) => {
     if (message.status === 'unread') {
       try {
@@ -192,7 +169,6 @@ const TenantContacts = ({
       }
     }
     setSelectedThread(message);
-    scrollToBottom();
   };
 
   const handleDeleteMessage = async (messageId) => {
@@ -207,23 +183,16 @@ const TenantContacts = ({
       }
     } catch (error) {
       console.error('Error deleting message:', error.response ? error.response.data : error.message);
-      setError('Failed to delete message');
     } finally {
       setLoading(false);
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  // Clear filters
   const clearFilters = () => {
     setSearchQuery("");
     setFilters({ category: "", status: "" });
   };
 
-  // Error and loading handling
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -232,23 +201,11 @@ const TenantContacts = ({
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-screen text-red-500">
-        {error}
-        <Button onClick={() => setError(null)} className="ml-4">
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-      {/* Header Section */}
       <Card className="mb-4">
         <CardHeader>
-          <CardTitle>{userRole === 'tenant' ? 'Tenant Message Dashboard' : 'Message Center'}</CardTitle>
+          <CardTitle>Message Center</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
@@ -269,7 +226,6 @@ const TenantContacts = ({
               )}
             </div>
 
-            {/* Filter Dropdowns */}
             <Select
               value={filters.category}
               onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
@@ -306,11 +262,10 @@ const TenantContacts = ({
               </Button>
             )}
 
-            {/* New Message Button */}
             <Button
               onClick={() => {
                 setIsComposeVisible(true);
-                setSelectedThread(null); // Reset selected thread to ensure new message is not part of an existing thread
+                setSelectedThread(null);
               }}
               className="group relative overflow-hidden">
               <div className="flex items-center relative z-10">
@@ -322,7 +277,6 @@ const TenantContacts = ({
         </CardContent>
       </Card>
 
-      {/* Compose New Message Section */}
       {isComposeVisible && (
         <Card className="mb-4">
           <CardHeader>
@@ -362,9 +316,7 @@ const TenantContacts = ({
         </Card>
       )}
 
-      {/* Messages Grid */}
       <div className="grid grid-cols-3 gap-4">
-        {/* Message List */}
         <div className="col-span-1">
           <Card>
             <CardHeader>
@@ -384,7 +336,7 @@ const TenantContacts = ({
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="font-medium">
-                          {message.sender}
+                          {userNames[message.sender] || message.sender}
                         </div>
                         <div className="text-sm text-gray-500">{message.subject}</div>
                       </div>
@@ -412,7 +364,6 @@ const TenantContacts = ({
           </Card>
         </div>
 
-        {/* Message Thread */}
         <div className="col-span-2">
           <Card className="h-full flex flex-col">
             <CardHeader>
@@ -435,28 +386,24 @@ const TenantContacts = ({
                         </div>
                       </div>
 
-                      {/* Message Thread */}
                       <div className="space-y-4 max-h-[400px] overflow-y-auto">
                         {selectedThread.thread.map((msg, index) => (
                           <div
                             key={index}
                             className={`p-3 rounded-lg ${msg.sender === 'Admin'
-                              ? 'bg-gray-100 self-start text-left mr-auto'
-                              : 'bg-blue-50 self-end text-right ml-auto'
-                              }`}>
-                            <div className="font-medium text-sm mb-1">{users[msg.sender] || msg.sender}</div>
+                              ? 'bg-blue-50 self-end text-right ml-auto'
+                              : 'bg-gray-100 self-start text-left mr-auto'}`}>
+                            <div className="font-medium text-sm mb-1">{msg.sender === 'Admin' ? 'Admin' : userNames[msg.sender]}</div>
                             <div>{msg.content}</div>
                             <div className="text-xs text-gray-500 mt-1">
                               {new Date(msg.timestamp).toLocaleString()}
                             </div>
                           </div>
                         ))}
-                        <div ref={messagesEndRef} />
                       </div>
                     </div>
                   </div>
 
-                  {/* Message Input */}
                   <div className="mt-4">
                     <div className="flex space-x-2">
                       <Input
@@ -490,4 +437,4 @@ const TenantContacts = ({
   );
 };
 
-export default TenantContacts;
+export default ContactAdmin;

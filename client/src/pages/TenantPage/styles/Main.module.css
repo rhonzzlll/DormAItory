@@ -2,16 +2,16 @@
   padding: 2rem 0;
 }
 
-/* styles/Main.module.css */
-/* styles/Main.module.css */
 .welcomeMessage {
-  margin-bottom: 1rem; /* Space below the welcome message */
-  text-align: left; /* Align the text to the left */
-  font-size: 1.2rem; /* Font size for the welcome message */
-  color: whitesmoke; /* Change text color to black */
-  padding-left: 1rem; /* Add padding to the left for better alignment */
+  margin-bottom: 1rem;
+  text-align: left;
+  font-size: 100px;
+  /* Increased font size */
+  font-weight: bold;
+  /* Made the text bold */
+  color: whitesmoke;
+  padding-left: 1rem;
 }
-
 
 .container {
   max-width: 1200px;
@@ -22,82 +22,46 @@
 .actionCards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
+  /* Reduced gap between individual action cards */
   margin-bottom: 2rem;
+  margin-top: 4rem;
+  /* Gap from the top */
 }
 
 .actionCard {
   background-color: var(--white);
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 2rem;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.2s ease-in-out;
+  margin-bottom: 1rem;
+  /* Added margin-bottom for gap under each action card */
 }
 
 .actionCard:hover {
   transform: translateY(-5px);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .icon {
   color: var(--primary-color);
   margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+h3 {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  font-size: 1.2rem;
+  text-align: center;
 }
 
 .chatBot {
@@ -145,7 +109,6 @@
   transform: scale(1.05);
 }
 
-
 .infoSection {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -168,13 +131,11 @@
   justify-content: center;
 }
 
-/* Calendar icon styling */
 .calendar_icon {
   color: #009688;
   margin-bottom: 10px;
 }
 
-/* Calendar grid styling */
 .calendar_grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -182,18 +143,15 @@
   text-align: center;
 }
 
-/* Calendar day styling */
 .calendar_day {
   font-weight: bold;
   color: #009688;
 }
 
-/* Calendar date styling */
 .calendar_date {
   color: #333;
 }
 
-/* Highlighted day styling */
 .highlighted_day {
   background-color: #f44336;
   color: white;
@@ -207,14 +165,12 @@
 }
 
 .dormbot_icons {
-	display: flex;
-	gap: 8px;
-  }
-  
-  /* DormBot icon styling */
-  .dormbot_icon {
-	width: 40px;
-	height: 40px;
-	border-radius: 8px;
-  }
-  
+  display: flex;
+  gap: 8px;
+}
+
+.dormbot_icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}

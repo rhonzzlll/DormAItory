@@ -64,6 +64,11 @@ const PaymentSystem = ({ isAdmin = false, adminQrCodes = {}, refreshPaymentRecor
         throw new Error('User information is missing');
       }
 
+      const selectedPaymentMethod = paymentMethods.find(method => method._id === selectedOption);
+      if (!selectedPaymentMethod) {
+        throw new Error('Selected payment method is invalid');
+      }
+
       const fullName = `${currentUser.firstName} ${currentUser.lastName}`;
       const formData = {
         amount: details.amount,
@@ -72,6 +77,9 @@ const PaymentSystem = ({ isAdmin = false, adminQrCodes = {}, refreshPaymentRecor
         paymentMethod: selectedOption,
         fullName: fullName,
         roomNumber: currentUser.roomNo,
+        accountNumber: selectedPaymentMethod.accountNumber,
+        accountName: selectedPaymentMethod.accountName,
+        name: selectedPaymentMethod.name,
       };
 
       console.log('Form data before submission:', formData);
@@ -94,6 +102,9 @@ const PaymentSystem = ({ isAdmin = false, adminQrCodes = {}, refreshPaymentRecor
 
     } catch (error) {
       console.error('Error submitting payment:', error);
+      if (error.response) {
+        console.error('Server response:', error.response.data);
+      }
       setSubmissionError(error.message || 'An unexpected error occurred');
     }
   };

@@ -103,6 +103,15 @@ select {
     margin-right: 0.5rem;
 }
 
+.eula_container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
 .eula_link {
     color: blue;
     text-decoration: underline;

@@ -1,23 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
-import { 
-  MapPin, 
-  Bed, 
-  Bath, 
-  Wifi, 
-  Wind, 
-  Share2, 
-  Info,
-  Send
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Wifi,
+  Wind,
+  Share2,
+  Info
 } from 'lucide-react';
 import Button from '../../components/layouts/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/layouts/ui/Card';
 import { Alert, AlertDescription } from '../../components/layouts/ui/alert';
-import { Textarea } from '../../components/layouts/ui/textarea';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
 // Import Swiper modules
 import 'swiper/css/autoplay';
@@ -28,8 +27,7 @@ const RoomView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [showContact, setShowContact] = useState(false);
-  const [message, setMessage] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -41,7 +39,7 @@ const RoomView = () => {
 
       try {
         const res = await fetch(`http://localhost:8080/api/dorms/get/${id}`);
-        
+
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
@@ -51,7 +49,7 @@ const RoomView = () => {
         setLoading(false);
       } catch (error) {
         console.error('Error fetching room data:', error);
-        setError('Failed to fetch room data');
+        setError(`Failed to fetch room data: ${error.message}`);
         setLoading(false);
       }
     };
@@ -67,12 +65,12 @@ const RoomView = () => {
     }, 2000);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // Add your message submission logic here
-    console.log('Message submitted:', message);
-    setMessage('');
-    setShowContact(false);
+  const handleContact = () => {
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
   };
 
   if (loading) return (
@@ -112,9 +110,9 @@ const RoomView = () => {
                 delay: 3000,
                 disableOnInteraction: false,
               }}
-              pagination={{ 
+              pagination={{
                 clickable: true,
-                dynamicBullets: true 
+                dynamicBullets: true
               }}
               className="h-96 w-full"
             >
@@ -133,7 +131,7 @@ const RoomView = () => {
               <p className="text-gray-500">No images available</p>
             </div>
           )}
-          
+
           <button
             onClick={handleShare}
             className="absolute top-4 right-4 z-10 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
@@ -174,7 +172,7 @@ const RoomView = () => {
               <Bed size={16} className="mr-2" />
               <span className="text-sm text-gray-600">{room.capacity} Beds</span>
             </span>
-            
+
             <span className="flex items-center p-2 bg-gray-50 rounded-lg">
               <Bath size={16} className="mr-2" />
               <span className="text-sm text-gray-600">
@@ -209,44 +207,33 @@ const RoomView = () => {
             </div>
           </div>
 
-          {!showContact ? (
-            <Button 
-              onClick={() => setShowContact(true)}
-              className="mt-4 w-full bg-[#008db9] hover:bg-[#007a9f] text-white transition-colors"
-            >
-              CONTACT LANDLORD
-            </Button>
-          ) : (
-            <form onSubmit={handleSubmit} className="mt-4 w-full">
-              <div className="mb-4">
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message here..."
-                  className="w-full min-h-[100px] p-3 border rounded-lg focus:ring-2 focus:ring-[#008db9]"
-                  required
-                />
-              </div>
-              <div className="flex gap-2 w-full">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-[#008db9] hover:bg-[#007a9f] text-white transition-colors w-full"
-                >
-                  <Send size={16} className="mr-2" />
-                  Send Message
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setShowContact(false)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 transition-colors w-full"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          )}
+          <Button
+            onClick={handleContact}
+            className="mt-4 w-full bg-[#008db9] hover:bg-[#007a9f] text-white transition-colors"
+          >
+            CONTACT LANDLORD
+          </Button>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        aria-labelledby="contact-dialog-title"
+        aria-describedby="contact-dialog-description"
+      >
+        <DialogTitle id="contact-dialog-title">{"Contact Landlord"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="contact-dialog-description">
+            For inquiries, feel free to email us at mlqudormitory@gmail.com or visit us in person. We’d be happy to assist you!
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary" autoFocus>
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

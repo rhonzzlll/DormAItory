@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Users, Zap, Mail, Settings, CreditCard, FileText, MessageCircle, Bell, Robot } from 'lucide-react';
+import { Bed, List, Users, Zap, Mail, Settings, CreditCard, FileText, MessageCircle, Bell, Robot } from 'lucide-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRobot } from '@fortawesome/free-solid-svg-icons'; // Import the robot icon
 
@@ -9,15 +9,15 @@ const Sidebar = () => {
 
   const menuItems = [
     { title: 'Dashboard', path: '/admin' },
-    { icon: <List size={20} />, title: 'Room List', path: '/admin/rooms' },
-    { icon: <List size={20} />, title: 'Manage Rooms', path: '/admin/managerooms' },
+    { icon: <Bed size={20} />, title: 'Room List', path: '/admin/rooms' },
+    { icon: <Bed size={20} />, title: 'Manage Rooms', path: '/admin/managerooms' },
     { icon: <Users size={20} />, title: 'Tenants', path: '/admin/users' },
     { icon: <Users size={20} />, title: 'Visitor Management', path: '/admin/visitors' },
-    { icon: <Zap size={20} />, title: 'Utilities', path: '/admin/utilities' },
+
     { icon: <Mail size={20} />, title: 'Contact Admin', path: '/admin/contacts' },
     { icon: <Settings size={20} />, title: 'Maintenance Request', path: '/admin/maintenance' },
     { icon: <CreditCard size={20} />, title: 'Payment Options', path: '/admin/payments' },
-    { icon: <FileText size={20} />, title: 'Records', path: '/admin/records' },
+
     { icon: <Bell size={20} />, title: 'Manage Announcements', path: '/admin/announcements' },
     { icon: <FontAwesomeIcon icon={faRobot} size="lg" />, title: 'Prompts', path: '/admin/prompts' } // Use Font Awesome robot icon
   ];
