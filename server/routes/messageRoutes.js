@@ -1,14 +1,20 @@
-// routes/messageRoutes.js
 const express = require('express');
 const router = express.Router();
 const contactController = require('../controllers/contactController');
 
-// Define routes
-router.post('/', contactController.createContactMessage);
-router.get('/', contactController.getContactMessages);
-router.get('/:id', contactController.getContactMessageById);
-router.put('/:id', contactController.updateContactMessageThread);
-router.put('/:id/status', contactController.updateMessageStatus);
-router.delete('/:id', contactController.deleteContactMessage);
+// Route to get all messages (with pagination)
+router.get('/', contactController.getAllMessages);
+
+// Route to get a single message by ID
+router.get('/:id', contactController.getMessageById);
+
+// Route to create a new message
+router.post('/', contactController.createMessage);
+
+// Route to update a message by ID
+router.put('/:id', contactController.updateMessage);
+
+// Route to delete a message by ID
+router.delete('/:id', contactController.deleteMessage);
 
 module.exports = router;

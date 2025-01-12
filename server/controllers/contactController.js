@@ -1,86 +1,111 @@
-
+const mongoose = require('mongoose');
 const Message = require('../models/contactMessage');
 
-// Create a new contact message
-exports.createContactMessage = async (req, res) => {
+// Helper function to validate ObjectId
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+// Get all messages with pagination
+exports.getAllMessages = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
+
   try {
-    const message = new Message(req.body);
-    await message.save();
-    res.json(message);
-  } catch (error) {
-    console.error('Error creating message:', error);
-    res.status(500).json({ error: 'Failed to create message', details: error.message });
+    const messages = await Message.find()
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+    const totalMessages = await Message.countDocuments();
+
+    res.json({
+      totalMessages,
+      totalPages: Math.ceil(totalMessages / limit),
+      currentPage: page,
+      messages // Ensure messages is an array
+    });
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Get all contact messages
-exports.getContactMessages = async (req, res) => {
-  const { userId, userRole } = req.query;
-  try {
-    const messages = userRole === 'admin'
-      ? await Message.find()
-      : await Message.find({ userId });
-    res.json(messages);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch messages' });
-  }
-};
+// Get a specific message by ID
+exports.getMessageById = async (req, res) => {
+  const { id } = req.params;
 
-// Get a single contact message by ID
-exports.getContactMessageById = async (req, res) => {
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid message ID' });
+  }
+
   try {
-    const message = await Message.findById(req.params.id);
+    const message = await Message.findById(id);
     if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
+      return res.status(404).json({ message: 'Message not found' });
     }
     res.json(message);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch message' });
+  } catch (err) {
+    console.error('Error fetching message by ID:', err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-// Update a contact message thread
-exports.updateContactMessageThread = async (req, res) => {
+// Create a new message
+exports.createMessage = async (req, res) => {
+  const { sender, recipient, subject, category, content, status, fullname, thread } = req.body;
+
+  const newMessage = new Message({
+    sender,
+    recipient,
+    subject,
+    category,
+    content,
+    status,
+    fullname,
+    thread
+  });
+
   try {
-    const message = await Message.findByIdAndUpdate(
-      req.params.id,
-      { $push: { thread: req.body.thread } },
-      { new: true }
-    );
-    if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
-    res.json(message);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update message' });
+    const savedMessage = await newMessage.save();
+    res.status(201).json(savedMessage); // Send the saved message back to the frontend
+  } catch (err) {
+    console.error('Error creating message:', err);
+    res.status(400).json({ message: err.message });
   }
 };
 
-// Update message status
-exports.updateMessageStatus = async (req, res) => {
-  try {
-    const message = await Message.findById(req.params.id);
-    if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
+// Update a message by ID
+exports.updateMessage = async (req, res) => {
+  const { id } = req.params;
 
-    message.status = req.body.status;
-    const updatedMessage = await message.save();
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid message ID' });
+  }
+
+  try {
+    const updatedMessage = await Message.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updatedMessage) {
+      return res.status(404).json({ message: 'Message not found' });
+    }
     res.json(updatedMessage);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update message status' });
+  } catch (err) {
+    console.error('Error updating message:', err);
+    res.status(400).json({ message: err.message });
   }
 };
 
-// Delete a contact message
-exports.deleteContactMessage = async (req, res) => {
+// Delete a message by ID
+exports.deleteMessage = async (req, res) => {
+  const { id } = req.params;
+
+  if (!isValidObjectId(id)) {
+    return res.status(400).json({ message: 'Invalid message ID' });
+  }
+
   try {
-    const message = await Message.findByIdAndDelete(req.params.id);
-    if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
+    const deletedMessage = await Message.findByIdAndDelete(id);
+    if (!deletedMessage) {
+      return res.status(404).json({ message: 'Message not found' });
     }
-    res.json({ message: 'Message deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete message' });
+    res.json({ message: 'Message deleted' });
+  } catch (err) {
+    console.error('Error deleting message:', err);
+    res.status(500).json({ message: err.message });
   }
 };

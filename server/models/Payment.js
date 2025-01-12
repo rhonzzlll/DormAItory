@@ -1,26 +1,21 @@
-// models/Payment.js
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const paymentSchema = new mongoose.Schema({
+const PaymentSchema = new Schema({
   // Fields for payment methods
-  name: { type: String }, // Payment method name
-  accountName: { type: String }, // Account name for payment method
-  accountNumber: { type: String }, // Account number for payment method
+  name: { type: String, required: true }, // Payment method name
+  accountName: { type: String, required: true }, // Account name for payment method
+  accountNumber: { type: String, required: true }, // Account number for payment method
   imageUrl: { type: String }, // Image URL for payment method
 
   // Fields for payment records
-  fullName: {
-    type: String,
-    required: true,
-  },
-  roomNumber: {
-    type: String,
-    required: true,
-  },
   amount: { type: Number }, // Payment amount
-  screenshotUrl: { type: String }, // URL of payment screenshot
-  referenceNumber: { type: String }, // Payment reference number
-  date: { type: Date, default: Date.now }, // Date of payment
+  referenceNumber: { type: String }, // Reference number for payment
+  screenshotUrl: { type: String }, // Screenshot URL for payment
+  paymentMethod: { type: String }, // Payment method used
+  fullName: { type: String }, // Full name of the payer
+  roomNumber: { type: String }, // Room number of the payer
+  date: { type: Date, default: Date.now } // Date of payment
 });
 
-module.exports = mongoose.model('Payment', paymentSchema);
+module.exports = mongoose.model('Payment', PaymentSchema);

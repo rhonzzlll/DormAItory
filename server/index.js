@@ -4,6 +4,14 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require('path');
 const fs = require('fs');
+const redis = require('redis');
+
+// Create a Redis client
+const redisClient = redis.createClient();
+
+redisClient.on('error', (err) => {
+  console.error('Redis error:', err);
+});
 
 // Import routes
 const userRoutes = require("./routes/users");
@@ -14,7 +22,6 @@ const dormRoutes = require("./routes/dorm");
 const chatRoutes = require("./routes/chatRoutes");
 const visitorRoutes = require("./routes/visitorRoutes");
 const messageRoutes = require('./routes/messageRoutes');
-
 const paymentRoutes = require("./routes/paymentRoutes");
 const announcementRoutes = require('./routes/announcementRoutes'); // Ensure this path is correct
 
@@ -33,7 +40,6 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-app.use('/api/messages', messageRoutes);
 // Endpoint to handle file upload
 app.post('/api/payments/upload', (req, res) => {
   let fileData = '';
@@ -89,7 +95,7 @@ const connectDB = async () => {
 // Connect to the database
 connectDB();
 
-// API Routestfgf
+// API Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/maintenancerequest", maintenanceRoutes);

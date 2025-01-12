@@ -3,7 +3,7 @@ const Payment = require('../models/Payment');
 // Get all payment methods
 exports.getPayments = async (req, res) => {
   try {
-    const payments = await Payment.find({ name: { $exists: true } });
+    const payments = await Payment.find({ name: { $exists: true }, amount: { $exists: false } });
     res.json(payments);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -13,7 +13,8 @@ exports.getPayments = async (req, res) => {
 // Create a new payment method
 exports.createPayment = async (req, res) => {
   try {
-    const payment = new Payment(req.body);
+    const { name, accountName, accountNumber, imageUrl } = req.body;
+    const payment = new Payment({ name, accountName, accountNumber, imageUrl });
     await payment.save();
     res.status(201).json(payment);
   } catch (error) {
@@ -24,6 +25,7 @@ exports.createPayment = async (req, res) => {
 // Update a payment method
 exports.updatePayment = async (req, res) => {
   try {
+    console.log('Update Payment Request:', req.params, req.body);
     const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!payment) {
       return res.status(404).json({ error: 'Payment not found' });
@@ -50,7 +52,7 @@ exports.deletePayment = async (req, res) => {
 // Get all payment records
 exports.getPaymentRecords = async (req, res) => {
   try {
-    const paymentRecords = await Payment.find({ fullName: { $exists: true } }).populate('fullName').populate('roomNumber');
+    const paymentRecords = await Payment.find({ amount: { $exists: true } }).populate('fullName').populate('roomNumber');
     res.json(paymentRecords);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -60,16 +62,18 @@ exports.getPaymentRecords = async (req, res) => {
 // Create a new payment record
 exports.createPaymentRecord = async (req, res) => {
   try {
-    const { amount, referenceNumber, paymentMethod, fullName, roomNumber } = req.body;
-    const screenshotUrl = req.file ? req.file.path : '';
+    const { amount, referenceNumber, paymentMethod, fullName, roomNumber, accountNumber, accountName, name, screenshotUrl } = req.body;
 
     const paymentRecord = new Payment({
       amount,
       referenceNumber,
-      screenshotUrl,
+      screenshotUrl, // Ensure this is a base64 string
       paymentMethod,
       fullName,
       roomNumber,
+      accountNumber,
+      accountName,
+      name
     });
 
     await paymentRecord.save();
@@ -83,6 +87,7 @@ exports.createPaymentRecord = async (req, res) => {
 // Update a payment record
 exports.updatePaymentRecord = async (req, res) => {
   try {
+    console.log('Update Payment Record Request:', req.params, req.body);
     const paymentRecord = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!paymentRecord) {
       return res.status(404).json({ error: 'Payment record not found' });
