@@ -62,7 +62,6 @@ const sendBotQuery = async (message, res) => {
         });
 
         const { entities } = await req.json();
-        const { entity, value } = entities[0];
 
         const botMessage = new Message({ 
             roomId: message.roomId, 
@@ -70,6 +69,13 @@ const sendBotQuery = async (message, res) => {
             receiver: message.sender, 
             content: "Sorry, I could not understand what you meant, may you please try again? Thank you!"
         });
+
+        if (entities.length === 0) {
+            botMessage.content = "Sorry, could you please be more specific with your query. Thank you!"
+            return res.status(200).json({ data: { response: botMessage.content } });
+        }
+        
+        const { entity, value } = entities[0];
 
         if (entities.length === 1) {
             if (entity === "_id") {
