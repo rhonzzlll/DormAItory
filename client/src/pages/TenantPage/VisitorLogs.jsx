@@ -16,7 +16,7 @@ const STATUS_COLORS = {
   rejected: '#F56565'  // Red
 };
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://dormaitory.online:8080/api';
 
 const VisitorLogs = () => {
   const [visitors, setVisitors] = useState([]);

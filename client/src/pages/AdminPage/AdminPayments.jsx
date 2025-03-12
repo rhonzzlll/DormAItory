@@ -31,7 +31,8 @@ import { toast } from '../../components/layouts/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/layouts/ui/Select';
 import { saveAs } from 'file-saver';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+
+const API_BASE_URL = 'http://dormaitory.online:8080/api';
 
 const AdminPaymentManagement = () => {
   const [paymentMethods, setPaymentMethods] = useState([]);

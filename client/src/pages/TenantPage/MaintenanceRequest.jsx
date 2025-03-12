@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://dormaitory.online:8080/api';
 
 export default function MaintenanceRequestForm() {
   const [formData, setFormData] = useState({

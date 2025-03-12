@@ -19,7 +19,7 @@ import Alert from '@mui/material/Alert';
 import { Label } from '../../components/layouts/ui/label';
 import moment from 'moment';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://dormaitory.online/api';
 
 const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending', color: '#FFA500' },

@@ -33,10 +33,10 @@ const DashboardCharts = () => {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const tenantsResponse = await fetch('http://localhost:8080/api/users');
-        const visitorsResponse = await fetch('http://localhost:8080/api/visitors');
-        const paymentsResponse = await fetch('http://localhost:8080/api/payments');
-        const roomsResponse = await fetch('http://localhost:8080/api/dorms');
+        const tenantsResponse = await fetch('http://dormaitory.online/api/users');
+        const visitorsResponse = await fetch('http://dormaitory.online/api/visitors');
+        const paymentsResponse = await fetch('http://dormaitory.online/api/payments');
+        const roomsResponse = await fetch('http://dormaitory.online/api/dorms');
 
         if (!tenantsResponse.ok || !visitorsResponse.ok || !paymentsResponse.ok || !roomsResponse.ok) {
           throw new Error('Failed to fetch data from one or more endpoints');

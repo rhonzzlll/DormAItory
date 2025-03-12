@@ -3,7 +3,8 @@ import { CreditCard, ArrowLeft, Check, Upload, AlertCircle } from 'lucide-react'
 import { Alert, AlertTitle, AlertDescription } from '../../components/layouts/ui/alert';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://dormaitory.online:8080/api';
+
 
 const PaymentSystem = ({ isAdmin = false, adminQrCodes = {}, refreshPaymentRecords }) => {
   const userId = localStorage.getItem("_id"); // Retrieve userId from localStorage

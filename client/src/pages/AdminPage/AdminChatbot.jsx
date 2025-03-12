@@ -27,7 +27,7 @@ const AdminChatbot = () => {
             scrollToBottom();
 
             try {
-                const req = await fetch(`http://localhost:8080/api/chat/message/send/${chatroomId}?admin=true`, {
+                const req = await fetch(`http://dormaitory.online:8080/api/chat/message/send/${chatroomId}?admin=true`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -40,7 +40,7 @@ const AdminChatbot = () => {
                     })
                 });
                 const res = await req.json();
-
+            
                 setTimeout(() => {
                     setMessages(prev => [...prev, { sender: '673349dfb3adad07a8d18919', receiver: userId, content: res.data?.response || 'No response' }]);
                     setIsTyping(false);
@@ -62,7 +62,7 @@ const AdminChatbot = () => {
             const otherId = "673349dfb3adad07a8d18919";
 
             try {
-                const c_req = await fetch("http://localhost:8080/api/chat/chatroom", {
+                const c_req = await fetch("http://dormaitory.online:8080/api/chat/chatroom", {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
@@ -81,7 +81,7 @@ const AdminChatbot = () => {
                     setChatroomId(chatroomId);
                 }
 
-                const m_req = await fetch(`http://localhost:8080/api/chat/messages/${chatroomId}`, {
+                const m_req = await fetch(`http://dormaitory.online:8080/api/chat/messages/${chatroomId}`, {
                     method: "GET",
                     headers: {
                         "Accept": "application/json"
@@ -112,8 +112,7 @@ const AdminChatbot = () => {
                         key={index}
                         className={`mb-4 flex ${message.sender === userId ? 'justify-end' : 'justify-start'}`}
                     >
-                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === userId ? 'bg-blue-500 text-white' : 'bg-white text-black'
-                            }`}>
+                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === userId ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}>
                             {message.content}
                         </div>
                     </div>

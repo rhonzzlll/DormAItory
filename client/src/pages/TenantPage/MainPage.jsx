@@ -46,7 +46,7 @@ const VisitorsChart = () => {
   useEffect(() => {
     const fetchVisitorsData = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/visitors/');
+        const response = await axios.get('http://dormaitory.online:8080/api/visitors/');
         setVisitorsData(response.data);
       } catch (error) {
         console.error('Error fetching visitors data:', error);
@@ -92,7 +92,7 @@ const MaintenanceRequestsChart = () => {
   useEffect(() => {
     const fetchMaintenanceData = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/maintenancerequest/get');
+        const response = await axios.get('http://dormaitory.online:8080/api/maintenancerequest/get');
         setMaintenanceData(response.data);
       } catch (error) {
         console.error('Error fetching maintenance data:', error);
@@ -146,7 +146,7 @@ const MainPage = () => {
 
   const fetchAnnouncementsAndEvents = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/announcements');
+      const response = await axios.get('http://dormaitory.online:8080/api/announcements');
       const data = response.data;
 
       setAnnouncements(data.filter(item => !item.date || item.type === 'announcement'));

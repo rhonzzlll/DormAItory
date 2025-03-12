@@ -19,7 +19,7 @@ const STATUS_COLORS = {
   rejected: '#F44336'  // Red
 };
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://dormaitory.online:8080/api';
 
 export default function MaintenanceLogs() {
   const [requests, setRequests] = useState([]);
@@ -44,7 +44,7 @@ export default function MaintenanceLogs() {
 
   const fetchTenantData = async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/tenants/get/${localStorage.getItem("_id")}`);
+      const response = await axios.get(`http://dormaitory.online:8080/api/tenants/get/${localStorage.getItem("_id")}`);
       const { tenant } = response.data.data;
 
       setTenantInfo({

@@ -92,7 +92,7 @@ const RoomList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const roomsPerPage = 6;
 
-  const API_BASE_URL = 'http://localhost:8080/api/dorms';
+  const API_BASE_URL = 'http://dormaitory.online:8080/api/dorms';
 
   useEffect(() => {
     const fetchRooms = async () => {

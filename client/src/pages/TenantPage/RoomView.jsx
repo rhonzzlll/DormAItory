@@ -38,7 +38,7 @@ const RoomView = () => {
       }
 
       try {
-        const res = await fetch(`http://localhost:8080/api/dorms/get/${id}`);
+        const res = await fetch(`http://dormaitory.online:8080/api/dorms/get/${id}`);
 
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);

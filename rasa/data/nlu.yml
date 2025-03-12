@@ -243,3 +243,20 @@ nlu:
     - What tenants are in room [24](roomNumber)?
     - Who has been assigned to room [12](roomNumber)?
     - Give me a list of residents in room [16](roomNumber)
+    - Show the occupants of room [28](roomNumber)
+    - Can you find out who is in room [10](roomNumber)?
+- intent: room_details
+  examples: |
+    - Show me the details of room [101](roomNumber)
+    - What are the details of room [202](roomNumber)?
+    - Can you provide information about room [303](roomNumber)?
+    - Tell me about room [404](roomNumber)
+    - I need details for room [505](roomNumber)
+
+- intent: payment_status
+  examples: |
+    - What is the payment status for room [101](roomNumber)?
+    - Show me the payment details for room [202](roomNumber)
+    - Can you tell me the payment status of room [303](roomNumber)?
+    - I need the payment information for room [404](roomNumber)
+    - What is the rent status for room [505](roomNumber)?

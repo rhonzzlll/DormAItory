@@ -35,8 +35,8 @@ const ContactAdmin = ({ userRole = 'tenant' }) => {
       const userId = localStorage.getItem("_id");
       try {
         const [usersResponse, messagesResponse] = await Promise.all([
-          axios.get('http://localhost:8080/api/users'),
-          axios.get('http://localhost:8080/api/contact-messages')
+          axios.get('http://dormaitory.online:8080/api/users'),
+          axios.get('http://dormaitory.online:8080/api/contact-messages')
         ]);
 
         const formattedUsers = usersResponse.data.map(user => ({
@@ -112,7 +112,7 @@ const ContactAdmin = ({ userRole = 'tenant' }) => {
   
       if (selectedThread) {
         const response = await axios.put(
-          `http://localhost:8080/api/contact-messages/${selectedThread._id}`,
+          `http://dormaitory.online:8080/api/contact-messages/${selectedThread._id}`,
           { thread: [...selectedThread.thread, messagePayload.thread[0]] }
         );
   
@@ -126,7 +126,7 @@ const ContactAdmin = ({ userRole = 'tenant' }) => {
         setSelectedThread(response.data);
       } else {
         const response = await axios.post(
-          'http://localhost:8080/api/contact-messages',
+          'http://dormaitory.online:8080/api/contact-messages',
           messagePayload
         );
   
@@ -155,7 +155,7 @@ const ContactAdmin = ({ userRole = 'tenant' }) => {
     if (message.status === 'unread') {
       try {
         const response = await axios.put(
-          `http://localhost:8080/api/contact-messages/${message._id}`,
+          `http://dormaitory.online:8080/api/contact-messages/${message._id}`,
           { status: 'read' }
         );
 
@@ -174,7 +174,7 @@ const ContactAdmin = ({ userRole = 'tenant' }) => {
   const handleDeleteMessage = async (messageId) => {
     setLoading(true);
     try {
-      await axios.delete(`http://localhost:8080/api/contact-messages/${messageId}`);
+      await axios.delete(`http://dormaitory.online:8080/api/contact-messages/${messageId}`);
       const updatedMessages = messages.filter(message => message._id !== messageId);
       setMessages(updatedMessages);
       localStorage.setItem('messages', JSON.stringify(updatedMessages));

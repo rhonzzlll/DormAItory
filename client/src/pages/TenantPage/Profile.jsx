@@ -31,7 +31,7 @@ const Profile = () => {
         const fetchUserData = async () => {
             try {
                 console.log(`Fetching user data for userId: ${userId}`);
-                const response = await axios.get(`http://localhost:8080/api/users/${userId}`);
+                const response = await axios.get(`http://dormaitory.online:8080/api/users/${userId}`);
                 const userData = response.data;
                 setProfile({
                     firstName: userData.firstName,
@@ -110,7 +110,7 @@ const Profile = () => {
             }
 
             console.log(`Updating user data for userId: ${userId}`);
-            const response = await axios.put(`http://localhost:8080/api/users/${userId}`, updateData);
+            const response = await axios.put(`http://dormaitory.online:8080/api/users/${userId}`, updateData);
 
             if (response.status === 200) {
                 console.log('Profile updated successfully');

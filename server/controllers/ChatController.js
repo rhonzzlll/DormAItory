@@ -51,7 +51,7 @@ const calculateSimilarity = async (content, query) => {
 
 const sendBotQuery = async (message, res) => {  
     try {
-        const req = await fetch("http://localhost:5005/model/parse", {
+        const req = await fetch("http://dormaitory.online:5005/model/parse", {
             method: "POST",
             headers: {
                 "Accept": "application/json"

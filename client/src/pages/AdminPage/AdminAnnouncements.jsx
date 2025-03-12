@@ -24,16 +24,17 @@ const AdminManagementUI = () => {
     fetchData();
   }, []);
 
+   
   const fetchData = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/announcements');
+      const response = await axios.get('http://dormaitory.online:8080/api/announcements');
       const allItems = response.data;
       setCalendarEvents(allItems.filter(item => item.type === 'event'));
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
-
+  
   const addCalendarEvent = async () => {
     if (newEvent.date && newEvent.title.trim() !== '') {
       try {
@@ -41,7 +42,7 @@ const AdminManagementUI = () => {
           ...newEvent,
           content: newEvent.title
         };
-        const response = await axios.post('http://localhost:8080/api/announcements', eventToAdd);
+        const response = await axios.post('http://dormaitory.online:8080/api/announcements', eventToAdd);
         if (response && response.data) {
           setCalendarEvents([...calendarEvents, response.data]);
           setNewEvent({ date: null, title: '', description: '', type: 'event' });
@@ -56,19 +57,19 @@ const AdminManagementUI = () => {
       }
     }
   };
-
+  
   const deleteCalendarEvent = async (id) => {
     try {
-      await axios.delete(`http://localhost:8080/api/announcements/${id}`);
+      await axios.delete(`http://dormaitory.online:8080/api/announcements/${id}`);
       setCalendarEvents(calendarEvents.filter(event => event._id !== id));
     } catch (error) {
       console.error('Error deleting calendar event:', error);
     }
   };
-
+  
   const updateCalendarEvent = async (id, updatedEvent) => {
     try {
-      const response = await axios.put(`http://localhost:8080/api/announcements/${id}`, updatedEvent);
+      const response = await axios.put(`http://dormaitory.online:8080/api/announcements/${id}`, updatedEvent);
       if (response && response.data) {
         setCalendarEvents(calendarEvents.map(event =>
           event._id === id ? response.data : event

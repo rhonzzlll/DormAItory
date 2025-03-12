@@ -92,7 +92,7 @@ const DormitoryManagementGrid = () => {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/dorms');
+      const response = await axios.get('http://dormaitory.online:8080/api/dorms');
       setRooms(response.data.dorms.sort((a, b) => a.roomNumber - b.roomNumber));
     } catch (error) {
       console.error('Error fetching all dorms:', error);
@@ -197,7 +197,7 @@ const DormitoryManagementGrid = () => {
 
     try {
       if (editingRoom) {
-        await axios.post("http://localhost:8080/api/dorms/update", roomData, {
+        await axios.post("http://dormaitory.online:8080/api/dorms/update", roomData, {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -220,7 +220,7 @@ const DormitoryManagementGrid = () => {
 
         setEditingRoom(false);
       } else {
-        await axios.post("http://localhost:8080/api/dorms/create", roomData, {
+        await axios.post("http://dormaitory.online:8080/api/dorms/create", roomData, {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -238,7 +238,7 @@ const DormitoryManagementGrid = () => {
 
   const handleRoomDelete = async (id) => {
     try {
-      await axios.get(`http://localhost:8080/api/dorms/delete/${id}`);
+      await axios.get(`http://dormaitory.online:8080/api/dorms/delete/${id}`);
       fetchRooms();
     } catch (error) {
       console.log(error);
@@ -250,7 +250,7 @@ const DormitoryManagementGrid = () => {
 
     try {
       if (editingTenant) {
-        await axios.post("http://localhost:8080/api/tenants/update", {
+        await axios.post("http://dormaitory.online:8080/api/tenants/update", {
           formData
         }, {
           headers: {
@@ -259,7 +259,7 @@ const DormitoryManagementGrid = () => {
           }
         });
       } else {
-        const tenant = await axios.post("http://localhost:8080/api/tenants/create", {
+        const tenant = await axios.post("http://dormaitory.online:8080/api/tenants/create", {
           formData
         }, {
           headers: {
@@ -284,7 +284,7 @@ const DormitoryManagementGrid = () => {
     if (!window.confirm('Are you sure you want to remove this tenant?')) return;
 
     try {
-      await axios.post("http://localhost:8080/api/tenants/delete", {
+      await axios.post("http://dormaitory.online:8080/api/tenants/delete", {
         tenant
       }, {
         headers: {
@@ -561,11 +561,7 @@ const DormitoryManagementGrid = () => {
                 </div>
                 <div className="w-full grid gap-2">
                   <Label htmlFor="wifi">WIFI</Label>
-                  <Select
-                    value={roomData.wifi}
-
-
-
+                  <Select                     value={roomData.wifi}
                     onValueChange={(value) => handleRoomChange('wifi', value)}
                   >
                     <SelectTrigger id="wifi">
@@ -716,3 +712,4 @@ const DormitoryManagementGrid = () => {
 };
 
 export default DormitoryManagementGrid;
+ 

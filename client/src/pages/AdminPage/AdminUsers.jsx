@@ -22,12 +22,12 @@ export default function AdminUsers() {
         setLoading(true);
 
         // Fetch all users data
-        const usersResponse = await axios.get('http://localhost:8080/api/users');
+        const usersResponse = await axios.get('http://dormaitory.online/api/users');
         console.log('Users Response:', usersResponse.data); // Debugging log
         const users = Array.isArray(usersResponse.data) ? usersResponse.data : [usersResponse.data];
 
         // Fetch all dorms data
-        const dormsResponse = await axios.get('http://localhost:8080/api/dorms');
+        const dormsResponse = await axios.get('http://dormaitory.online/api/dorms');
         console.log('Dorms Response:', dormsResponse.data); // Debugging log
         const dorms = Array.isArray(dormsResponse.data) ? dormsResponse.data : [dormsResponse.data];
 
@@ -39,7 +39,7 @@ export default function AdminUsers() {
             id: index + 1, // Incrementing ID starting from 1
             _id: user._id,
             fullName: `${user.firstName} ${user.lastName}`,
-            roomNo: user.roomNo || 'N/A',
+            roomNo: dormData.roomNumber || 'N/A',
             gender: user.gender || 'N/A',
             email: user.email,
             phoneNumber: user.phoneNumber || 'N/A',

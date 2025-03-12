@@ -21,7 +21,7 @@ import { LocalizationProvider, DatePicker } from '@mui/lab';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://dormaitory.online:8080/api';
 
 const TenantDetails = () => {
   const [tenantData, setTenantData] = useState([]);
