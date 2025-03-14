@@ -18,7 +18,7 @@ app.post('/api/payments/upload', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).send('No file uploaded.');
   }
-  const fileUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+  const fileUrl = `http://dormaitory.online:${PORT}/uploads/${req.file.filename}`;
   res.json({ url: fileUrl });
 });
 

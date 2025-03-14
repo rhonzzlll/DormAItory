@@ -13,6 +13,7 @@ import axios from 'axios';
 import Box from '@mui/material/Box';
 import InputAdornment from '@mui/material/InputAdornment';
 import { CardTitle } from '../../components/layouts/ui/Card';
+import AdminContentTemplate from '../../pages/AdminPage/AdminContentTemplate';
 
 const AdminChatbotPrompts = () => {
   const [requests, setRequests] = useState([]);
@@ -35,8 +36,8 @@ const AdminChatbotPrompts = () => {
       return;
     }
 
-    const filtered = requests.filter(request => 
-      Object.values(request).some(query => 
+    const filtered = requests.filter(request =>
+      Object.values(request).some(query =>
         query && query.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
@@ -47,7 +48,7 @@ const AdminChatbotPrompts = () => {
     try {
       const response = await axios.get('http://dormaitory.online:8080/api/chat/prompts');
       setRequests(response.data.data.prompts);
-      setFilteredRequests(response.data.prompts);
+      setFilteredRequests(response.data.data.prompts);
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
     }
@@ -114,7 +115,7 @@ const AdminChatbotPrompts = () => {
           }
         });
       }
-      
+
       fetchRequests();
       handleClose();
     } catch (error) {
@@ -123,12 +124,12 @@ const AdminChatbotPrompts = () => {
   };
 
   const columns = [
-    { field: 'query', headerName: 'Query', flex: 0, minWidth: 200 },
-    { field: 'response', headerName: 'Response', flex: 1, minWidth: 200 },
+    { field: 'query', headerName: 'Query', flex: 1, minWidth: 200 },
+    { field: 'response', headerName: 'Response', flex: 2, minWidth: 200 },
     {
       field: 'actions',
       headerName: 'Actions',
-      minWidth: 25,
+      minWidth: 100,
       renderCell: (params) => (
         <Box>
           <IconButton onClick={() => handleOpen(params.row)} size="small" sx={{ mr: 1 }}>
@@ -141,103 +142,103 @@ const AdminChatbotPrompts = () => {
       )
     }
   ];
-  
+
   return (
-    <Paper sx={{ height: 650, width: '100%', p: 3 }}>
-      <CardTitle>Admin Chatbot Prompts</CardTitle>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'center', marginTop: "1rem" }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpen()}
-          startIcon={<UserPlus />}
-          sx={{ height: 40 }}
-        >
-          Add Prompt
-        </Button>
-        <TextField
-          placeholder="Search prompts..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ width: 300 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search size={20} />
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+    <AdminContentTemplate sx={{ minHeight: '100vh' }}>
+      <Paper sx={{ height: 950, width: '100%', p: 3 }}>
+        <CardTitle>Admin Chatbot Prompts</CardTitle>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3, alignItems: 'center', marginTop: "1rem" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleOpen()}
+            startIcon={<UserPlus />}
+            sx={{ height: 40 }}
+          >
+            Add Prompt
+          </Button>
+          <TextField
+            placeholder="Search prompts..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ width: 300 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search size={20} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
 
-      <DataGrid
-        rows={filteredRequests}
-        columns={columns}
-        pageSize={10}
-        rowsPerPageOptions={[10]}
-        disableSelectionOnClick
-        getRowId={(row) => row._id}
-        sx={{
-          border: 'none',
-          '& .MuiDataGrid-cell': {
-            borderBottom: '1px solid #f0f0f0',
-          },
-          '& .MuiDataGrid-columnHeaders': {
-            backgroundColor: '#f5f5f5',
-            borderBottom: 'none',
-          }
-        }}
-      />
+        <DataGrid
+  rows={filteredRequests}
+  columns={columns}
+  pageSize={5}
+  rowsPerPageOptions={[15, 30, 45]} // Update this line
+  disableSelectionOnClick
+  getRowId={(row) => row._id}
+  sx={{
+    border: 'none',
+    '& .MuiDataGrid-cell': {
+      borderBottom: '1px solid #f0f0f0',
+      whiteSpace: 'normal',
+      wordWrap: 'break-word',
+    },
+    '& .MuiDataGrid-columnHeaders': {
+      backgroundColor: '#f5f5f5',
+      borderBottom: 'none',
+    }
+  }}
+/>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>{isEdit ? 'Edit Prompt' : 'Add Prompt'}</DialogTitle>
-        <DialogContent>
-          {isEdit ? (
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+          <DialogTitle>{isEdit ? 'Edit Prompt' : 'Add Prompt'}</DialogTitle>
+          <DialogContent>
+            {isEdit ? (
+              <TextField
+                margin="dense"
+                name="_id"
+                label="ID"
+                type="text"
+                fullWidth
+                value={selectedRequest?._id || ''}
+                readOnly
+                disabled
+              />
+            ) : null}
             <TextField
               margin="dense"
-              name="_id"
-              label="ID"
+              name="query"
+              label="Query"
               type="text"
               fullWidth
-              value={selectedRequest?._id || ''}
-              readOnly
-              disabled
+              value={selectedRequest?.query || ''}
+              onChange={handleInputChange}
             />
-            ) : 
-            (
-              <></>
-            )
-          }
-          <TextField
-            margin="dense"
-            name="query"
-            label="Query"
-            type="text"
-            fullWidth
-            value={selectedRequest?.query || ''}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="response"
-            label="Response"
-            type="text"
-            fullWidth
-            value={selectedRequest?.response || ''}
-            onChange={handleInputChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} color="primary" variant="contained">
-            {isEdit ? 'Update' : 'Add'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Paper>
+            <TextField
+              margin="dense"
+              name="response"
+              label="Response"
+              type="text"
+              fullWidth
+              value={selectedRequest?.response || ''}
+              onChange={handleInputChange}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose} color="primary">
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} color="primary" variant="contained">
+              {isEdit ? 'Update' : 'Add'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Paper>
+    </AdminContentTemplate>
   );
-};
+}
 
 export default AdminChatbotPrompts;

@@ -28,7 +28,7 @@ const calculateSimilarity = async (content, query) => {
 
     for (let idx = 0; idx <= lengthB; idx++) {
         distanceMatrix[0][idx] = idx;
-    } 
+    }
 
     for (let x = 1; x <= lengthA; x++) {
         distanceMatrix[x] = [];
@@ -49,7 +49,25 @@ const calculateSimilarity = async (content, query) => {
     return [query, (1 - distanceMatrix[lengthA][lengthB] / maxLength) * 100];
 };
 
-const sendBotQuery = async (message, res) => {  
+/**
+ * Formats a date string or Date object to a more readable format
+ * @param {string|Date} date - The date to format
+ * @returns {string} The formatted date string
+ */
+const formatDate = (date) => {
+    if (!date) return "Not specified";
+    
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return date; // Return original if invalid
+    
+    return dateObj.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+};
+
+const sendBotQuery = async (message, res) => {
     try {
         const req = await fetch("http://dormaitory.online:5005/model/parse", {
             method: "POST",
@@ -62,70 +80,74 @@ const sendBotQuery = async (message, res) => {
         });
 
         const { entities } = await req.json();
-        const { entity, value } = entities[0];
 
-        const botMessage = new Message({ 
-            roomId: message.roomId, 
-            sender: message.receiver, 
-            receiver: message.sender, 
+        const botMessage = new Message({
+            roomId: message.roomId,
+            sender: message.receiver,
+            receiver: message.sender,
             content: "Sorry, I could not understand what you meant, may you please try again? Thank you!"
         });
+
+        if (entities.length === 0) {
+            botMessage.content = "Sorry, could you please be more specific with your query. Thank you!";
+            return res.status(200).json({ data: { response: botMessage.content } });
+        }
+
+        const { entity, value } = entities[0];
 
         if (entities.length === 1) {
             if (entity === "_id") {
                 const foundUser = await User.findOne({ "_id": new mongoose.Types.ObjectId(value) });
 
                 if (foundUser) {
-                    const { firstName, lastName, address, email, phoneNumber } = foundUser;
-
-                    botMessage.content = `That user appears to be ${firstName} ${lastName}. He lives at "${address}" and you may contact him via their email (${email}) or phone number (+63${phoneNumber}).`;
+                    const { firstName, lastName, address, email, phoneNumber, startDate, endDate, paymentStatus } = foundUser;
+                    botMessage.content = `That user appears to be ${firstName} ${lastName}. He lives at "${address}" and you may contact him via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.`;
                 } else {
                     botMessage.content = `Sorry, I couldn't find anyone with the ID ${value}`;
                 }
-            } else  if (entity === "firstName") {
+            } else if (entity === "firstName") {
                 const users = await User.find({ "firstName": value });
-    
+
                 if (users.length === 1) {
-                    const { _id, firstName, lastName, address, email, phoneNumber } = users[0];
-                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}". You may contact him via their email (${email}) or phone number (+63${phoneNumber})".`
+                    const { _id, firstName, lastName, address, email, phoneNumber, startDate, endDate, paymentStatus } = users[0];
+                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}". You may contact him via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.`;
                     botMessage.save();
-    
+
                     return res.status(200).json({ data: { response: botMessage.content } });
                 } else if (users.length > 1) {
-                    let message = `It appears that there are multiple users with the first name ${value}:\n`
-    
+                    let message = `It appears that there are multiple users with the first name ${value}:\n`;
+
                     for (const user of users) {
-                        const { _id, firstName, lastName, address } = user;
-    
-                        message += `(${_id}) ${firstName} ${lastName} from "${address}"\n`
+                        const { _id, firstName, lastName, address, startDate, endDate, paymentStatus } = user;
+
+                        message += `(${_id}) ${firstName} ${lastName} from "${address}". The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.\n`;
                     }
-    
+
                     message += "\n\nThose are the found users, please let me know if I can assist you more.";
                     botMessage.content = message;
                 } else {
-                    botMessage.content = `Sorry, I couldn't find anyone with the first name ${value}.`
+                    botMessage.content = `Sorry, I couldn't find anyone with the first name ${value}.`;
                 }
             } else if (entity === "lastName") {
                 const users = await User.find({ "lastName": value });
-    
+
                 if (users.length === 1) {
-                    const { _id, firstName, lastName, address, email, phoneNumber } = users[0];
-                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}. You may contact him via their email (${email}) or phone number (+63${phoneNumber})"`
-    
+                    const { _id, firstName, lastName, address, email, phoneNumber, startDate, endDate, paymentStatus } = users[0];
+                    botMessage.content = `That user appears to be ${firstName} ${lastName}. He lives at "${address}" and you may contact him via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.`;
                     return res.status(200).json({ data: { response: botMessage.content } });
                 } else if (users.length > 1) {
-                    let message = `It appears that there are multiple users with the last name ${value}:\n`
-    
+                    let message = `It appears that there are multiple users with the last name ${value}:\n`;
+
                     for (const user of users) {
-                        const { _id, firstName, lastName, address } = user;
-    
-                        message += `(${_id}) ${firstName} ${lastName} from "${address}"\n`
+                        const { _id, firstName, lastName, address, startDate, endDate, paymentStatus } = user;
+
+                        message += `(${_id}) ${firstName} ${lastName} from "${address}". The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.\n`;
                     }
-    
+
                     message += "\n\nThose are the found users, please let me know if I can assist you more.";
                     botMessage.content = message;
                 } else {
-                    botMessage.content = `Sorry, I couldn't find anyone with the last name ${value}.`
+                    botMessage.content = `Sorry, I couldn't find anyone with the last name ${value}.`;
                 }
             } else if (entity === "roomNumber") {
                 const foundDorm = await Dorm.aggregate([
@@ -141,11 +163,11 @@ const sendBotQuery = async (message, res) => {
                                     $match: {
                                         $expr: {
                                             $and: [
-                                                { $eq: ["$roomId", "$$roomId"]}
+                                                { $eq: ["$roomId", "$$roomId"] }
                                             ]
                                         }
                                     }
-                                }, 
+                                },
                                 {
                                     $lookup: {
                                         from: "users",
@@ -156,7 +178,7 @@ const sendBotQuery = async (message, res) => {
                                 },
                                 {
                                     $unwind: {
-                                        path: "$user",
+                                        path: "$info",
                                         preserveNullAndEmptyArrays: true
                                     }
                                 }
@@ -165,97 +187,122 @@ const sendBotQuery = async (message, res) => {
                         }
                     },
                 ]);
-    
+
                 if (foundDorm.length === 1) {
                     let message = `Room ${value} contains ${foundDorm[0]["occupied"]} people, up to ${foundDorm[0]["capacity"]}, with a renting price starting at ${foundDorm[0]["price"]} pesos. It has`;
-    
+
                     if (foundDorm[0]["amenities"]["aircon"]) {
                         message += " aircon";
                     } else {
                         message += " no aircon";
                     }
-    
+
                     if (foundDorm[0]["amenities"]["wifi"]) {
                         message += ", WIFI";
                     } else {
                         message += ", no WIFI";
                     }
-    
+
                     if (foundDorm[0]["amenities"]["bathroom"]) {
-                        message += ", bahtroom";
+                        message += ", bathroom";
                     } else {
                         message += ", no bathroom";
                     }
-    
+
                     if (foundDorm[0]["occupied"] === 0) {
                         message += ", and there are no people that currently live in this room.";
                     } else {
                         message += ", and people that currently live here are:\n\n";
-    
+
                         for (const tenant of foundDorm[0]["tenants"]) {
-                            message += `(${tenant["userId"]}) ${tenant["info"][0]["firstName"]} ${tenant["info"][0]["lastName"]} from "${tenant["info"][0]["address"]}"\n`;
+                            message += `(${tenant["userId"]}) ${tenant["info"]["firstName"]} ${tenant["info"]["lastName"]} from "${tenant["info"]["address"]}"\n`;
+                            message += `  - Rent Amount: ${tenant["rentAmount"]} pesos\n`;
+                            message += `  - Contract: ${formatDate(tenant["startDate"])} to ${formatDate(tenant["endDate"])}\n`;
+                            message += `  - Payment Status: ${tenant["paymentStatus"]}\n\n`;
                         }
                     }
-    
                     botMessage.content = message;
                 } else {
                     botMessage.content = `Sorry but I could not find anything about room ${value}.`;
+                }
+            } else if (entity === "startdate") {
+                const foundDorm = await Dorm.findOne({ "startDate": value });
+
+                if (foundDorm) {
+                    botMessage.content = `The start date for the dorm is ${formatDate(foundDorm.startDate)}.`;
+                } else {
+                    botMessage.content = `Sorry, I couldn't find any dorm with the start date ${value}.`;
+                }
+            } else if (entity === "enddate") {
+                const foundDorm = await Dorm.findOne({ "endDate": value });
+
+                if (foundDorm) {
+                    botMessage.content = `The end date for the dorm is ${formatDate(foundDorm.endDate)}.`;
+                } else {
+                    botMessage.content = `Sorry, I couldn't find any dorm with the end date ${value}.`;
+                }
+            } else if (entity === "status") {
+                const foundDorm = await Dorm.findOne({ "status": value });
+
+                if (foundDorm) {
+                    botMessage.content = `The status of the dorm is ${foundDorm.status}.`;
+                } else {
+                    botMessage.content = `Sorry, I couldn't find any dorm with the status ${value}.`;
                 }
             }
         } else if (entities.length > 1) {
             if (entities[0].entity === "firstName" && entities[1].entity === "lastName") {
                 const users = await User.find({ "firstName": entities[0].value, "lastName": entities[1].value });
-    
+
                 if (users.length === 1) {
-                    const { _id, firstName, lastName, address, email, phoneNumber } = users[0];
-                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}". You may contact him via their email (${email}) or phone number (+63${phoneNumber})".`
+                    const { _id, firstName, lastName, address, email, phoneNumber, startDate, endDate, paymentStatus } = users[0];
+                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}". You may contact him via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.`;
                     botMessage.save();
-    
+
                     return res.status(200).json({ data: { response: botMessage.content } });
                 } else if (users.length > 1) {
-                    let message = `It appears that there are multiple ${entities[0].value} ${entities[1].value}:\n`
-    
+                    let message = `It appears that there are multiple ${entities[0].value} ${entities[1].value}:\n`;
+
                     for (const user of users) {
-                        const { _id, firstName, lastName, address } = user;
-    
-                        message += `(${_id}) ${firstName} ${lastName} from "${address}"\n`
+                        const { _id, firstName, lastName, address, startDate, endDate, paymentStatus } = user;
+
+                        message += `(${_id}) ${firstName} ${lastName} from "${address}". The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.\n`;
                     }
-    
+
                     message += "\n\nThose are the found users, please let me know if I can assist you more.";
                     botMessage.content = message;
                 } else {
-                    botMessage.content = `Sorry, I couldn't find anything about ${entities[0].value} ${entities[1].value}.`
+                    botMessage.content = `Sorry, I couldn't find anything about ${entities[0].value} ${entities[1].value}.`;
                 }
             } else if (entities[0].entity === "lastName" && entities[1].entity === "firstName") {
                 const users = await User.find({ "firstName": entities[1].value, "lastName": entities[0].value });
-    
+
                 if (users.length === 1) {
-                    const { _id, firstName, lastName, address, email, phoneNumber } = users[0];
-                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}". You may contact him via their email (${email}) or phone number (+63${phoneNumber})".`
+                    const { _id, firstName, lastName, address, email, phoneNumber, startDate, endDate, paymentStatus } = users[0];
+                    botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives at "${address}". You may contact him via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.`;
                     botMessage.save();
-    
+
                     return res.status(200).json({ data: { response: botMessage.content } });
                 } else if (users.length > 1) {
-                    let message = `It appears that there are multiple ${entities[1].value} ${entities[0].value}:\n`
-    
+                    let message = `It appears that there are multiple ${entities[1].value} ${entities[0].value}:\n`;
+
                     for (const user of users) {
-                        const { _id, firstName, lastName, address } = user;
-    
-                        message += `(${_id}) ${firstName} ${lastName} from "${address}"\n`
+                        const { _id, firstName, lastName, address, startDate, endDate, paymentStatus } = user;
+
+                        message += `(${_id}) ${firstName} ${lastName} from "${address}". The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.\n`;
                     }
-    
+
                     message += "\n\nThose are the found users, please let me know if I can assist you more.";
                     botMessage.content = message;
                 } else {
-                    botMessage.content = `Sorry, I couldn't find anything about ${entities[1].value} ${entities[0].value}.`
+                    botMessage.content = `Sorry, I couldn't find anything about ${entities[1].value} ${entities[0].value}.`;
                 }
             } else if (entities[0].entity === "_id") {
                 const foundUser = await User.findOne({ "_id": new mongoose.Types.ObjectId(entities[0].value) });
 
                 if (foundUser) {
-                    const { firstName, lastName, address, email, phoneNumber } = foundUser;
-
-                    botMessage.content = `That user appears to be ${firstName} ${lastName}. He lives at "${address}" and you may contact him via their email (${email}) or phone number (+63${phoneNumber}).`;
+                    const { firstName, lastName, address, email, phoneNumber, startDate, endDate, paymentStatus } = foundUser;
+                    botMessage.content = `That user appears to be ${firstName} ${lastName}. He lives at "${address}" and you may contact him via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${formatDate(startDate)} and ends on ${formatDate(endDate)}. The payment status is ${paymentStatus}.`;
                 } else {
                     botMessage.content = `Sorry, I couldn't find anyone with the ID ${entities[0].value}`;
                 }
@@ -273,11 +320,11 @@ const sendBotQuery = async (message, res) => {
                                     $match: {
                                         $expr: {
                                             $and: [
-                                                { $eq: ["$roomId", "$$roomId"]}
+                                                { $eq: ["$roomId", "$$roomId"] }
                                             ]
                                         }
                                     }
-                                }, 
+                                },
                                 {
                                     $lookup: {
                                         from: "users",
@@ -288,7 +335,7 @@ const sendBotQuery = async (message, res) => {
                                 },
                                 {
                                     $unwind: {
-                                        path: "$user",
+                                        path: "$info",
                                         preserveNullAndEmptyArrays: true
                                     }
                                 }
@@ -297,41 +344,44 @@ const sendBotQuery = async (message, res) => {
                         }
                     },
                 ]);
-    
+
                 if (foundDorm.length === 1) {
                     let message = `Room ${entities[0].value} contains ${foundDorm[0]["occupied"]} people, up to ${foundDorm[0]["capacity"]}, with a renting price starting at ${foundDorm[0]["price"]} pesos. It has`;
-    
+
                     if (foundDorm[0]["amenities"]["aircon"]) {
                         message += " aircon";
                     } else {
                         message += " no aircon";
                     }
-    
+
                     if (foundDorm[0]["amenities"]["wifi"]) {
                         message += ", WIFI";
                     } else {
                         message += ", no WIFI";
                     }
-    
+
                     if (foundDorm[0]["amenities"]["bathroom"]) {
-                        message += ", bahtroom";
+                        message += ", bathroom";
                     } else {
                         message += ", no bathroom";
                     }
-    
+
                     if (foundDorm[0]["occupied"] === 0) {
                         message += ", and there are no people that currently live in this room.";
                     } else {
                         message += ", and people that currently live here are:\n\n";
-    
+
                         for (const tenant of foundDorm[0]["tenants"]) {
-                            message += `(${tenant["userId"]}) ${tenant["info"][0]["firstName"]} ${tenant["info"][0]["lastName"]} from "${tenant["info"][0]["address"]}"\n`;
+                            message += `(${tenant["userId"]}) ${tenant["info"]["firstName"]} ${tenant["info"]["lastName"]} from "${tenant["info"]["address"]}"\n`;
+                            message += `  - Rent Amount: ${tenant["rentAmount"]} pesos\n`;
+                            message += `  - Contract: ${formatDate(tenant["startDate"])} to ${formatDate(tenant["endDate"])}\n`;
+                            message += `  - Payment Status: ${tenant["paymentStatus"]}\n\n`;
                         }
                     }
-    
+
                     botMessage.content = message;
                 } else {
-                    botMessage.content = `Sorry but I could not find anything about room ${value}.`;
+                    botMessage.content = `Sorry but I could not find anything about room ${entities[0].value}.`;
                 }
             }
         }
@@ -346,7 +396,7 @@ const sendBotQuery = async (message, res) => {
     return res.status(500).json({ message: "Something went wrong! Please try again." });
 };
 
-const sendBotResponse = async (message, res) => {  
+const sendBotResponse = async (message, res) => {
     try {
         const prompts = await Prompt.find({});
 
@@ -363,10 +413,10 @@ const sendBotResponse = async (message, res) => {
         }
 
         if (highestScore[1] < 15) {
-            const botMessage = await new Message({ 
-                roomId: message.roomId, 
-                sender: message.receiver, 
-                receiver: message.sender, 
+            const botMessage = await new Message({
+                roomId: message.roomId,
+                sender: message.receiver,
+                receiver: message.sender,
                 content: "I'm sorry, I don't have specific information on that query. Please contact the MlQU admin for more detailed assistance."
             }).save();
 
@@ -375,17 +425,16 @@ const sendBotResponse = async (message, res) => {
 
         for (const prompt of prompts) {
             if (highestScore[0] === prompt.query) {
-                const botMessage = await new Message({ 
-                    roomId: message.roomId, 
-                    sender: message.receiver, 
-                    receiver: message.sender, 
+                const botMessage = await new Message({
+                    roomId: message.roomId,
+                    sender: message.receiver,
+                    receiver: message.sender,
                     content: prompt.response
                 }).save();
-    
+
                 return res.status(200).json({ data: { response: botMessage.content } });
             }
         }
-
         return res.status(200).json({ message: "I'm sorry, I don't have specific information on that query. Please contact the MlQU admin for more detailed assistance." });
     } catch (error) {
         console.log(error);
@@ -398,7 +447,7 @@ const createChatroom = async (userId, otherId) => {
     try {
         const chatroom = await new Chatroom().save();
 
-        new ChatroomMembers({ chatroomId: chatroom["_id"], userId: userId}).save();
+        new ChatroomMembers({ chatroomId: chatroom["_id"], userId: userId }).save();
         new ChatroomMembers({ chatroomId: chatroom["_id"], userId: otherId }).save();
 
         if (chatroom) {
@@ -426,7 +475,7 @@ exports.sendMessage = (req, res) => {
             return sendBotResponse(message, res);
         }
 
-        return res.status(201).json({ message: `Message of User #${sender} has been successfully sent to User #${receiver}.` }); 
+        return res.status(201).json({ message: `Message of User #${sender} has been successfully sent to User #${receiver}.` });
     } catch (error) {
         console.log(error);
     }
@@ -441,7 +490,7 @@ exports.getChatroom = async (req, res) => {
     try {
         const chatroom = await ChatroomMembers.aggregate([
             {
-                $match: { 
+                $match: {
                     userId: { $in: [userId, otherId] }
                 }
             },
@@ -468,10 +517,10 @@ exports.getChatroom = async (req, res) => {
             return res.status(200).json({ data: { chatroomId: chatroom[0].chatroomId.toString() } });
         }
 
-        const chatroomId = createChatroom(userId, otherId);
+        const chatroomId = await createChatroom(userId, otherId);
 
         if (chatroomId) {
-            return res.status(200).json({ data: { chatroomId }});
+            return res.status(200).json({ data: { chatroomId } });
         }
     } catch (error) {
         return res.status(500).json({ message: "Something went wrong! Please try again." });
@@ -491,7 +540,7 @@ exports.getPrompts = async (req, res) => {
         console.log(error);
     }
 
-    return res.status(200).json({ 
+    return res.status(200).json({
         message: "Could not find any existing prompts.",
         data: {
             prompts: []
@@ -504,21 +553,21 @@ exports.upsertPrompt = async (req, res) => {
         const { _id, query, response } = req.body;
 
         if (_id) {
-            const update = await Prompt.findOneAndUpdate({ 
+            const update = await Prompt.findOneAndUpdate({
                 "_id": new mongoose.Types.ObjectId(_id),
                 query,
-                response 
+                response
             });
-    
+
             if (update) {
-                return res.status(200).json({ message: `Prompt with ID ${id} has been updated successfully.` });
+                return res.status(200).json({ message: `Prompt with ID ${_id} has been updated successfully.` });
             }
         } else {
-            const insert = await Prompt({ 
+            const insert = await Prompt({
                 query,
-                response 
+                response
             }).save();
-    
+
             if (insert) {
                 return res.status(200).json({ message: `A new prompt has been added successfully.` });
             }
@@ -534,12 +583,12 @@ exports.deletePrompt = async (req, res) => {
     try {
         const { _id } = req.body;
 
-        const prompt = await Prompt.findOneAndDelete({ 
+        const prompt = await Prompt.findOneAndDelete({
             "_id": new mongoose.Types.ObjectId(_id),
         });
 
         if (prompt) {
-            return res.status(200).json({ message: `Prompt with ID ${id} has been deleted successfully.` });
+            return res.status(200).json({ message: `Prompt with ID ${_id} has been deleted successfully.` });
         }
     } catch (error) {
         console.log(error);
@@ -562,10 +611,10 @@ exports.getMessages = async (req, res) => {
         console.log(error);
     }
 
-    return res.status(200).json({ 
+    return res.status(200).json({
         message: "Could not find any existing messages.",
         data: {
             messages: []
         }
     });
-}
+};

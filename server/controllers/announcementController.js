@@ -1,87 +1,130 @@
-const express = require('express');
-const router = express.Router();
 const Announcement = require('../models/announcementModel');
+const asyncHandler = require('express-async-handler');
 
-// Get all announcements and events
-router.get('/', async (req, res) => {
-  try {
-    const announcements = await Announcement.find();
-    res.json(announcements);
-  } catch (err) {
-    console.error('Error fetching announcements:', err);
-    res.status(500).json({ message: err.message });
-  }
-});
+// @desc    Get all announcements
+// @route   GET /api/announcements
+// @access  Public
+const getAnnouncements = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
 
-// Add a new announcement or event
-router.post('/', async (req, res) => {
-  const { content, description, type, date, title } = req.body;
+  const filter = { active: true };
 
-  if (!content || !description || !type || !title) {
-    return res.status(400).json({ message: 'Missing required fields' });
+  // Add priority filter if provided
+  if (req.query.priority) {
+    filter.priority = req.query.priority;
   }
 
-  const announcement = new Announcement({
-    content,
-    description,
-    type,
-    date,
-    title,
+  const announcements = await Announcement.find(filter)
+    .sort({ date: -1 })
+    .skip(skip)
+    .limit(limit)
+    .populate('postedBy', 'name role');
+
+  // Get total count for pagination
+  const total = await Announcement.countDocuments(filter);
+
+  res.json({
+    announcements,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit)
+    }
   });
+});
+
+// @desc    Get single announcement
+// @route   GET /api/announcements/:id
+// @access  Public
+const getAnnouncementById = asyncHandler(async (req, res) => {
+  const announcement = await Announcement.findById(req.params.id)
+    .populate('postedBy', 'name role');
+
+  if (!announcement) {
+    res.status(404);
+    throw new Error('Announcement not found');
+  }
+
+  res.json(announcement);
+});
+
+// @desc    Create new announcement
+// @route   POST /api/announcements
+// @access  Private
+const createAnnouncement = asyncHandler(async (req, res) => {
+  const { title, content, priority, date } = req.body;
+
+  if (!title || !content) {
+    res.status(400);
+    throw new Error('Please provide title and content');
+  }
 
   try {
-    const newAnnouncement = await announcement.save();
-    res.status(201).json(newAnnouncement);
-  } catch (err) {
-    console.error('Error adding announcement:', err);
-    res.status(400).json({ message: err.message });
+    const announcement = await Announcement.create({
+      title,
+      content,
+      priority: priority || 'medium',
+      postedBy: 'management', // Always set to 'management'
+      date: date || new Date()
+    });
+
+    res.status(201).json(announcement);
+  } catch (error) {
+    console.error('Error creating announcement:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Update an announcement or event
-router.put('/:id', async (req, res) => {
-  const { content, description, type, date, title } = req.body;
+// @desc    Update announcement
+// @route   PUT /api/announcements/:id
+// @access  Private
+const updateAnnouncement = asyncHandler(async (req, res) => {
+  const announcement = await Announcement.findById(req.params.id);
 
-  if (!content || !description || !type || !title) {
-    return res.status(400).json({ message: 'Missing required fields' });
+  if (!announcement) {
+    res.status(404);
+    throw new Error('Announcement not found');
   }
 
-  try {
-    const announcement = await Announcement.findById(req.params.id);
-    if (!announcement) {
-      console.error(`Announcement with id ${req.params.id} not found`);
-      return res.status(404).json({ message: 'Announcement not found' });
-    }
-
-    announcement.title = title;
-    announcement.content = content;
-    announcement.description = description;
-    announcement.type = type;
-    announcement.date = date;
-
-    const updatedAnnouncement = await announcement.save();
-    res.json(updatedAnnouncement);
-  } catch (err) {
-    console.error(`Error updating announcement with id ${req.params.id}:`, err);
-    res.status(400).json({ message: err.message });
+  // Ensure the date is a valid date object
+  if (req.body.date) {
+    req.body.date = new Date(req.body.date);
   }
+
+  const updatedAnnouncement = await Announcement.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  ).populate('postedBy', 'name role');
+
+  res.json(updatedAnnouncement);
 });
 
-// Delete an announcement or event
-router.delete('/:id', async (req, res) => {
-  try {
-    const announcement = await Announcement.findById(req.params.id);
-    if (!announcement) {
-      console.error(`Announcement with id ${req.params.id} not found`);
-      return res.status(404).json({ message: 'Announcement not found' });
-    }
+// @desc    Delete announcement
+// @route   DELETE /api/announcements/:id
+// @access  Private
+const deleteAnnouncement = asyncHandler(async (req, res) => {
+  const announcement = await Announcement.findById(req.params.id);
 
-    await announcement.remove();
-    res.json({ message: 'Announcement deleted' });
-  } catch (err) {
-    console.error(`Error deleting announcement with id ${req.params.id}:`, err);
-    res.status(500).json({ message: err.message });
+  if (!announcement) {
+    res.status(404);
+    throw new Error('Announcement not found');
   }
+
+  // Soft delete
+  announcement.active = false;
+  await announcement.save();
+
+  res.json({ message: 'Announcement removed' });
 });
 
-module.exports = router;
+module.exports = {
+  getAnnouncements,
+  getAnnouncementById,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement
+};

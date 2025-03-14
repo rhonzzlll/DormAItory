@@ -100,7 +100,7 @@ const Signup = () => {
     }
 
     try {
-      const url = 'http://localhost:8080/api/users';
+      const url = 'http://dormaitory.online:8080/api/users';
 
       const currentData = { ...data };
       delete currentData.agreeToEULA; // Remove EULA flag before sending to backend
@@ -297,15 +297,7 @@ const Signup = () => {
                 <p>4.2 In case of a data breach, the Company will notify affected users as required by applicable laws.</p>
                 <h3>5. Ownership and Intellectual Property</h3>
                 <p>5.1 The System, including its software, designs, logos, and content, is the property of the Company and is protected by intellectual property laws. You may not copy, modify, distribute, or reverse-engineer any part of the System.</p>
-                <h3>6. Termination</h3>
-                <p>6.1 The Company reserves the right to terminate or suspend your access to the System at any time, with or without notice, for violation of this Agreement.</p>
-                <p>6.2 Upon termination, your license to use the System will be revoked, and your account may be deleted.</p>
-                <h3>7. Limitation of Liability</h3>
-                <p>7.1 To the extent permitted by law, the Company shall not be liable for:</p>
-                <ul>
-                  <li>Any indirect, incidental, or consequential damages arising from your use of the System.</li>
-                  <li>Loss or corruption of data due to unauthorized access or technical issues.</li>
-                </ul>
+
                 <p>This Agreement shall be governed by and construed in accordance with the laws of the Philippines.</p>
                 <p>For questions or disputes about this agreement, please contact us at mrsantos@tip.edu.ph.</p>
               </div>
@@ -321,7 +313,7 @@ const Signup = () => {
             <div className={styles.link_container}>
               <p>
                 Already have an account?{' '}
-                <Link to="/login" className={styles.link}>
+                <Link to="/login" className="text-blue-500 underline font-semibold">
                   Log in here
                 </Link>
               </p>

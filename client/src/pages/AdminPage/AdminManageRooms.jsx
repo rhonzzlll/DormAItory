@@ -561,7 +561,11 @@ const DormitoryManagementGrid = () => {
                 </div>
                 <div className="w-full grid gap-2">
                   <Label htmlFor="wifi">WIFI</Label>
-                  <Select                     value={roomData.wifi}
+                  <Select
+                    value={roomData.wifi}
+
+
+
                     onValueChange={(value) => handleRoomChange('wifi', value)}
                   >
                     <SelectTrigger id="wifi">
@@ -712,4 +716,3 @@ const DormitoryManagementGrid = () => {
 };
 
 export default DormitoryManagementGrid;
- 

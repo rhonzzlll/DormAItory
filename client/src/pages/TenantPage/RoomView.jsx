@@ -97,6 +97,11 @@ const RoomView = () => {
     </div>
   );
 
+  // Get the correct occupancy information
+  const occupiedCount = room.occupied || 0;
+  const isFullyOccupied = room.capacity <= occupiedCount;
+  const availableSpace = Math.max(0, room.capacity - occupiedCount);
+
   return (
     <div className="container mx-auto p-4">
       <Card className="overflow-hidden">
@@ -149,28 +154,28 @@ const RoomView = () => {
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-2xl font-bold">
-                Room {room.roomNumber} - ₱{room.price.toLocaleString()}/month
+                Room {room.roomNumber} - ₱{room.price ? room.price.toLocaleString() : 'N/A'}/month
               </CardTitle>
               <p className="text-sm text-gray-500 flex items-center mt-2">
                 <MapPin size={16} className="mr-1" />
                 {room.address || '916 R. Hidalgo Street Quiapo'}
               </p>
             </div>
-            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-              Available
+            <span className={`px-3 py-1 ${!isFullyOccupied ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded-full text-sm font-medium`}>
+              {!isFullyOccupied ? 'Available' : 'Fully Occupied'}
             </span>
           </div>
         </CardHeader>
 
         <CardContent>
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <p className="text-sm text-gray-700">{room.description}</p>
+            <p className="text-sm text-gray-700">{room.description || 'No description available for this room.'}</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
             <span className="flex items-center p-2 bg-gray-50 rounded-lg">
               <Bed size={16} className="mr-2" />
-              <span className="text-sm text-gray-600">{room.capacity} Beds</span>
+              <span className="text-sm text-gray-600">{room.capacity || 0} Beds</span>
             </span>
 
             <span className="flex items-center p-2 bg-gray-50 rounded-lg">
@@ -198,18 +203,40 @@ const RoomView = () => {
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <h3 className="font-semibold text-gray-900 mb-2">Current Occupancy</h3>
             <div className="flex justify-between items-center">
-              <span className="text-green-700">
-                Currently Rented: {room.currentlyRented || 0} People
+              <span className="text-gray-700">
+                Currently Occupied: {occupiedCount} People
               </span>
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                {room.capacity - (room.currentlyRented || 0)} Available
+              <span className={`px-3 py-1 ${availableSpace > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} rounded-full text-sm`}>
+                {availableSpace} {availableSpace === 1 ? 'Bed' : 'Beds'} Available
               </span>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg mb-6">
+            <h3 className="font-semibold text-gray-900 mb-2">Pricing Details</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Room Rate:</span>
+                <span className="font-medium">₱{room.price ? room.price.toLocaleString() : 'N/A'}/month</span>
+              </div>
+              {room.electricity && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Electricity Fee:</span>
+                  <span className="font-medium">₱{room.electricity.toLocaleString()}/month</span>
+                </div>
+              )}
+              {room.water && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Water Fee:</span>
+                  <span className="font-medium">₱{room.water.toLocaleString()}/month</span>
+                </div>
+              )}
             </div>
           </div>
 
           <Button
             onClick={handleContact}
-            className="mt-4 w-full bg-[#008db9] hover:bg-[#007a9f] text-white transition-colors"
+            className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
             CONTACT LANDLORD
           </Button>
@@ -225,11 +252,11 @@ const RoomView = () => {
         <DialogTitle id="contact-dialog-title">{"Contact Landlord"}</DialogTitle>
         <DialogContent>
           <DialogContentText id="contact-dialog-description">
-            For inquiries, feel free to email us at mlqudormitory@gmail.com or visit us in person. We’d be happy to assist you!
+            For inquiries, feel free to email us at mlqudormitory@gmail.com or visit us in person. We'd be happy to assist you!
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} color="primary" autoFocus>
+          <Button onClick={handleCloseDialog} autoFocus>
             OK
           </Button>
         </DialogActions>

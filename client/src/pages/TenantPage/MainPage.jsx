@@ -22,24 +22,16 @@ import {
   Tooltip,
   ResponsiveContainer
 } from 'recharts';
-import styles from './styles/Main.module.css';
-import dormbotPic from '../../Images/icons/dormbot pic.png';
 import axios from 'axios';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { TextField } from '@mui/material';
 import dayjs from 'dayjs';
+import AOS from 'aos';
 
-const ActionCard = ({ icon, title, description, onClick }) => {
-  return (
-    <div className={styles.actionCard} onClick={onClick}>
-      <div className={styles.icon}>{React.cloneElement(icon, { size: 48 })}</div>
-      <h3>{title}</h3>
-      <p>{description}</p>
-    </div>
-  );
-};
+// Import images
+import dormbotPic from '../../Images/icons/dormbot pic.png';
 
 const VisitorsChart = () => {
   const [visitorsData, setVisitorsData] = useState([]);
@@ -54,7 +46,6 @@ const VisitorsChart = () => {
     };
     fetchVisitorsData();
   }, []);
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center mb-4">
@@ -133,26 +124,113 @@ const MaintenanceRequestsChart = () => {
   );
 };
 
+const AnnouncementsList = ({ announcements }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex items-center mb-4">
+        <Megaphone className="mr-3 w-6 h-6 text-red-600" />
+        <h2 className="text-xl font-semibold text-gray-800">
+          Latest Announcements
+        </h2>
+      </div>
+      <div className="space-y-4">
+        {announcements.length > 0 ? (
+          announcements.map((announcement, index) => (
+            <div key={index} className="border-b pb-3">
+              <h3 className="font-semibold text-gray-700">{announcement.title}</h3>
+              <p className="text-gray-600 text-sm">{new Date(announcement.date).toLocaleDateString()}</p>
+              <p className="mt-1">{announcement.content}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No announcements available.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const EventsList = ({ events, selectedDate }) => {
+  const filteredEvents = events.filter(event => {
+    const eventDate = new Date(event.date);
+    return eventDate.getMonth() === selectedDate.month() &&
+      eventDate.getFullYear() === selectedDate.year();
+  });
+
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex items-center mb-4">
+        <Calendar className="mr-3 w-6 h-6 text-purple-600" />
+        <h2 className="text-xl font-semibold text-gray-800">
+          Events for {selectedDate.format('MMMM YYYY')}
+        </h2>
+      </div>
+      <div className="space-y-4">
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event, index) => (
+            <div key={index} className="border-b pb-3">
+              <h3 className="font-semibold text-gray-700">{event.title}</h3>
+              <p className="text-gray-600 text-sm">{new Date(event.date).toLocaleDateString()}</p>
+              <p className="mt-1">{event.description}</p>
+              <p className="text-gray-600 text-sm">Location: {event.location}</p>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500">No events scheduled for this month.</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const MainPage = () => {
   const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState([]);
   const [events, setEvents] = useState([]);
   const [hoveredDate, setHoveredDate] = useState(null);
   const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [showAllEvents, setShowAllEvents] = useState(false);
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   useEffect(() => {
     fetchAnnouncementsAndEvents();
   }, [selectedDate]);
 
+  // Initialize AOS animation library
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      easing: 'ease-in-out',
+      once: true,
+      mirror: false
+    });
+  }, []);
   const fetchAnnouncementsAndEvents = async () => {
     try {
-      const response = await axios.get('http://dormaitory.online:8080/api/announcements');
-      const data = response.data;
+      // Fetch announcements
+      const announcementsResponse = await axios.get('http://localhost:8080/api/announcements/');
+      console.log('Announcements response:', announcementsResponse.data);
+      setAnnouncements(announcementsResponse.data.announcements || announcementsResponse.data || []);
 
-      setAnnouncements(data.filter(item => !item.date || item.type === 'announcement'));
-      setEvents(data.filter(item => item.date && item.type === 'event'));
+      // Fetch events
+      const eventsResponse = await axios.get('http://localhost:8080/api/events/');
+      console.log('Events response:', eventsResponse.data);
+      setEvents(eventsResponse.data.events || eventsResponse.data || []);
     } catch (error) {
-      console.error('Error fetching announcements and events:', error);
+      console.error('Error fetching data:', error);
+      // Set some sample data for demonstration if API fails
+      setAnnouncements([
+        { id: 1, title: 'Building Maintenance', date: '2025-03-13', content: 'Water will be shut off from 9 AM to 11 AM on March 15th for maintenance.' },
+        { id: 2, title: 'Room Inspection', date: '2025-03-14', content: 'Monthly room inspection will be conducted on March 20th.' }
+      ]);
+      setEvents([
+        { id: 1, title: 'Dorm Meeting', date: '2025-03-18', description: 'Monthly dorm meeting to discuss community issues.', location: 'Common Room' },
+        { id: 2, title: 'Game Night', date: '2025-03-22', description: 'Join us for board games and snacks!', location: 'Recreation Room' }
+      ]);
     }
   };
 
@@ -171,150 +249,134 @@ const MainPage = () => {
     setSelectedDate(date);
   };
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+  const toggleViewAllEvents = () => {
+    setShowAllEvents(!showAllEvents);
   };
 
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  // Format current date for display
+  const formattedDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 
   return (
-    <main className={styles.mainContent}>
-      <div className={styles.container}>
-        {/* Welcome Message */}
-        <div className={styles.welcomeMessage}>
-          <p>Welcome to the User Dashboard</p>
-        </div>
-
-        <div className={styles.actionCards}>
-          <div className={styles.actionCardsRow}>
-            <ActionCard
-              icon={<Home />} // Changed icon to Home
-              title="Room List"
-              description="View and manage dormitory rooms"
-              onClick={() => handleCardClick('/tenant/room-list')}
-            />
-            <ActionCard
-              icon={<Users />}
-              title="Visitor Management"
-              description="Register and track visitors"
-              onClick={() => handleCardClick('/tenant/visitor-management')}
-            />
-            <ActionCard
-              icon={<Zap />}
-              title="Rent & Utilities"
-              description="Monitor and manage utility usage"
-              onClick={() => handleCardClick('/tenant/utilities')}
-            />
-          </div>
-          <div className={styles.actionCardsRow}>
-            <ActionCard
-              icon={<Mail />}
-              title="Contact Admin"
-              description="Get in touch with dormitory administration"
-              onClick={() => handleCardClick('/tenant/contact-admin')}
-            />
-            <ActionCard
-              icon={<Settings />}
-              title="Maintenance Request"
-              description="Submit a maintenance or repair request"
-              onClick={() => handleCardClick('/tenant/maintenance-request')}
-            />
-            <ActionCard
-              icon={<CreditCard />}
-              title="Payment Options"
-              description="View and manage your payment methods"
-              onClick={() => handleCardClick('/tenant/payment-options')}
-            />
-          </div>
-        </div>
-
-        <div className={styles.chatBot}>
-          <div className={styles.chatBotHeader}>
-            <div className={styles.dormbot_icons}>
-              <img src={dormbotPic} alt="DormBot" className={styles.dormbot_icon} />
-            </div>
-            <div>
-              <h3>DormBot</h3>
-              <p>Allow me to assist you!</p>
-            </div>
-          </div>
-          <div className={styles.chatButtonContainer}>
-            <Link to="/tenant/chatbot" className={styles.chatButton}>Chat with DormBot now!</Link>
-          </div>
-        </div>
-
-        <div className="min-h-screen bg-gray-100 p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* Header */}
-            <div id="cal-and-announcements" className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-800">
-                Announcements
-              </h1>
-              <div className="flex space-x-2">
-                <div className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full flex items-center">
-                  <Megaphone className="mr-2 w-4 h-4" />
-                  Announcements
-                </div>
-                <div className="bg-green-50 text-green-600 px-3 py-1 rounded-full flex items-center">
-                  <Calendar className="mr-2 w-4 h-4" />
-                  Events
-                </div>
+    <main className="main">
+      {/* Hero Section */}
+      <section id="hero" className="hero section accent-background">
+        <div className="container position-relative" data-aos="fade-up" data-aos-delay={100}>
+          <div className="row gy-5 justify-content-between">
+            <div className="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center">
+              <h2><span>Welcome to </span><span className="accent">DormAItory!</span></h2>
+              <p>{formattedDate}</p>
+              <div className="d-flex">
+                <a href="#about" className="btn-get-started">Get Started</a>
               </div>
             </div>
+            <div className="col-lg-5 order-1 order-lg-2">
+              <img src="/assets/img/dormBldg.png" className="img-fluid" alt="Dorm Building" />
+            </div>
+          </div>
+        </div>
 
-            {/* Main Content Area */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Announcements Column */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex items-center mb-4">
-                  <Megaphone className="mr-3 w-6 h-6 text-blue-600" />
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Latest Announcements
-                  </h2>
+        <div className="icon-boxes position-relative" data-aos="fade-up" data-aos-delay={200}>
+          <div className="container position-relative">
+            <div className="row gy-4 mt-5">
+              <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={100}>
+                <div className="icon-box" onClick={() => handleCardClick('/tenant/room-list')}>
+                  <div className="icon"><i className="bi bi-card-list"></i></div>
+                  <h4 className="title"><a href="#" className="stretched-link">Room List</a></h4>
+                  <p>View and manage dormitory rooms</p>
                 </div>
-                {events.map(event => (
-                  <div key={event._id} className="bg-gray-50 rounded-lg p-3 mb-3 flex items-center">
-                    <div className="mr-4">
-                      <Star className="w-6 h-6 text-yellow-500" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-gray-800">Title: {event.title}</h4>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="w-4 h-4 mr-2" />
-                        <span className="font-bold">{formatDate(event.date)}</span>
-                      </div>
-                      <p className="text-gray-600">Description: {event.description}</p>
-                    </div>
-                  </div>
-                ))}
+              </div>{/*End Icon Box */}
+
+              <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={200}>
+                <div className="icon-box" onClick={() => handleCardClick('/tenant/visitor-management')}>
+                  <div className="icon"><i className="bi bi-people"></i></div>
+                  <h4 className="title"><a href="#" className="stretched-link">Visitor Management</a></h4>
+                  <p>Register and track visitors</p>
+                </div>
+              </div>{/*End Icon Box */}
+
+              <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={300}>
+                <div className="icon-box" onClick={() => handleCardClick('/tenant/utilities')}>
+                  <div className="icon"><i className="bi bi-lightning-charge"></i></div>
+                  <h4 className="title"><a href="#" className="stretched-link">Rent & Utilities</a></h4>
+                  <p>Monitor and manage utility usage</p>
+                </div>
+              </div>{/*End Icon Box */}
+
+              <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={400}>
+                <div className="icon-box" onClick={() => handleCardClick('/tenant/contact-admin')}>
+                  <div className="icon"><i className="bi bi-envelope"></i></div>
+                  <h4 className="title"><a href="#" className="stretched-link">Contact Admin</a></h4>
+                  <p>Get in touch with dormitory administration</p>
+                </div>
+              </div>{/*End Icon Box */}
+
+              <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={500}>
+                <div className="icon-box" onClick={() => handleCardClick('/tenant/maintenance-request')}>
+                  <div className="icon"><i className="bi bi-nut"></i></div>
+                  <h4 className="title"><a href="#" className="stretched-link">Maintenance Request</a></h4>
+                  <p>Submit a maintenance or repair request</p>
+                </div>
+              </div>{/*End Icon Box */}
+
+              <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={600}>
+                <div className="icon-box" onClick={() => handleCardClick('/tenant/payment-options')}>
+                  <div className="icon"><i className="bi bi-credit-card"></i></div>
+                  <h4 className="title"><a href="#" className="stretched-link">Payment Options</a></h4>
+                  <p>View and manage your payment methods</p>
+                </div>
+              </div>{/*End Icon Box */}
+            </div>
+          </div>
+        </div>
+      </section>{/* End Hero Section */}
+
+      {/* Call To Action Section */}
+      <section id="call-to-action" className="call-to-action section dark-background">
+        <div className="container">
+          <img src="/assets/img/bgDB.png" alt="DormBot Background" />
+          <div className="content row justify-content-center" data-aos="zoom-in" data-aos-delay={20}>
+            <div className="col-xl-10">
+              <div className="text-center">
+                <h3>Interact with DormBot</h3>
+                <p>Need help with anything? Ask DormBot right away!</p>
+
+                <Link to="/tenant/chatbot" className="cta-btn" style={{ color: 'white' }}>Interact with DormBot</Link>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>{/* End Call To Action Section */}
 
-              {/* Calendar & Events Column */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex items-center mb-4">
-                  <Calendar className="mr-3 w-6 h-6 text-green-600" />
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Upcoming Events
-                  </h2>
+      {/* Calendar and Announcements Section */}
+      <section id="cal-and-announcements" className="services section">
+        <div className="container">
+          <div className="section-header">
+            <h2>Calendar and Announcements</h2>
+            <p>Stay updated with the latest events and announcements</p>
+          </div>
+
+          <div className="row gy-4">
+            {/* Calendar Component */}
+            <div className="col-lg-6 col-md-6" data-aos="fade-up" data-aos-delay={100}>
+              <div className="service-item position-relative">
+                <div className="icon">
+                  <i className="bi bi-calendar4-week"></i>
                 </div>
-
-                {/* Date Picker */}
-                <div className="mb-4">
+                <h3>Upcoming Events</h3>
+                <div className="calendar-container">
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker
-                      label="Select date"
                       value={selectedDate}
                       onChange={handleDateChange}
                       renderInput={(params) => <TextField {...params} />}
                     />
                   </LocalizationProvider>
                 </div>
-
-                {/* Simple Calendar Placeholder */}
                 <div className="bg-gray-100 rounded-lg p-4 mb-4">
                   <div className="text-center">
                     <h3 className="font-bold text-lg">{months[selectedDate.month()]} {selectedDate.year()}</h3>
@@ -323,7 +385,7 @@ const MainPage = () => {
                       {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
                         <div key={day} className="font-bold text-gray-600">{day}</div>
                       ))}
-                      {[...Array(31)].map((_, i) => {
+                      {Array.from({ length: new Date(selectedDate.year(), selectedDate.month() + 1, 0).getDate() }, (_, i) => {
                         const event = getEventForDate(i + 1);
                         return (
                           <div
@@ -334,7 +396,7 @@ const MainPage = () => {
                           >
                             {i + 1}
                             {hoveredDate === i + 1 && event && (
-                              <div className="absolute bg-white shadow-lg p-2 rounded mt-1 text-left">
+                              <div className="absolute bg-white shadow-lg p-2 rounded mt-1 text-left z-10">
                                 <h4 className="font-bold">{event.title}</h4>
                                 <p>{event.description}</p>
                               </div>
@@ -345,17 +407,52 @@ const MainPage = () => {
                     </div>
                   </div>
                 </div>
+                <a href="#" className="readmore stretched-link" onClick={(e) => {
+                  e.preventDefault();
+                  toggleViewAllEvents();
+                }}>
+                  {showAllEvents ? "Hide events" : "View all events"} <i className="bi bi-arrow-right"></i>
+                </a>
+              </div>
+            </div>{/* End Calendar Item */}
+
+            {/* Announcements Component */}
+            <div className="col-lg-6 col-md-6" data-aos="fade-up" data-aos-delay={200}>
+              <div className="service-item position-relative">
+                <div className="icon">
+                  <i className="bi bi-megaphone"></i>
+                </div>
+                <h3>Announcements</h3>
+                <AnnouncementsList announcements={announcements} />
+              </div>
+            </div>{/* End Announcements Item */}
+          </div>
+
+          {/* Conditional Event List */}
+          {showAllEvents && (
+            <div className="row mt-4" data-aos="fade-up" data-aos-delay={200}>
+              <div className="col-12">
+                <EventsList events={events} selectedDate={selectedDate} />
               </div>
             </div>
+          )}
 
-            {/* New Charts Section */}
-            <div className="grid md:grid-cols-2 gap-6 mt-6">
+          {/* Charts Section */}
+          <div className="row mt-6" data-aos="fade-up" data-aos-delay={300}>
+            <div className="section-header mt-5">
+              <h2>Activity Dashboard</h2>
+              <p>Recent dormitory activities and statistics</p>
+            </div>
+
+            <div className="col-lg-6 col-md-6 mb-4">
               <VisitorsChart />
+            </div>
+            <div className="col-lg-6 col-md-6 mb-4">
               <MaintenanceRequestsChart />
             </div>
           </div>
         </div>
-      </div>
+      </section>{/* End Calendar and Announcements Section */}
     </main>
   );
 };

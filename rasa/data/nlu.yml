@@ -245,11 +245,51 @@ nlu:
     - Give me a list of residents in room [16](roomNumber)
     - Show the occupants of room [28](roomNumber)
     - Can you find out who is in room [10](roomNumber)?
+     - What is the start date for [Shawn](firstName) [Gestupa](lastName)?
+    - When did [Alice](firstName) [Smith](lastName) start staying?
+    - Can you tell me the end date for [John](firstName) [Doe](lastName)?
+    - When is [Emily](firstName) [Clark](lastName) leaving?
+    - What is the status of [Michael](firstName) [Jordan](lastName)?
+    - Show me the start date for [Sarah](firstName) [Williams](lastName)
+    - When did [Henry](firstName) [Ford](lastName) move in?
+    - What is the end date for [Emma](firstName)?
+    - When is [Sophia](firstName) [Davis](lastName) moving out?
+    - What is the current status of [Ethan](firstName)?
+    - Provide the start date for [Olivia](firstName)
+    - I'd like to know the end date for [James](firstName) [Taylor](lastName)
+    - Can you look up the status of [Ava](firstName) [Moore](lastName)?
+    - What is the start date for [Lucas](firstName) [Garcia](lastName)?
+    - When is [Mason](firstName) moving out?
+    - Show me the end date for [Charlotte](firstName) [Martinez](lastName)
+    - What is the status of [Liam](firstName)?
+    - When did [Mia](firstName) [Rodriguez](lastName) start staying?
+    - What is the end date for [Chris](firstName) [Evans](lastName)?
+    - When is [Jessica](firstName) [Miller](lastName) leaving?
+    - What is the current status of [Daniel](firstName) [Lopez](lastName)?
+    - Provide the start date for [Matthew](firstName) [Wilson](lastName)
+    - I'd like to know the end date for [Isabella](firstName) [Anderson](lastName)
+    - Can you look up the status of [Amelia](firstName) [Thomas](lastName)?
+    - What is the start date for [Oliver](firstName) [Harris](lastName)?
+    - When is [Benjamin](firstName) moving out?
+    - Show me the end date for [Harper](firstName)
+    - What is the status of [Alexander](firstName) [Clark](lastName)?
+    - When did [Ella](firstName) [Lewis](lastName) start staying?
+    - What is the end date for [Jack](firstName) [Lee](lastName)?
+    - When is [Zoe](firstName) [Walker](lastName) leaving?
+    - What is the current status of [Ryan](firstName) [Hall](lastName)?
+    - Provide the start date for [Henry](firstName) [Young](lastName)
+    - I'd like to know the end date for [William](firstName) [Scott](lastName)
+    - Can you look up the status of [Daisy](firstName) [King](lastName)?
+    - What is the start date for [Abigail](firstName) [Baker](lastName)?
+    - When is [Lucas](firstName) [Wright](lastName) moving out?
+    - Show me the end date for [Sebastian](firstName) [Adams](lastName)
+    - What is the status of [Ella](firstName) [Lewis](lastName)?
+
 - intent: room_details
   examples: |
     - Show me the details of room [101](roomNumber)
     - What are the details of room [202](roomNumber)?
-    - Can you provide information about room [303](roomNumber)?
+    - Can you provide information about room [303](roomNumber)? 
     - Tell me about room [404](roomNumber)
     - I need details for room [505](roomNumber)
 
@@ -257,6 +297,39 @@ nlu:
   examples: |
     - What is the payment status for room [101](roomNumber)?
     - Show me the payment details for room [202](roomNumber)
-    - Can you tell me the payment status of room [303](roomNumber)?
-    - I need the payment information for room [404](roomNumber)
-    - What is the rent status for room [505](roomNumber)?
+    - Can you tell me the payment status of room [103](roomNumber)?
+    - I need the payment information for room [104](roomNumber)
+    - What is the rent status for room [205](roomNumber)?
+    - What is the payment status for room [101](roomNumber) occupied by [John Doe](fullName)?
+    - Show me the payment details for room [202](roomNumber) where [Alice Smith](fullName) is staying
+    - Can you tell me the payment status of room [303](roomNumber) for [Michael Jordan](fullName)?
+    - I need the payment information for room [204](roomNumber) assigned to [Sarah Williams](fullName)
+    - What is the rent status for room [205](roomNumber) where [James Taylor](fullName) is staying?
+    - Provide the payment status for room [106](roomNumber) occupied by [Emily Clark](fullName)
+    - Tell me the payment details for room [107](roomNumber) where [Henry Ford](fullName) is staying
+    - What is the payment status for room [108](roomNumber) assigned to [Emma Davis](fullName)?
+    - Show me the rent status for room [109](roomNumber) where [Olivia Harris](fullName) is staying
+    - Can you provide the payment information for room [110](roomNumber) occupied by [Liam Moore](fullName)?
+
+- intent: get_payment_records
+  examples: |
+    - Show me the payment records for room [101](roomNumber)
+    - Can you provide the payment records for [John Doe](fullName)?
+    - I need the payment records for room [202](roomNumber)
+    - What are the payment records for [Alice Smith](fullName)?
+    - Show me the payment history for room [303](roomNumber)
+    - Can you tell me the payment records for [Michael Jordan](fullName)?
+    - I need to see the payment records for room [404](roomNumber)
+    - Provide the payment records for [Sarah Williams](fullName)
+    - What are the payment records for room [505](roomNumber)?
+    - Show me the payment records for [James Taylor](fullName)
+    - Can you provide the payment records for room [606](roomNumber)?
+    - I need the payment records for [Emily Clark](fullName)
+    - What are the payment records for room [707](roomNumber)?
+    - Show me the payment history for [Henry Ford](fullName)
+    - Can you tell me the payment records for room [808](roomNumber)?
+    - I need to see the payment records for [Emma Davis](fullName)
+    - Provide the payment records for room [909](roomNumber)
+    - What are the payment records for [Olivia Harris](fullName)?
+    - Show me the payment records for room [1010](roomNumber)
+    - Can you provide the payment records for [Liam Moore](fullName)?

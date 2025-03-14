@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CreditCard, ArrowLeft, Check, Upload, AlertCircle } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '../../components/layouts/ui/alert';
 import axios from 'axios';
-
+ 
+import { Link } from 'react-router-dom'; // Add this import
 const API_BASE_URL = 'http://dormaitory.online:8080/api';
 
 
@@ -44,6 +45,7 @@ const PaymentSystem = ({ isAdmin = false, adminQrCodes = {}, refreshPaymentRecor
 
   const fetchUserData = async () => {
     try {
+      
       console.log(`Fetching user data for userId: ${userId}`);
       const response = await axios.get(`${API_BASE_URL}/users/${userId}`);
       const userData = response.data;
@@ -170,7 +172,7 @@ const PaymentOptions = ({
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Available Payment Options</h2>
-        <p className="text-gray-600">You may visit the admin office for billing inquiries</p>
+        <p className="text-white-600">You may visit the admin office for billing inquiries</p>
       </div>
 
       <Alert variant="info" className="bg-blue-50 border-blue-200">
@@ -193,23 +195,23 @@ const PaymentOptions = ({
       </div>
 
       <div className="flex justify-between mt-8">
-        <button
-          onClick={() => window.history.back()}
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <span className="flex items-center gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Go Back
-          </span>
-        </button>
-        <button
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={!selectedOption}
-          onClick={handleContinue}
-        >
-          Continue
-        </button>
-      </div>
+  <Link
+    to="/tenant"
+    className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+  >
+    <span className="flex items-center gap-2">
+      <ArrowLeft className="w-4 h-4" />
+      Go Back
+    </span>
+  </Link>
+  <button
+    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled={!selectedOption}
+    onClick={handleContinue}
+  >
+    Continue
+  </button>
+</div>
     </div>
   );
 };
@@ -236,8 +238,8 @@ const PaymentOption = ({ _id, name, subtitle, color, selected, onClick, accountN
             <p><strong>Account Name:</strong> {accountName}</p>
           </div>
           {imageUrl && (
-            <div className="mt-3">
-              <img src={imageUrl} alt={`${name} QR Code`} className="w-24 h-24 object-contain" />
+            <div className="mt-3 flex justify-center items-center">
+              <img src={imageUrl} alt={`${name} QR Code`} className="w-80 h-80 object-contain" />
             </div>
           )}
         </div>
@@ -294,7 +296,7 @@ const PaymentForm = ({ paymentMethod, setCurrentStep, handlePaymentSubmission, s
             {paymentMethod.imageUrl && (
               <div className="mt-4">
                 <p className="font-semibold mb-2">Scan QR Code to Pay</p>
-                <img src={paymentMethod.imageUrl} alt="Payment QR Code" className="w-48 h-48 object-contain" />
+                <img src={paymentMethod.imageUrl} alt="Payment QR Code" className="w-48 h-48 object-contain mx-auto" />
               </div>
             )}
           </div>

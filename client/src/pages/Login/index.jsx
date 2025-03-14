@@ -20,7 +20,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = "http://localhost:8080/api/auth"; // Your API endpoint
+      const url = "http://dormaitory.online:8080/api/auth"; // Your API endpoint
       const { data: res } = await axios.post(url, data);
 
       // Save user ID, token and role to local storage
@@ -50,7 +50,7 @@ const Login = () => {
     console.log('Google login success:', response);
     const { credential } = response;
     try {
-      const url = "http://localhost:8080/api/auth/google"; // Your API endpoint for Google login
+      const url = "http://dormaitory.online:8080/api/auth/google"; // Your API endpoint for Google login
       const { data: res } = await axios.post(url, { token: credential });
 
       // Save user ID, token and role to local storage
@@ -79,55 +79,56 @@ const Login = () => {
   };
 
   return (
-    <GoogleOAuthProvider clientId={clientId}>
-      <div className={styles.login_container}>
-        <div className={styles.login_form_container}>
-          <div className={styles.left}>
-            <form className={styles.form_container} onSubmit={handleSubmit}>
-              <h1>dormAItory</h1>
-              <input
-                type="email"
-                placeholder="Email"
-                name="email"
-                onChange={handleChange}
-                value={data.email}
-                required
-                className={styles.input}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                name="password"
-                onChange={handleChange}
-                value={data.password}
-                required
-                className={styles.input}
-              />
-              {error && <div className={styles.error_msg}>{error}</div>}
-              <button type="submit" className={styles.green_btn}>
-                Sign In
-              </button>
-            </form>
-            <div className={styles.google_login}>
-              <GoogleLogin
-                onSuccess={handleGoogleLoginSuccess}
-                onError={handleGoogleLoginFailure}
-                buttonText="Login with Google"
-              />
+ 
+      <GoogleOAuthProvider clientId={clientId}>
+        <div className={styles.login_container}>
+          <div className={styles.login_form_container}>
+            <div className={styles.left}>
+              <form className={styles.form_container} onSubmit={handleSubmit}>
+                <h1>dormAItory</h1>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  name="email"
+                  onChange={handleChange}
+                  value={data.email}
+                  required
+                  className={styles.input}
+                />
+                <input
+                  type="password"
+                  placeholder="Password"
+                  name="password"
+                  onChange={handleChange}
+                  value={data.password}
+                  required
+                  className={styles.input}
+                />
+                {error && <div className={styles.error_msg}>{error}</div>}
+                <button type="submit" className={styles.green_btn}>
+                  Sign In
+                </button>
+              </form>
+              <div className={styles.google_login}>
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginFailure}
+                  buttonText="Login with Google"
+                />
+              </div>
+            </div>
+            <div className={styles.right}>
+              <h1>New Here?</h1>
+              <Link to="/signup">
+                <button type="button" className={styles.white_btn}>
+                  Sign Up
+                </button>
+              </Link>
             </div>
           </div>
-          <div className={styles.right}>
-            <h1>New Here?</h1>
-            <Link to="/signup">
-              <button type="button" className={styles.white_btn}>
-                Sign Up
-              </button>
-            </Link>
-          </div>
         </div>
-      </div>
-    </GoogleOAuthProvider>
-  );
+      </GoogleOAuthProvider>
+    );
 };
 
 export default Login;

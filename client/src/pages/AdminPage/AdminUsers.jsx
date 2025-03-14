@@ -16,38 +16,29 @@ export default function AdminUsers() {
   const [success, setSuccess] = useState(null);
 
   useEffect(() => {
-    // Fetch all users and dorm data when component mounts
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Fetch all users data
-        const usersResponse = await axios.get('http://dormaitory.online/api/users');
-        console.log('Users Response:', usersResponse.data); // Debugging log
+        const usersResponse = await axios.get('http://dormaitory.online:8080/api/users');
         const users = Array.isArray(usersResponse.data) ? usersResponse.data : [usersResponse.data];
 
-        // Fetch all dorms data
-        const dormsResponse = await axios.get('http://dormaitory.online/api/dorms');
-        console.log('Dorms Response:', dormsResponse.data); // Debugging log
+        const dormsResponse = await axios.get('http://dormaitory.online:8080/api/dorms');
         const dorms = Array.isArray(dormsResponse.data) ? dormsResponse.data : [dormsResponse.data];
 
-        // Merge user and dorm data
         const mergedUsers = users.map((user, index) => {
           const dormData = dorms.find(dorm => dorm.userId === user._id) || {};
-          console.log('Dorm Data for User:', user._id, dormData); // Debugging log
           return {
-            id: index + 1, // Incrementing ID starting from 1
+            id: index + 1,
             _id: user._id,
             fullName: `${user.firstName} ${user.lastName}`,
-            roomNo: dormData.roomNumber || 'N/A',
+            roomNo: user.roomNo || 'Not Assigned',
             gender: user.gender || 'N/A',
             email: user.email,
             phoneNumber: user.phoneNumber || 'N/A',
-            // Add any other fields you want to display
           };
         });
 
-        console.log('Merged Users:', mergedUsers); // Debugging log
         setMergedData(mergedUsers);
         setLoading(false);
       } catch (error) {
@@ -58,7 +49,10 @@ export default function AdminUsers() {
     };
 
     fetchData();
-  }, []); // Empty dependency array means this runs once when component mounts
+    const intervalId = setInterval(fetchData, 60000); // Fetch data every 60 seconds
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
 
   const filteredUsers = mergedData.filter(user =>
     Object.values(user).some(value =>

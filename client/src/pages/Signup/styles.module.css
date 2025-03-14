@@ -87,8 +87,8 @@ select {
     color: white;
     padding: 10px;
     border-radius: 5px;
-    text-align: center;
-    font-size: 14px;
+    text-align: justify;
+    font-size: 8px;
 }
 
 .eula_checkbox {
@@ -110,6 +110,7 @@ select {
     padding: 1rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    
 }
 
 .eula_link {

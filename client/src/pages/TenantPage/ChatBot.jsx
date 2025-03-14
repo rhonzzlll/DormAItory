@@ -23,31 +23,39 @@ const DormBot = () => {
             const newMessage = { sender: userId, receiver: "67258d7c80b699eba26fcece", content: text };
 
             setMessages(prev => [...prev, newMessage]);
-            
             setInput('');
             setIsTyping(true);
-
             scrollToBottom();
 
-            const req = await fetch(`http://dormaitory.online:8080/api/chat/message/send/${chatroomId}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    sender: localStorage.getItem("_id"),
-                    receiver: "673349dfb3adad07a8d18919",
-                    content: text
-                })
-            });
-            const res = await req.json();
+            try {
+                const req = await fetch(`http://dormaitory.online:8080/api/chat/message/send/${chatroomId}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        sender: localStorage.getItem("_id"),
+                        receiver: "673349dfb3adad07a8d18919",
+                        content: text
+                    })
+                });
+                const res = await req.json();
 
-            setTimeout(() => {
-                setMessages(prev => [...prev, { sender: '673349dfb3adad07a8d18919', receiver: userId, content: res.data.response }]);
+                if (res.data && res.data.response) {
+                    setTimeout(() => {
+                        setMessages(prev => [...prev, { sender: '673349dfb3adad07a8d18919', receiver: userId, content: res.data.response }]);
+                        setIsTyping(false);
+                        scrollToBottom();
+                    }, 1500);
+                } else {
+                    console.error('Unexpected response structure:', res);
+                    setIsTyping(false);
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
                 setIsTyping(false);
-                scrollToBottom();
-            }, 1500);
+            }
         }
     };
 
@@ -66,51 +74,51 @@ const DormBot = () => {
                     }
                 });
                 const res = await req.json();
-
                 setPrompts(res.data.prompts);
             } catch (error) {
-                console.error(error);
+                console.error('Error fetching prompts:', error);
             }
         };
 
         const fetchChatroomId = async () => {
             const otherId = "67258d7c80b699eba26fcece";
 
-            const c_req = await fetch("http://dormaitory.online:8080/api/chat/chatroom", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    userId,
-                    otherId
-                })
-            });
-            const c_res = await c_req.json();
+            try {
+                const c_req = await fetch("http://dormaitory.online:8080/api/chat/chatroom", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        otherId
+                    })
+                });
+                const c_res = await c_req.json();
+                const chatroomId = c_res.data.chatroomId;
 
-            const chatroomId = c_res["data"].chatroomId;
-
-            if (c_req.status === 200) {
-                setChatroomId(chatroomId);
-            }
-
-            const m_req = await fetch(`http://dormaitory.online:8080/api/chat/messages/${chatroomId}`, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json"
+                if (c_req.status === 200) {
+                    setChatroomId(chatroomId);
                 }
-            });
-            const m_res = await m_req.json();
 
-            setMessages(m_res["data"].messages ?? []);
-
-            scrollToBottom();
+                const m_req = await fetch(`http://dormaitory.online:8080/api/chat/messages/${chatroomId}`, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+                const m_res = await m_req.json();
+                setMessages(m_res.data.messages ?? []);
+                scrollToBottom();
+            } catch (error) {
+                console.error('Error fetching chatroom or messages:', error);
+            }
         };
-        
+
         fetchPrompts();
         fetchChatroomId();
-    }, []);
+    }, [userId]);
 
     return (
         <div className="max-w-2xl mx-auto my-8 bg-white rounded-lg shadow-lg overflow-hidden">
@@ -125,14 +133,13 @@ const DormBot = () => {
                         key={index}
                         className={`mb-4 flex ${message.sender === userId ? 'justify-end' : 'justify-start'}`}
                     >
-                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === userId ? 'bg-blue-500 text-white' : 'bg-white text-black'
-                            }`}>
+                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === userId ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}>
                             {message.content}
                         </div>
                     </div>
                 )) : (
                     <div className="w-full h-full flex justify-center items-center">
-                        <svg className="text-teal-700" xmlns="http://www.w3.org/2000/svg" width="4rem" height="4rem" viewBox="0 0 24 24"><path fill="currentColor" d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z"><animateTransform attributeName="transform" dur="0.75s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></svg>
+                        <p className="text-teal-700 text-lg">Start chatting...</p>
                     </div>
                 )}
                 {isTyping && (

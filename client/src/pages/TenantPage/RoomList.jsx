@@ -24,55 +24,62 @@ import {
 import { Input } from '../../components/layouts/ui/Input';
 import Button from '../../components/layouts/ui/Button';
 import { Alert, AlertDescription } from '../../components/layouts/ui/alert';
+import styles from './styles/Room.module.css';
 
-const RoomCard = ({ room }) => (
-  <Link
-    to={`/tenant/room-view/${room._id}`}
-    className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 transform hover:-translate-y-1"
-  >
-    <img
-      src={room.images[0] || '/placeholder-room.jpg'}
-      alt={`Room ${room.roomNumber}`}
-      className="w-full h-48 object-cover"
-    />
-    <div className="p-4">
-      <h2 className="text-lg font-bold text-gray-800 mb-2">Room {room.roomNumber}</h2>
-      <div className="flex items-center text-gray-600 mb-2">
-        <MapPin size={16} className="mr-2 text-blue-500" />
-        <span className="text-sm">916 R. Hidalgo Street Quiapo</span>
-      </div>
-      <p className="text-sm text-gray-700 mb-3 line-clamp-2">{room.description}</p>
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-xl font-bold text-blue-600">₱{room.price}/month</span>
-        <div className={`px-2 py-1 rounded-full text-xs ${!room.occupied ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-          {!room.occupied ? 'Available' : 'Occupied'}
+const RoomCard = ({ room }) => {
+  // Calculate occupancy based on the occupied property directly
+  const occupiedCount = room.occupied || 0;
+  const isFullyOccupied = room.capacity <= occupiedCount;
+
+  return (
+    <Link
+      to={`/tenant/room-view/${room._id}`}
+      className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 transform hover:-translate-y-1"
+    >
+      <img
+        src={room.images && room.images.length > 0 ? room.images[0] : '/placeholder-room.jpg'}
+        alt={`Room ${room.roomNumber}`}
+        className="w-full h-48 object-cover"
+      />
+      <div className="p-4">
+        <h2 className="text-lg font-bold text-gray-800 mb-2">Room {room.roomNumber}</h2>
+        <div className="flex items-center text-gray-600 mb-2">
+          <MapPin size={16} className="mr-2 text-blue-500" />
+          <span className="text-sm">916 R. Hidalgo Street Quiapo</span>
         </div>
-      </div>
-      <div className="flex items-center text-gray-600 text-xs space-x-3">
-        <div className="flex items-center">
-          <Bed size={14} className="mr-1" />
-          <span>{room.capacity} Beds</span>
-        </div>
-        <div className="flex items-center">
-          <Bath size={14} className="mr-1" />
-          <span>{room.amenities.bathroom ? 'Private' : 'Shared'} Bath</span>
-        </div>
-        {room.amenities.wifi && (
-          <div className="flex items-center">
-            <Wifi size={14} className="mr-1" />
-            <span>WiFi</span>
+        <p className="text-sm text-gray-700 mb-3 line-clamp-2">{room.description || 'No description available'}</p>
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-xl font-bold text-blue-600">₱{room.price}/month</span>
+          <div className={`px-2 py-1 rounded-full text-xs ${!isFullyOccupied ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {!isFullyOccupied ? 'Available' : 'Occupied'}
           </div>
-        )}
-        {room.amenities.aircon && (
+        </div>
+        <div className="flex items-center text-gray-600 text-xs space-x-3">
           <div className="flex items-center">
-            <Wind size={14} className="mr-1" />
-            <span>A/C</span>
+            <Bed size={14} className="mr-1" />
+            <span>{room.capacity} Beds ({occupiedCount}/{room.capacity} Occupied)</span>
           </div>
-        )}
+          <div className="flex items-center">
+            <Bath size={14} className="mr-1" />
+            <span>{room.amenities && room.amenities.bathroom ? 'Private' : 'Shared'} Bath</span>
+          </div>
+          {room.amenities && room.amenities.wifi && (
+            <div className="flex items-center">
+              <Wifi size={14} className="mr-1" />
+              <span>WiFi</span>
+            </div>
+          )}
+          {room.amenities && room.amenities.aircon && (
+            <div className="flex items-center">
+              <Wind size={14} className="mr-1" />
+              <span>A/C</span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  </Link>
-);
+    </Link>
+  );
+};
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([]);
@@ -128,7 +135,7 @@ const RoomList = () => {
 
     const filtered = rooms.filter(room =>
       room.roomNumber.toString().includes(term.toLowerCase()) ||
-      room.description.toLowerCase().includes(term.toLowerCase())
+      (room.description && room.description.toLowerCase().includes(term.toLowerCase()))
     );
 
     setFilteredRooms(applyFilters(filtered));
@@ -157,12 +164,12 @@ const RoomList = () => {
 
       const availabilityMatch =
         filterConfig.availability === 'all' ||
-        (filterConfig.availability === 'available' && !room.occupied) ||
-        (filterConfig.availability === 'occupied' && room.occupied);
+        (filterConfig.availability === 'available' && room.capacity > (room.occupied || 0)) ||
+        (filterConfig.availability === 'occupied' && room.capacity <= (room.occupied || 0));
 
       const amenitiesMatch =
         filterConfig.amenities.length === 0 ||
-        filterConfig.amenities.every(amenity => room.amenities[amenity]);
+        (room.amenities && filterConfig.amenities.every(amenity => room.amenities[amenity]));
 
       return priceMatch && availabilityMatch && amenitiesMatch;
     });
@@ -196,79 +203,78 @@ const RoomList = () => {
   );
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-        <div className="relative w-full md:w-1/3">
-          <Input
-            type="text"
-            placeholder="Search rooms..."
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="pl-10 w-full"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-        </div>
-
-        <div className="flex space-x-4">
-          <Button
-            variant="outline"
-            onClick={() => handleSort('price')}
-            className="flex items-center text-white"
-          >
-            {sortConfig.key === 'price' && (sortConfig.direction === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />)}
-            Price
-          </Button>
-
-          <FilterDialog onFilter={handleFilter} />
-        </div>
-      </div>
-
-      {filteredRooms.length === 0 ? (
-        <div className="text-center text-gray-600 py-10">
-          No rooms found matching your search and filters.
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentRooms.map((room) => (
-              <RoomCard key={room._id} room={room} />
-            ))}
+    <div className={styles.page_background}>
+      <div className="container mx-auto p-4 md:p-8">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+          <div className="relative w-full md:w-1/3">
+            <Input
+              type="text"
+              placeholder="Search rooms..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 w-full"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => paginate(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="text-white"
-                >
-                  <ChevronLeft size={16} />
-                </Button>
-                {[...Array(totalPages)].map((_, index) => (
-                  <Button
-                    key={index}
-                    variant={currentPage === index + 1 ? 'default' : 'outline'}
-                    onClick={() => paginate(index + 1)}
-                    className="text-white"
-                  >
-                    {index + 1}
-                  </Button>
-                ))}
-                <Button
-                  variant="outline"
-                  onClick={() => paginate(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="text-white"
-                >
-                  <ChevronRight size={16} />
-                </Button>
-              </div>
+          <div className="flex space-x-4">
+            <Button
+              variant="outline"
+              onClick={() => handleSort('price')}
+              className="flex items-center"
+            >
+              {sortConfig.key === 'price' && (sortConfig.direction === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />)}
+              Price
+            </Button>
+
+            <FilterDialog onFilter={handleFilter} />
+          </div>
+        </div>
+
+        {filteredRooms.length === 0 ? (
+          <div className="text-center text-gray-600 py-10">
+            No rooms found matching your search and filters.
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentRooms.map((room) => (
+                <RoomCard key={room._id} room={room} />
+              ))}
             </div>
-          )}
-        </>
-      )}
+
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-8">
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft size={16} />
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage === pageNumber ? 'default' : 'outline'}
+                      onClick={() => paginate(pageNumber)}
+                    >
+                      {pageNumber}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight size={16} />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
@@ -300,7 +306,7 @@ const FilterDialog = ({ onFilter }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="flex items-center text-white">
+        <Button variant="outline" className="flex items-center">
           <Filter size={16} className="mr-2" /> Filters
         </Button>
       </DialogTrigger>

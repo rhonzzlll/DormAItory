@@ -5,10 +5,35 @@ intents:
   - tenant_lookup
   - room_details
   - payment_status
+  - maintenance_request_status
+  - create_maintenance_request
+  - delete_maintenance_request
+  - get_payment_records
 
 entities:
   - _id
   - firstName
   - lastName
   - roomNumber
+  - amount
+  - fullName
+  - accountNumber
+  - accountName
+  - startdate
+  - enddate
+  - status
 
+responses:
+  utter_payment_status:
+    - text: "The payment status for {fullName} in room {roomNumber} is: {status}."
+
+  utter_get_payment_records:
+    - text: "Here are the payment records for {fullName} in room {roomNumber}: {records}."
+
+  utter_maintenance_request_status:
+    - text: "The maintenance request status for {fullName} in room {roomNumber} is: {status}."
+
+actions:
+  - action_get_payment_status
+  - action_get_payment_records
+  - action_get_maintenance_request_status
