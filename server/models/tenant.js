@@ -9,6 +9,5 @@ const tenantSchema = new mongoose.Schema({
   paymentStatus: { type: String, required: true }
 });
 
-const Tenant = mongoose.model("Tenant", tenantSchema);
-
-module.exports = Tenant;
+// Check if the model already exists before defining it
+module.exports = mongoose.models.Tenant || mongoose.model("Tenant", tenantSchema);

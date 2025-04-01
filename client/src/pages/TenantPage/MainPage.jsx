@@ -212,25 +212,17 @@ const MainPage = () => {
   const fetchAnnouncementsAndEvents = async () => {
     try {
       // Fetch announcements
-      const announcementsResponse = await axios.get('http://localhost:8080/api/announcements/');
+      const announcementsResponse = await axios.get('http://dormaitory.online:8080/api/announcements/');
       console.log('Announcements response:', announcementsResponse.data);
       setAnnouncements(announcementsResponse.data.announcements || announcementsResponse.data || []);
 
       // Fetch events
-      const eventsResponse = await axios.get('http://localhost:8080/api/events/');
+      const eventsResponse = await axios.get('http://dormaitory.online:8080/api/events/');
       console.log('Events response:', eventsResponse.data);
       setEvents(eventsResponse.data.events || eventsResponse.data || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       // Set some sample data for demonstration if API fails
-      setAnnouncements([
-        { id: 1, title: 'Building Maintenance', date: '2025-03-13', content: 'Water will be shut off from 9 AM to 11 AM on March 15th for maintenance.' },
-        { id: 2, title: 'Room Inspection', date: '2025-03-14', content: 'Monthly room inspection will be conducted on March 20th.' }
-      ]);
-      setEvents([
-        { id: 1, title: 'Dorm Meeting', date: '2025-03-18', description: 'Monthly dorm meeting to discuss community issues.', location: 'Common Room' },
-        { id: 2, title: 'Game Night', date: '2025-03-22', description: 'Join us for board games and snacks!', location: 'Recreation Room' }
-      ]);
     }
   };
 

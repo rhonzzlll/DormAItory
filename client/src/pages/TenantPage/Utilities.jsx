@@ -42,26 +42,31 @@ const TenantDetails = () => {
 
   const fetchTenantData = async () => {
     try {
+      const userId = localStorage.getItem("_id"); // Get the logged-in user's ID from local storage
       const response = await axios.get(`${API_BASE_URL}/dorms`);
       console.log('API Response:', response.data); // Debugging log
       const { dorms } = response.data;
-
+  
+      // Filter tenant details for the specific logged-in user
       const tenantDetails = dorms.flatMap(dorm =>
-        dorm.tenants.map(t => ({
-          tenantId: t.id._id,
-          userId: t.id.userId,
-          fullName: `${t.firstName} ${t.lastName}`,
-          roomNumber: dorm.roomNumber,
-          rent: t.rentAmount,
-          electricity: dorm.electricity,
-          water: dorm.water,
-          totalMonthlyDues: t.rentAmount + dorm.electricity + dorm.water,
-          startDate: t.startDate,
-          endDate: t.endDate,
-          status: t.paymentStatus
-        }))
+        dorm.tenants
+          .filter(t => t.id.userId === userId) // Only include the logged-in user's data
+          .map(t => ({
+            tenantId: t.id._id,
+            userId: t.id.userId,
+            fullName: `${t.firstName} ${t.lastName}`,
+            roomNumber: dorm.roomNumber,
+            rent: t.rentAmount,
+            electricity: dorm.electricity,
+            water: dorm.water,
+            totalMonthlyDues: t.rentAmount + dorm.electricity + dorm.water,
+            startDate: t.startDate,
+            endDate: t.endDate,
+            status: t.paymentStatus
+          }))
       );
-
+  
+       
       const filteredTenantDetails = tenantDetails.filter(tenant => {
         const tenantStartDate = new Date(tenant.startDate);
         const tenantEndDate = new Date(tenant.endDate);

@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LineChart, 
-  Line, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  PieChart, 
-  Pie, 
-  Cell 
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
-import { 
-  FaUsers, 
-  FaUserClock, 
-  FaBuilding, 
-  FaMoneyBillWave 
-} from 'react-icons/fa';
+import { FaUsers, FaUserClock, FaBuilding, FaMoneyBillWave } from 'react-icons/fa';
 
 const DashboardCharts = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -35,7 +30,7 @@ const DashboardCharts = () => {
       try {
         const tenantsResponse = await fetch('http://dormaitory.online/api/users');
         const visitorsResponse = await fetch('http://dormaitory.online/api/visitors');
-        const paymentsResponse = await fetch('http://dormaitory.online/api/payments');
+        const paymentsResponse = await fetch('http://dormaitory.online/api/payments/records');
         const roomsResponse = await fetch('http://dormaitory.online/api/dorms');
 
         if (!tenantsResponse.ok || !visitorsResponse.ok || !paymentsResponse.ok || !roomsResponse.ok) {
@@ -46,11 +41,6 @@ const DashboardCharts = () => {
         const visitorStats = await visitorsResponse.json();
         const paymentStats = await paymentsResponse.json();
         const occupied = await roomsResponse.json();
-
-        console.log('Tenant Stats:', tenantStats);
-        console.log('Visitor Stats:', visitorStats);
-        console.log('Payment Stats:', paymentStats);
-        console.log('Occupied:', occupied);
 
         // Process tenant stats
         const tenantGrowth = Array(12).fill(0);
@@ -78,28 +68,25 @@ const DashboardCharts = () => {
           }, {})
         ).map(([type, value]) => ({ type, value }));
 
-        const totalPayments = paymentStats.reduce(
-          (acc, payment) => acc + payment.amount,
-          0
-        );
+        const totalPayments = paymentStats.reduce((acc, payment) => acc + payment.amount, 0);
 
-        // Process room occupancy - handle the case where occupied is an object with dorms
-        const roomDetails = occupied.dorms ? 
-          Object.entries(
+        // Process room occupancy
+        const roomDetails = occupied.dorms
+          ? Object.entries(
             occupied.dorms.reduce((acc, room) => {
               acc[room.type] = (acc[room.type] || 0) + (room.occupied ? room.occupied.length : 0);
               return acc;
             }, {})
-          ).map(([type, total]) => ({ type, total })) : 
-          [];
+          ).map(([type, total]) => ({ type, total }))
+          : [];
 
         setDashboardData({
           tenantStats: { total: tenantStats.length, monthlyGrowth: tenantGrowth },
           visitorStats: { total: visitorStats.length, monthlyTrends: visitorTrends },
           paymentStats: { total: totalPayments, distribution: paymentDistribution },
-          occupied: { 
-            total: occupied.dorms ? occupied.dorms.length : 0, 
-            details: roomDetails 
+          occupied: {
+            total: occupied.dorms ? occupied.dorms.length : 0,
+            details: roomDetails,
           },
         });
         setIsLoading(false);
@@ -108,23 +95,20 @@ const DashboardCharts = () => {
         setError('Failed to load dashboard data.');
         setIsLoading(false);
       }
-    };
+    }
 
     fetchDashboardData();
   }, []);
 
-  // Rest of the component remains the same as in the original code
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
   const DashboardCard = ({ title, icon: Icon, value, colorClass }) => (
-    <div className={`${colorClass} text-white p-4 rounded-lg shadow-md`}>
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <p className="text-2xl font-bold">{value}</p>
-        </div>
-        <Icon className="text-3xl opacity-70" />
+    <div className={`flex justify-between items-center ${colorClass} text-white p-4 rounded-lg shadow-md`}>
+      <div>
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <p className="text-2xl font-bold">{value}</p>
       </div>
+      <Icon className="text-3xl opacity-70" />
     </div>
   );
 
@@ -150,30 +134,10 @@ const DashboardCharts = () => {
 
       {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <DashboardCard 
-          title="Total Tenants" 
-          icon={FaUsers} 
-          value={dashboardData.tenantStats.total || 0} 
-          colorClass="bg-blue-500" 
-        />
-        <DashboardCard 
-          title="Total Visitors" 
-          icon={FaUserClock} 
-          value={dashboardData.visitorStats.total || 0} 
-          colorClass="bg-green-500" 
-        />
-        <DashboardCard 
-          title="Total Rooms" 
-          icon={FaBuilding} 
-          value={dashboardData.occupied.total || 0} 
-          colorClass="bg-yellow-500" 
-        />
-        <DashboardCard 
-          title="Total Payments" 
-          icon={FaMoneyBillWave} 
-          value={`₱${dashboardData.paymentStats.total || 0}`} 
-          colorClass="bg-red-500" 
-        />
+        <DashboardCard title="Total Tenants" icon={FaUsers} value={dashboardData.tenantStats.total || 0} colorClass="bg-blue-500" />
+        <DashboardCard title="Total Visitors" icon={FaUserClock} value={dashboardData.visitorStats.total || 0} colorClass="bg-green-500" />
+        <DashboardCard title="Total Rooms" icon={FaBuilding} value={dashboardData.occupied.total || 0} colorClass="bg-yellow-500" />
+        <DashboardCard title="Total Payments" icon={FaMoneyBillWave} value={`₱${dashboardData.paymentStats.total || 0}`} colorClass="bg-red-500" />
       </div>
 
       {/* Charts Section */}
@@ -187,7 +151,7 @@ const DashboardCharts = () => {
             <YAxis />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{r: 8}} />
+            <Line type="monotone" dataKey="value" stroke="#8884d8" activeDot={{ r: 8 }} />
           </LineChart>
         </div>
 
@@ -195,15 +159,7 @@ const DashboardCharts = () => {
         <div className="bg-white p-4 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Payment Distribution</h2>
           <PieChart width={500} height={300}>
-            <Pie
-              data={dashboardData.paymentStats.distribution}
-              cx={250}
-              cy={150}
-              labelLine={false}
-              outerRadius={80}
-              fill="#8884d8"
-              dataKey="value"
-            >
+            <Pie data={dashboardData.paymentStats.distribution} cx={250} cy={150} labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
               {dashboardData.paymentStats.distribution.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}

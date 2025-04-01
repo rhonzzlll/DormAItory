@@ -23,6 +23,14 @@ const Header = () => {
     navigate('/login'); // Redirect to login page after logout
   };
 
+  // Check if the user is an admin based on the role stored in local storage
+  const isAdmin = localStorage.getItem("role") === "admin";
+
+  // If user is admin, don't render the header
+  if (isAdmin) {
+    return null;
+  }
+
   return (
     <GoogleOAuthProvider clientId={clientId}>
       <div className="index-page">
@@ -30,9 +38,7 @@ const Header = () => {
           <div className="topbar d-flex align-items-center">
             <div className="container d-flex justify-content-center justify-content-md-between">
               <div className="contact-info d-flex align-items-center">
-                {/* <i class="bi bi-envelope d-flex align-items-center"><a href="mailto:contact@example.com">Ar</a></i> */}
                 <i className="bi bi-pin-map d-flex align-items-center"> Arlegui Dormitory, Arlegui St., Quiapo, Manila</i>
-                {/* <i class="bi bi-phone d-flex align-items-center ms-4"><span>+1 5589 55488 55</span></i> */}
                 <i className="bi bi-telephone d-flex align-items-center ms-4"><span> Contact us via +63 945 840 5527</span></i>
               </div>
             </div>
@@ -41,10 +47,15 @@ const Header = () => {
           {/* Main Header */}
           <div className={`${styles.mainHeader} branding d-flex align-items-center`}>
             <div className={`${styles.container} container position-relative d-flex align-items-center justify-content-between`}>
-              <RouterLink to="/tenant" className="logo d-flex align-items-center">
-                <img src="assets/img/typelogo.png" alt />
+              {/* Logo */}
+              <RouterLink
+                to="/tenant"
+                className="logo d-flex align-items-center"
+              >
+                <img src="assets/img/typelogo.png" alt="Logo" />
               </RouterLink>
 
+              {/* Navigation Bar */}
               <nav id="navmenu" className="navmenu">
                 <ul>
                   <li><a href="/tenant" className="active">Services<br /></a></li>
@@ -78,7 +89,7 @@ const Header = () => {
                     <p className={styles.dropdownItem}>Email: {user?.email || "Not logged in"}</p>
                     {/* Use Link to navigate to the Profile page */}
                     <RouterLink to="/profile" className={styles.dropdownItem}>
-                      Edit Profile
+                      Profile
                     </RouterLink>
                     <button className={styles.dropdownItem} onClick={handleLogout}>Logout</button>
                   </div>

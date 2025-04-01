@@ -1,20 +1,20 @@
-import { MaintenanceProvider } from './redux/MaintenanceContext';  // Correct import path
-import React, { useEffect } from 'react';
+import { MaintenanceProvider } from './redux/MaintenanceContext'; // Correct import path
+import React from 'react';
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import './index.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import Footer from './components/layouts/Footer/Footer'; // Adjust path if Footer is in a subdirectory
+import Header from './components/layouts/Header/Header'; // Adjust path if Header is in a subdirectory
 
 // Tenant Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import MainPage from './pages/TenantPage/MainPage';
-import Header from './components/layouts/Header/Header';
-import Footer from './components/layouts/Footer/Footer';
 import RoomList from './pages/TenantPage/RoomList';
-import RoomView from './pages/TenantPage/RoomView';  // Import RoomView component
+import RoomView from './pages/TenantPage/RoomView';
 import VisitorManagement from './pages/TenantPage/VisitorManagement';
-import VisitorLogs from './pages/TenantPage/VisitorLogs'; // Import VisitorLogs component
-import MaintenanceLogs from './pages/TenantPage/MaintenanceLogs'; // Import MaintenanceLogs component
+import VisitorLogs from './pages/TenantPage/VisitorLogs';
+import MaintenanceLogs from './pages/TenantPage/MaintenanceLogs';
 import Records from './pages/TenantPage/Records';
 import Utilities from './pages/TenantPage/Utilities';
 import ContactAdmin from './pages/TenantPage/ContactAdmin';
@@ -52,12 +52,13 @@ function App() {
 
   // Assume tenantId is obtained from authentication context or similar
   const tenantId = "exampleTenantId"; // Replace with actual tenant ID retrieval logic
-
   return (
     <GoogleOAuthProvider clientId={clientId}>
       <MaintenanceProvider>
+        {/* Render Header only for non-auth and non-admin pages */}
         {!isAuthPage && !isAdminDashboard && <Header />}
         <div className="flex">
+          {/* Render Tenant Sidebar only for tenant pages */}
           {isTenantPageWithSidebar && <TenantSidebar />}
           <div className="flex-1">
             <Routes>
@@ -102,6 +103,7 @@ function App() {
             </Routes>
           </div>
         </div>
+        {/* Render Footer only for non-auth and non-admin pages */}
         {!isAuthPage && !isAdminDashboard && <Footer />}
       </MaintenanceProvider>
     </GoogleOAuthProvider>

@@ -55,8 +55,12 @@ const AdminManagementUI = () => {
     try {
       const announcementsResponse = await axios.get('http://dormaitory.online:8080/api/announcements');
       const eventsResponse = await axios.get('http://dormaitory.online:8080/api/events');
-
-      setAnnouncements(Array.isArray(announcementsResponse.data) ? announcementsResponse.data : []);
+  
+      console.log('Fetched announcements:', announcementsResponse.data);
+      console.log('Fetched events:', eventsResponse.data);
+  
+      // Assuming the announcements are nested within an 'announcements' property
+      setAnnouncements(Array.isArray(announcementsResponse.data.announcements) ? announcementsResponse.data.announcements : []);
       setEvents(Array.isArray(eventsResponse.data) ? eventsResponse.data : []);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -65,24 +69,22 @@ const AdminManagementUI = () => {
       setIsLoading(false);
     }
   };
-
   // Handle announcements
   const addAnnouncement = async () => {
     if (!newAnnouncement.title || !newAnnouncement.content) {
       setError('Title and content are required for announcements');
       return;
     }
-
+  
     setIsLoading(true);
     try {
-      const response = await axios.post('http://dormaitory.online:8080/api/announcements', {
+      await axios.post('http://dormaitory.online:8080/api/announcements', {
         ...newAnnouncement,
         date: newAnnouncement.date.toISOString(),
-        // In a real app, you would get the user ID from auth context
         postedBy: "currentUserId"
       });
-
-      setAnnouncements([...announcements, response.data]);
+  
+      await fetchData(); // Refetch data after adding
       setNewAnnouncement({
         title: '',
         content: '',
@@ -98,21 +100,16 @@ const AdminManagementUI = () => {
       setIsLoading(false);
     }
   };
-
   const updateAnnouncement = async (id, updatedAnnouncement) => {
     setIsLoading(true);
     try {
-      // Ensure the date is a valid date object
       const date = dayjs(updatedAnnouncement.date).isValid() ? dayjs(updatedAnnouncement.date).toISOString() : new Date().toISOString();
-
-      const response = await axios.put(`http://dormaitory.online:8080/api/announcements/${id}`, {
+      await axios.put(`http://dormaitory.online:8080/api/announcements/${id}`, {
         ...updatedAnnouncement,
         date
       });
-
-      setAnnouncements(announcements.map(item =>
-        item._id === id ? response.data : item
-      ));
+  
+      await fetchData(); // Refetch data after updating
       setEditingItem(null);
       setEditingType(null);
       setError(null);
@@ -123,11 +120,12 @@ const AdminManagementUI = () => {
       setIsLoading(false);
     }
   };
+  
   const deleteAnnouncement = async (id) => {
     setIsLoading(true);
     try {
       await axios.delete(`http://dormaitory.online:8080/api/announcements/${id}`);
-      setAnnouncements(announcements.filter(item => item._id !== id));
+      await fetchData(); // Refetch data after deleting
       setError(null);
     } catch (error) {
       console.error('Error deleting announcement:', error);
@@ -136,6 +134,7 @@ const AdminManagementUI = () => {
       setIsLoading(false);
     }
   };
+  
 
   // Handle events
   const addEvent = async () => {
@@ -185,7 +184,7 @@ const AdminManagementUI = () => {
         date: dayjs(updatedEvent.date).isValid() ? dayjs(updatedEvent.date).toISOString() : new Date().toISOString(),
         endDate: updatedEvent.endDate ? (dayjs(updatedEvent.endDate).isValid() ? dayjs(updatedEvent.endDate).toISOString() : null) : null
       });
-  
+
       setEvents(events.map(event => (event._id === id ? response.data : event)));
       setEditingItem(null);
       setEditingType(null);
@@ -256,7 +255,7 @@ const AdminManagementUI = () => {
         <div className="bg-white shadow-md rounded-lg p-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-800 flex items-center">
             <Speaker className="mr-2 w-6 h-6" />
-            DMS Communications Dashboard
+         Manage Announcements
           </h1>
         </div>
 

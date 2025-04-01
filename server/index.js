@@ -151,6 +151,9 @@ app.use('/api/payments/records', paymentRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/events', eventRoutes);
 
+
+
+
 // Root route
 app.get("/", (req, res) => {
   res.send("Welcome to the Dormitory Management System API!");
