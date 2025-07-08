@@ -20,7 +20,8 @@ export default function AdminRooms() {
     _id: undefined,
     roomNumber: "",
     capacity: 0,
-    occupied: 0,
+    occupied: 0, // always 0
+    gender: "", // <-- Start as empty string
     electricity: 0.0,
     water: 0.0,
     price: 0,
@@ -41,7 +42,7 @@ export default function AdminRooms() {
   const [currentPage, setCurrentPage] = useState(1);
   const roomsPerPage = 5;
 
-  const API_BASE_URL = 'http://dormaitory.online:8080/api/dorms';
+  const API_BASE_URL = 'http://localhost:8080/api/dorms';
 
   useEffect(() => {
     fetchRooms();
@@ -163,8 +164,13 @@ export default function AdminRooms() {
     if (!validateForm()) return;
 
     try {
+      const submitData = {
+        ...roomData,
+        occupied: 0 // always set to 0
+      };
+
       if (editingRoom) {
-        await axios.post(`${API_BASE_URL}/update`, roomData, {
+        await axios.post(`${API_BASE_URL}/update`, submitData, {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -172,7 +178,7 @@ export default function AdminRooms() {
         });
         setEditingRoom(true);
       } else {
-        await axios.post(`${API_BASE_URL}/create`, roomData, {
+        await axios.post(`${API_BASE_URL}/create`, submitData, {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -194,7 +200,8 @@ export default function AdminRooms() {
       _id: room._id,
       roomNumber: room.roomNumber,
       capacity: room.capacity,
-      occupied: room.occupied,
+      occupied: 0, // always 0
+      gender: room.gender || "Male", // default to Male if not set
       electricity: room.electricity,
       water: room.water,
       price: room.price,
@@ -222,6 +229,7 @@ export default function AdminRooms() {
       roomNumber: "",
       capacity: 0,
       occupied: 0,
+      gender: "Male",
       electricity: 0.0,
       water: 0.0,
       price: 0,
@@ -233,7 +241,7 @@ export default function AdminRooms() {
       description: "",
       images: []
     });
-    setEditingRoom(true);
+    setEditingRoom(false);
   };
 
   const handlePageChange = (pageNumber) => {
@@ -282,16 +290,18 @@ export default function AdminRooms() {
               />
             </div>
             <div>
-              <label htmlFor="occupied" className="block mb-1">Occupied Beds</label>
-              <input
-                type="number"
-                id="occupied"
-                value={roomData.occupied}
+              <label htmlFor="gender" className="block mb-1">Gender</label>
+              <select
+                id="gender"
+                value={roomData.gender}
                 onChange={handleChange}
-                min="0"
                 className="w-full p-2 border rounded"
                 required
-              />
+              >
+                <option value="" disabled>Select a gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+              </select>
             </div>
             <div>
               <label htmlFor="price" className="block mb-1">Rent Price (PHP)</label>
@@ -467,7 +477,9 @@ export default function AdminRooms() {
                     <div>
                       <h3 className="text-lg font-semibold">Room {room.roomNumber}</h3>
                       <p className="text-gray-600">
-                        Capacity: {room.occupied}/{room.capacity} - {formatPHP(room.price)} per bed
+                        Gender: {room.gender} <br />
+                        Capacity: {room.capacity} <br />
+                        {formatPHP(room.price)} per bed
                       </p>
                       <p className="text-sm text-gray-500">
                         Electricity: {formatPHP(room.electricity)}/kWh | Water: {formatPHP(room.water)}/cubic meter

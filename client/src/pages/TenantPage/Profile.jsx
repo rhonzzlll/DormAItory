@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from 'lucide-react';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const Profile = () => {
-    const userId = localStorage.getItem("_id"); // Retrieve userId from localStorage
+    const { tenantId } = useParams();
+    const userId = tenantId || localStorage.getItem("_id"); // Use tenantId from URL if available
     const [profile, setProfile] = useState({
         firstName: '',
         lastName: '',
@@ -17,7 +19,7 @@ const Profile = () => {
         profileImage: ''
     });
     const [profileImage, setProfileImage] = useState(null);
-    const [showPasswordFields, setShowPasswordFields] = useState(false); // Show/Hide password fields
+    const [showPasswordFields, setShowPasswordFields] = useState(false);
     const [passwords, setPasswords] = useState({
         oldPassword: '',
         newPassword: ''
@@ -30,26 +32,24 @@ const Profile = () => {
         // Fetch user data when component mounts
         const fetchUserData = async () => {
             try {
-                console.log(`Fetching user data for userId: ${userId}`);
-                const response = await axios.get(`http://dormaitory.online:8080/api/users/${userId}`);
+                const response = await axios.get(`http://localhost:8080/api/users/${userId}`);
                 const userData = response.data;
                 setProfile({
                     firstName: userData.firstName,
                     lastName: userData.lastName,
                     roomNo: userData.roomNo,
                     address: userData.address,
-                    birthdate: userData.birthdate.split('T')[0], // Format birthdate correctly
+                    birthdate: userData.birthdate ? userData.birthdate.split('T')[0] : '',
                     gender: userData.gender,
                     email: userData.email,
                     phoneNumber: userData.phoneNumber,
-                    password: '', // Do not pre-fill password
+                    password: '',
                     profileImage: userData.profileImage
                 });
                 if (userData.profileImage) {
                     setProfileImage(userData.profileImage);
                 }
             } catch (error) {
-                console.error('Error fetching user data:', error);
                 setError('Something went wrong! Please try again.');
             }
         };
@@ -80,7 +80,7 @@ const Profile = () => {
         if (file && file.type.substr(0, 5) === "image") {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setProfileImage(reader.result); // Set the base64 string as profileImage
+                setProfileImage(reader.result);
             };
             reader.readAsDataURL(file);
         } else {
@@ -102,34 +102,29 @@ const Profile = () => {
                 gender: profile.gender,
                 email: profile.email,
                 phoneNumber: profile.phoneNumber,
-                profileImage: profileImage, // Include the base64 string
+                profileImage: profileImage,
             };
             if (showPasswordFields) {
                 updateData.oldPassword = passwords.oldPassword;
                 updateData.newPassword = passwords.newPassword;
             }
 
-            console.log(`Updating user data for userId: ${userId}`);
-            const response = await axios.put(`http://dormaitory.online:8080/api/users/${userId}`, updateData);
+            const response = await axios.put(`http://localhost:8080/api/users/${userId}`, updateData);
 
             if (response.status === 200) {
-                console.log('Profile updated successfully');
                 setSuccess('Profile updated successfully');
-
-                // Reload the page to reflect the updated profile information
                 window.location.reload();
             } else {
                 setError('Failed to update profile. Please try again.');
             }
         } catch (error) {
-            console.error('Error updating profile:', error);
             setError('Something went wrong! Please try again.');
         }
     };
 
     const handleCancelPasswordChange = () => {
         setShowPasswordFields(false);
-        setPasswords({ oldPassword: '', newPassword: '' }); // Reset passwords
+        setPasswords({ oldPassword: '', newPassword: '' });
     };
 
     return (

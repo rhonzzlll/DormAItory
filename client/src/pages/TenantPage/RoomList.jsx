@@ -27,9 +27,14 @@ import { Alert, AlertDescription } from '../../components/layouts/ui/alert';
 import styles from './styles/Room.module.css';
 
 const RoomCard = ({ room }) => {
-  // Calculate occupancy based on the occupied property directly
   const occupiedCount = room.occupied || 0;
   const isFullyOccupied = room.capacity <= occupiedCount;
+  const genderLabel =
+    room.gender && room.gender.toLowerCase() === 'male'
+      ? 'For Male Only'
+      : room.gender && room.gender.toLowerCase() === 'female'
+      ? 'For Female Only'
+      : '';
 
   return (
     <Link
@@ -50,14 +55,19 @@ const RoomCard = ({ room }) => {
         <p className="text-sm text-gray-700 mb-3 line-clamp-2">{room.description || 'No description available'}</p>
         <div className="flex justify-between items-center mb-3">
           <span className="text-xl font-bold text-blue-600">₱{room.price}/month</span>
-          <div className={`px-2 py-1 rounded-full text-xs ${!isFullyOccupied ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {!isFullyOccupied ? 'Available' : 'Occupied'}
+          <div className="flex items-center space-x-2">
+            <div className={`px-2 py-1 rounded-full text-xs font-semibold ${!isFullyOccupied ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {!isFullyOccupied ? 'Available' : 'Occupied'}
+            </div>
+            <span className="text-xs font-semibold text-gray-700 bg-gray-100 px-2 py-1 rounded-full">
+              {occupiedCount}/{room.capacity} Occupied
+            </span>
           </div>
         </div>
         <div className="flex items-center text-gray-600 text-xs space-x-3">
           <div className="flex items-center">
             <Bed size={14} className="mr-1" />
-            <span>{room.capacity} Beds ({occupiedCount}/{room.capacity} Occupied)</span>
+            <span>{room.capacity} Beds</span>
           </div>
           <div className="flex items-center">
             <Bath size={14} className="mr-1" />
@@ -76,6 +86,15 @@ const RoomCard = ({ room }) => {
             </div>
           )}
         </div>
+        {genderLabel && (
+          <div className="mt-3 text-xs font-bold text-white px-3 py-1 rounded-full"
+            style={{
+              background: genderLabel === 'For Male Only' ? '#2563eb' : '#db2777'
+            }}
+          >
+            {genderLabel}
+          </div>
+        )}
       </div>
     </Link>
   );
@@ -89,17 +108,16 @@ const RoomList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: 'roomNumber', direction: 'asc' });
   const [filterConfig, setFilterConfig] = useState({
-    minPrice: '',
-    maxPrice: '',
     availability: 'all',
-    amenities: []
+    amenities: [],
+    gender: 'all'
   });
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const roomsPerPage = 6;
 
-  const API_BASE_URL = 'http://dormaitory.online:8080/api/dorms';
+  const API_BASE_URL = 'http://localhost:8080/api/dorms';
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -158,10 +176,6 @@ const RoomList = () => {
   // Filtering Function
   const applyFilters = (roomsToFilter) => {
     return roomsToFilter.filter(room => {
-      const priceMatch =
-        (!filterConfig.minPrice || room.price >= parseFloat(filterConfig.minPrice)) &&
-        (!filterConfig.maxPrice || room.price <= parseFloat(filterConfig.maxPrice));
-
       const availabilityMatch =
         filterConfig.availability === 'all' ||
         (filterConfig.availability === 'available' && room.capacity > (room.occupied || 0)) ||
@@ -171,7 +185,11 @@ const RoomList = () => {
         filterConfig.amenities.length === 0 ||
         (room.amenities && filterConfig.amenities.every(amenity => room.amenities[amenity]));
 
-      return priceMatch && availabilityMatch && amenitiesMatch;
+      const genderMatch =
+        filterConfig.gender === 'all' ||
+        (room.gender && room.gender.toLowerCase() === filterConfig.gender);
+
+      return availabilityMatch && amenitiesMatch && genderMatch;
     });
   };
 
@@ -227,7 +245,7 @@ const RoomList = () => {
               Price
             </Button>
 
-            <FilterDialog onFilter={handleFilter} />
+            <FilterDialog onFilter={handleFilter} filterConfig={filterConfig} />
           </div>
         </div>
 
@@ -280,18 +298,19 @@ const RoomList = () => {
 };
 
 // Filter Dialog Component
-const FilterDialog = ({ onFilter }) => {
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [availability, setAvailability] = useState('all');
-  const [amenities, setAmenities] = useState([]);
+const FilterDialog = ({ onFilter, filterConfig }) => {
+  const [availability, setAvailability] = useState(filterConfig?.availability || 'all');
+  const [amenities, setAmenities] = useState(filterConfig?.amenities || []);
+  // Remove "all" from gender options and default to "male"
+  const [gender, setGender] = useState(
+    filterConfig?.gender === 'all' ? 'male' : (filterConfig?.gender || 'male')
+  );
 
   const handleApplyFilter = () => {
     onFilter({
-      minPrice,
-      maxPrice,
       availability,
-      amenities
+      amenities,
+      gender
     });
   };
 
@@ -316,24 +335,6 @@ const FilterDialog = ({ onFilter }) => {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
-            <div className="flex space-x-2">
-              <Input
-                type="number"
-                placeholder="Min Price"
-                value={minPrice}
-                onChange={(e) => setMinPrice(e.target.value)}
-              />
-              <Input
-                type="number"
-                placeholder="Max Price"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
             <Select value={availability} onValueChange={setAvailability}>
               <SelectTrigger>
@@ -348,16 +349,31 @@ const FilterDialog = ({ onFilter }) => {
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+            <Select value={gender} onValueChange={setGender}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
-            <div className="flex space-x-2">
+            <div className="flex flex-col space-y-2">
               {['wifi', 'aircon', 'bathroom'].map(amenity => (
-                <Button
-                  key={amenity}
-                  variant={amenities.includes(amenity) ? 'default' : 'outline'}
-                  onClick={() => toggleAmenity(amenity)}
-                >
-                  {amenity.charAt(0).toUpperCase() + amenity.slice(1)}
-                </Button>
+                <label key={amenity} className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={amenities.includes(amenity)}
+                    onChange={() => toggleAmenity(amenity)}
+                    className="form-checkbox h-4 w-4 text-blue-600"
+                  />
+                  <span>{amenity.charAt(0).toUpperCase() + amenity.slice(1)}</span>
+                </label>
               ))}
             </div>
           </div>

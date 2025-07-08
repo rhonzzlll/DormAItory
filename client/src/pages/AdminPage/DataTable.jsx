@@ -19,7 +19,7 @@ const DataTable = ({ rows, setUsers }) => {
 
   const handleDelete = async (userId) => {
     try {
-      await axios.delete(`http://dormaitory.online/api/users/${userId}`);
+      await axios.delete(`http://localhost:8080/api/users/${userId}`);
       setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
       setIsDeleteOpen(false);
     } catch (error) {
@@ -35,7 +35,7 @@ const DataTable = ({ rows, setUsers }) => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`http://dormaitory.online/api/users/${selectedUser._id}`, formData);
+      await axios.put(`http://localhost:8080/api/users/${selectedUser._id}`, formData);
       setUsers(prevUsers => prevUsers.map(user => (user._id === selectedUser._id ? formData : user)));
       setIsEditOpen(false);
     } catch (error) {
@@ -45,7 +45,7 @@ const DataTable = ({ rows, setUsers }) => {
 
   const handleCreate = async () => {
     try {
-      const response = await axios.post('http://dormaitory.online/api/users', formData);
+      const response = await axios.post('http://localhost:8080/api/users', formData);
       setUsers(prevUsers => [...prevUsers, response.data]);
       setIsCreateOpen(false);
     } catch (error) {

@@ -38,7 +38,7 @@ const RoomView = () => {
       }
 
       try {
-        const res = await fetch(`http://dormaitory.online:8080/api/dorms/get/${id}`);
+        const res = await fetch(`http://localhost:8080/api/dorms/get/${id}`);
 
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
@@ -156,6 +156,21 @@ const RoomView = () => {
               <CardTitle className="text-2xl font-bold">
                 Room {room.roomNumber} - ₱{room.price ? room.price.toLocaleString() : 'N/A'}/month
               </CardTitle>
+              {/* Gender badge */}
+              <div className="mt-2">
+                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold
+                  ${room.gender === 'Male'
+                    ? 'bg-blue-100 text-blue-800'
+                    : room.gender === 'Female'
+                      ? 'bg-pink-100 text-pink-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`
+                }>
+                  {room.gender === 'Male' && 'Male Only'}
+                  {room.gender === 'Female' && 'Female Only'}
+                  {!room.gender && 'Unspecified'}
+                </span>
+              </div>
               <p className="text-sm text-gray-500 flex items-center mt-2">
                 <MapPin size={16} className="mr-1" />
                 {room.address || '916 R. Hidalgo Street Quiapo'}

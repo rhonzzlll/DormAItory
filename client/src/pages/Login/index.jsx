@@ -20,7 +20,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = "http://dormaitory.online:8080/api/auth"; // Your API endpoint
+      const url = "http://localhost:8080/api/auth"; // Your API endpoint
       const { data: res } = await axios.post(url, data);
 
       // Save user ID, token and role to local storage
@@ -50,7 +50,7 @@ const Login = () => {
     console.log('Google login success:', response);
     const { credential } = response;
     try {
-      const url = "http://dormaitory.online:8080/api/auth/google"; // Your API endpoint for Google login
+      const url = "http://localhost:8080/api/auth/google"; // Your API endpoint for Google login
       const { data: res } = await axios.post(url, { token: credential });
 
       // Save user ID, token and role to local storage

@@ -27,7 +27,7 @@ const AdminChatbot = () => {
             scrollToBottom();
 
             try {
-                const req = await fetch(`http://dormaitory.online:8080/api/chat/message/send/${chatroomId}?admin=true`, {
+                const req = await fetch(`http://localhost:8080/api/chat/message/send/${chatroomId}?admin=true`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -62,7 +62,7 @@ const AdminChatbot = () => {
             const otherId = "673349dfb3adad07a8d18919";
 
             try {
-                const c_req = await fetch("http://dormaitory.online:8080/api/chat/chatroom", {
+                const c_req = await fetch("http://localhost:8080/api/chat/chatroom", {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
@@ -81,7 +81,7 @@ const AdminChatbot = () => {
                     setChatroomId(chatroomId);
                 }
 
-                const m_req = await fetch(`http://dormaitory.online:8080/api/chat/messages/${chatroomId}`, {
+                const m_req = await fetch(`http://localhost:8080/api/chat/messages/${chatroomId}`, {
                     method: "GET",
                     headers: {
                         "Accept": "application/json"
@@ -107,23 +107,38 @@ const AdminChatbot = () => {
             </div>
 
             <div ref={messagesEndRef} className="h-[26rem] overflow-y-auto p-4 bg-gray-100">
-                {messages.length > 0 ? messages.map((message, index) => (
-                    <div
-                        key={index}
-                        className={`mb-4 flex ${message.sender === userId ? 'justify-end' : 'justify-start'}`}
-                    >
-                        <div className={`p-3 rounded-lg max-w-xs ${message.sender === userId ? 'bg-blue-500 text-white' : 'bg-white text-black'}`}>
-                            {message.content}
+                {messages.length > 0 ? messages.map((message, index) => {
+                    const isUser = message.sender === userId;
+                    const isBot = message.sender === "673349dfb3adad07a8d18919";
+                    return (
+                        <div
+                            key={index}
+                            className={`mb-4 flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                        >
+                            {isBot ? (
+                                <div
+                                    className={`p-3 rounded-lg w-full bg-white text-black mr-8 whitespace-pre-line`}
+                                    style={{ wordBreak: "break-word" }}
+                                    dangerouslySetInnerHTML={{ __html: message.content.replace(/\n/g, "<br/>") }}
+                                />
+                            ) : (
+                                <div
+                                    className={`p-3 rounded-lg w-full bg-blue-500 text-white ml-8 whitespace-pre-line`}
+                                    style={{ wordBreak: "break-word" }}
+                                >
+                                    {message.content}
+                                </div>
+                            )}
                         </div>
-                    </div>
-                )) : (
+                    );
+                }) : (
                     <div className="w-full h-full flex justify-center items-center">
                         <p className="text-gray-500">Start chatting</p>
                     </div>
                 )}
                 {isTyping && (
                     <div className="flex justify-start">
-                        <div className="bg-gray-300 text-black p-3 rounded-lg max-w-xs">
+                        <div className="bg-gray-300 text-black p-3 rounded-lg w-full mr-8">
                             DormBot is typing...
                         </div>
                     </div>

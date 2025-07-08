@@ -8,6 +8,7 @@ exports.updateDorm = async (req, res) => {
       roomNumber,
       capacity,
       occupied,
+      gender, // <-- Add this
       electricity,
       water,
       price,
@@ -26,6 +27,7 @@ exports.updateDorm = async (req, res) => {
           roomNumber,
           capacity,
           occupied,
+          gender, // <-- Add this
           electricity,
           water,
           price,
@@ -139,8 +141,35 @@ exports.getDorm = async (req, res) => {
 };
 
 exports.createDorm = async (req, res) => {
-  const dorm = new Dorm(req.body);
   try {
+    const {
+      roomNumber,
+      capacity,
+      occupied,
+      gender, // <-- Add this
+      electricity,
+      water,
+      price,
+      amenities,
+      description,
+      images,
+      tenants
+    } = req.body;
+
+    const dorm = new Dorm({
+      roomNumber,
+      capacity,
+      occupied,
+      gender, // <-- Add this
+      electricity,
+      water,
+      price,
+      amenities,
+      description,
+      images,
+      tenants
+    });
+
     const newDorm = await dorm.save();
     return res.status(201).json(newDorm);
   } catch (error) {

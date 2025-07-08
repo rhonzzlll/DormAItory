@@ -12,7 +12,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 
-const API_BASE_URL = 'http://dormaitory.online:8080/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 const VisitorRegistrationForm = () => {
   const [visitors, setVisitors] = useState([{ fullName: '', phoneNumber: '', email: '', relationship: '' }]);
@@ -122,7 +122,7 @@ const VisitorRegistrationForm = () => {
     }
 
     try {
-      await axios.post('http://dormaitory.online:8080/api/visitors/register', { visitors, ...formData });
+      await axios.post('http://localhost:8080/api/visitors/register', { visitors, ...formData });
       setConfirmationMessage('Your visit has been successfully registered.');
       setErrors({});
       window.location.reload(); // Refresh the page

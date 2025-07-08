@@ -4,7 +4,7 @@ import { Alert, AlertTitle, AlertDescription } from '../../components/layouts/ui
 import axios from 'axios';
  
 import { Link } from 'react-router-dom'; // Add this import
-const API_BASE_URL = 'http://dormaitory.online:8080/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 
 const PaymentSystem = ({ isAdmin = false, adminQrCodes = {}, refreshPaymentRecords }) => {

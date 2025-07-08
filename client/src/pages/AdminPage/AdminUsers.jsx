@@ -20,10 +20,10 @@ export default function AdminUsers() {
       try {
         setLoading(true);
 
-        const usersResponse = await axios.get('http://dormaitory.online:8080/api/users');
+        const usersResponse = await axios.get('http://localhost:8080/api/users');
         const users = Array.isArray(usersResponse.data) ? usersResponse.data : [usersResponse.data];
 
-        const dormsResponse = await axios.get('http://dormaitory.online:8080/api/dorms');
+        const dormsResponse = await axios.get('http://localhost:8080/api/dorms');
         const dorms = Array.isArray(dormsResponse.data) ? dormsResponse.data : [dormsResponse.data];
 
         const mergedUsers = users.map((user, index) => {

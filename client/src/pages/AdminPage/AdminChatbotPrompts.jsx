@@ -46,7 +46,7 @@ const AdminChatbotPrompts = () => {
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('http://dormaitory.online:8080/api/chat/prompts');
+      const response = await axios.get('http://localhost:8080/api/chat/prompts');
       setRequests(response.data.data.prompts);
       setFilteredRequests(response.data.data.prompts);
     } catch (error) {
@@ -75,7 +75,7 @@ const AdminChatbotPrompts = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.post(`http://dormaitory.online:8080/api/chat/prompts/delete`, {
+      await axios.post(`http://localhost:8080/api/chat/prompts/delete`, {
         "_id": id,
       }, {
         headers: {
@@ -94,7 +94,7 @@ const AdminChatbotPrompts = () => {
       const { _id, query, response } = selectedRequest;
 
       if (isEdit) {
-        await axios.post(`http://dormaitory.online:8080/api/chat/prompts/upsert`, {
+        await axios.post(`http://localhost:8080/api/chat/prompts/upsert`, {
           _id,
           query,
           response
@@ -105,7 +105,7 @@ const AdminChatbotPrompts = () => {
           }
         });
       } else {
-        await axios.post(`http://dormaitory.online:8080/api/chat/prompts/upsert`, {
+        await axios.post(`http://localhost:8080/api/chat/prompts/upsert`, {
           query,
           response
         }, {

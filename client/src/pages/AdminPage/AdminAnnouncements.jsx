@@ -53,8 +53,8 @@ const AdminManagementUI = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const announcementsResponse = await axios.get('http://dormaitory.online:8080/api/announcements');
-      const eventsResponse = await axios.get('http://dormaitory.online:8080/api/events');
+      const announcementsResponse = await axios.get('http://localhost:8080/api/announcements');
+      const eventsResponse = await axios.get('http://localhost:8080/api/events');
   
       console.log('Fetched announcements:', announcementsResponse.data);
       console.log('Fetched events:', eventsResponse.data);
@@ -78,7 +78,7 @@ const AdminManagementUI = () => {
   
     setIsLoading(true);
     try {
-      await axios.post('http://dormaitory.online:8080/api/announcements', {
+      await axios.post('http://localhost:8080/api/announcements', {
         ...newAnnouncement,
         date: newAnnouncement.date.toISOString(),
         postedBy: "currentUserId"
@@ -104,7 +104,7 @@ const AdminManagementUI = () => {
     setIsLoading(true);
     try {
       const date = dayjs(updatedAnnouncement.date).isValid() ? dayjs(updatedAnnouncement.date).toISOString() : new Date().toISOString();
-      await axios.put(`http://dormaitory.online:8080/api/announcements/${id}`, {
+      await axios.put(`http://localhost:8080/api/announcements/${id}`, {
         ...updatedAnnouncement,
         date
       });
@@ -124,7 +124,7 @@ const AdminManagementUI = () => {
   const deleteAnnouncement = async (id) => {
     setIsLoading(true);
     try {
-      await axios.delete(`http://dormaitory.online:8080/api/announcements/${id}`);
+      await axios.delete(`http://localhost:8080/api/announcements/${id}`);
       await fetchData(); // Refetch data after deleting
       setError(null);
     } catch (error) {
@@ -145,7 +145,7 @@ const AdminManagementUI = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('http://dormaitory.online:8080/api/events', {
+      const response = await axios.post('http://localhost:8080/api/events', {
         ...newEvent,
         date: dayjs(newEvent.date).isValid() ? dayjs(newEvent.date).toISOString() : new Date().toISOString(),
         endDate: newEvent.endDate ? (dayjs(newEvent.endDate).isValid() ? dayjs(newEvent.endDate).toISOString() : null) : null,
@@ -179,7 +179,7 @@ const AdminManagementUI = () => {
   const updateEvent = async (id, updatedEvent) => {
     setIsLoading(true);
     try {
-      const response = await axios.put(`http://dormaitory.online:8080/api/events/${id}`, {
+      const response = await axios.put(`http://localhost:8080/api/events/${id}`, {
         ...updatedEvent,
         date: dayjs(updatedEvent.date).isValid() ? dayjs(updatedEvent.date).toISOString() : new Date().toISOString(),
         endDate: updatedEvent.endDate ? (dayjs(updatedEvent.endDate).isValid() ? dayjs(updatedEvent.endDate).toISOString() : null) : null
@@ -202,7 +202,7 @@ const AdminManagementUI = () => {
   const deleteEvent = async (id) => {
     setIsLoading(true);
     try {
-      await axios.delete(`http://dormaitory.online:8080/api/events/${id}`);
+      await axios.delete(`http://localhost:8080/api/events/${id}`);
       setEvents(events.filter(event => event._id !== id));
       setError(null);
     } catch (error) {

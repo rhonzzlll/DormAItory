@@ -68,9 +68,65 @@ const formatDate = (date) => {
     });
 };
 
+/**
+ * Helper function to format user information as a bulleted list
+ */
+const formatUserInfo = (user, tenantInfo, roomInfo, includeId = true) => {
+    const { _id, firstName, lastName, email, phoneNumber } = user;
+    const startDate = tenantInfo ? formatDate(tenantInfo.startDate) : "Not specified";
+    const endDate = tenantInfo ? formatDate(tenantInfo.endDate) : "Not specified";
+    const paymentStatus = tenantInfo ? tenantInfo.paymentStatus : "Not specified";
+    const rentAmount = tenantInfo ? tenantInfo.rentAmount : "Not specified";
+
+    let userInfo = `👤 **${firstName} ${lastName}**\n`;
+    
+    if (includeId) {
+        userInfo += `   • ID: ${_id}\n`;
+    }
+    
+    userInfo += `   • Room: ${roomInfo}\n`;
+    userInfo += `   • Email: ${email}\n`;
+    userInfo += `   • Phone: +63${phoneNumber}\n`;
+    userInfo += `   • Contract Period: ${startDate} to ${endDate}\n`;
+    userInfo += `   • Payment Status: ${paymentStatus}\n`;
+    
+    if (rentAmount !== "Not specified") {
+        userInfo += `   • Rent Amount: ${rentAmount} pesos\n`;
+    }
+
+    return userInfo;
+};
+
+/**
+ * Helper function to format room amenities as a bulleted list
+ */
+const formatAmenities = (amenities) => {
+    let amenitiesList = "";
+    
+    if (amenities.aircon) {
+        amenitiesList += "   • ❄️ Air Conditioning\n";
+    } else {
+        amenitiesList += "   • ❌ No Air Conditioning\n";
+    }
+    
+    if (amenities.wifi) {
+        amenitiesList += "   • 📶 WiFi Available\n";
+    } else {
+        amenitiesList += "   • ❌ No WiFi\n";
+    }
+    
+    if (amenities.bathroom) {
+        amenitiesList += "   • 🚿 Private Bathroom\n";
+    } else {
+        amenitiesList += "   • ❌ No Private Bathroom\n";
+    }
+    
+    return amenitiesList;
+};
+
 const sendBotQuery = async (message, res) => {
     try {
-        const req = await fetch("http://dormaitory.online:5005/model/parse", {
+        const req = await fetch("http://localhost:5005/model/parse", {
             method: "POST",
             headers: {
                 "Accept": "application/json"
@@ -93,7 +149,7 @@ const sendBotQuery = async (message, res) => {
         });
 
         if (entities.length === 0) {
-            botMessage.content = "Sorry, could you please be more specific with your query. Thank you!";
+            botMessage.content = "🤔 Sorry, could you please be more specific with your query. Thank you!\n\n💡 **Try asking about:**\n   • User names (first/last name)\n   • Room numbers\n   • User IDs\n   • Payment status\n   • Contract dates";
             return res.status(200).json({ data: { response: botMessage.content } });
         }
 
@@ -148,18 +204,14 @@ const sendBotQuery = async (message, res) => {
                     }
                 }
 
-                const { firstName, lastName, email, phoneNumber } = foundUser;
-                const startDate = tenantInfo ? formatDate(tenantInfo.startDate) : "Not specified";
-                const endDate = tenantInfo ? formatDate(tenantInfo.endDate) : "Not specified";
-                const paymentStatus = tenantInfo ? tenantInfo.paymentStatus : "Not specified";
-
-                botMessage.content = `That user appears to be ${firstName} ${lastName}. They live in room number ${roomInfo}. You may contact them via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${startDate} and ends on ${endDate}. The payment status is ${paymentStatus}.`;
+                const userInfoFormatted = formatUserInfo(foundUser, tenantInfo, roomInfo, false);
+                botMessage.content = `✅ **User Found!**\n\n${userInfoFormatted}`;
             } else {
-                botMessage.content = `Sorry, I couldn't find anyone with the ID ${entityMap._id}`;
+                botMessage.content = `❌ **User Not Found**\n\n🔍 Sorry, I couldn't find anyone with the ID: **${entityMap._id}**\n\n💡 **Tip:** Please double-check the user ID and try again.`;
             }
         }
         else if (entityMap.roomNumber) {
-            // Keep the existing room number handling code as it's working
+            // Handle room number queries with enhanced formatting
             const foundDorm = await Dorm.aggregate([
                 {
                     $match: { roomNumber: entityMap.roomNumber }
@@ -199,41 +251,34 @@ const sendBotQuery = async (message, res) => {
             ]);
 
             if (foundDorm.length === 1) {
-                let message = `Room ${entityMap.roomNumber} contains ${foundDorm[0]["occupied"]} people, up to ${foundDorm[0]["capacity"]}, with a renting price starting at ${foundDorm[0]["price"]} pesos. It has`;
+                const room = foundDorm[0];
+                
+                let message = `🏠 **Room ${entityMap.roomNumber} Information**\n\n`;
+                message += `📊 **Room Details:**\n`;
+                message += `   • Occupancy: ${room.occupied}/${room.capacity} people\n`;
+                message += `   • Price: ${room.price} pesos\n\n`;
+                
+                message += `🛏️ **Amenities:**\n`;
+                message += formatAmenities(room.amenities);
 
-                if (foundDorm[0]["amenities"]["aircon"]) {
-                    message += " aircon";
+                if (room.occupied === 0) {
+                    message += `\n✅ **Availability:** This room is currently vacant.`;
                 } else {
-                    message += " no aircon";
-                }
+                    message += `\n👥 **Current Tenants:**\n\n`;
 
-                if (foundDorm[0]["amenities"]["wifi"]) {
-                    message += ", WIFI";
-                } else {
-                    message += ", no WIFI";
-                }
-
-                if (foundDorm[0]["amenities"]["bathroom"]) {
-                    message += ", bathroom";
-                } else {
-                    message += ", no bathroom";
-                }
-
-                if (foundDorm[0]["occupied"] === 0) {
-                    message += ", and there are no people that currently live in this room.";
-                } else {
-                    message += ", and people that currently live here are:\n\n";
-
-                    for (const tenant of foundDorm[0]["tenants"]) {
-                        message += `(${tenant["userId"]}) ${tenant["info"]["firstName"]} ${tenant["info"]["lastName"]} from room ${entityMap.roomNumber}\n`;
-                        message += `  - Rent Amount: ${tenant["rentAmount"]} pesos\n`;
-                        message += `  - Contract: ${formatDate(tenant["startDate"])} to ${formatDate(tenant["endDate"])}\n`;
-                        message += `  - Payment Status: ${tenant["paymentStatus"]}\n\n`;
+                    for (let i = 0; i < room.tenants.length; i++) {
+                        const tenant = room.tenants[i];
+                        message += `${i + 1}. **${tenant.info.firstName} ${tenant.info.lastName}**\n`;
+                        message += `   • ID: ${tenant.userId}\n`;
+                        message += `   • Rent: ${tenant.rentAmount} pesos\n`;
+                        message += `   • Contract: ${formatDate(tenant.startDate)} to ${formatDate(tenant.endDate)}\n`;
+                        message += `   • Payment Status: ${tenant.paymentStatus}\n\n`;
                     }
                 }
+                
                 botMessage.content = message;
             } else {
-                botMessage.content = `Sorry but I could not find anything about room ${entityMap.roomNumber}.`;
+                botMessage.content = `❌ **Room Not Found**\n\n🔍 Sorry, I couldn't find any information about room **${entityMap.roomNumber}**.\n\n💡 **Tip:** Please check the room number and try again.`;
             }
         }
         // Handle other entity types (startdate, enddate, status)
@@ -241,27 +286,27 @@ const sendBotQuery = async (message, res) => {
             const foundDorm = await Dorm.findOne({ "startDate": entityMap.startdate });
 
             if (foundDorm) {
-                botMessage.content = `The start date for the dorm is ${formatDate(foundDorm.startDate)}.`;
+                botMessage.content = `📅 **Start Date Information**\n\n   • The start date for the dorm is: **${formatDate(foundDorm.startDate)}**`;
             } else {
-                botMessage.content = `Sorry, I couldn't find any dorm with the start date ${entityMap.startdate}.`;
+                botMessage.content = `❌ **Date Not Found**\n\n🔍 Sorry, I couldn't find any dorm with the start date: **${entityMap.startdate}**`;
             }
         } 
         else if (entityMap.enddate) {
             const foundDorm = await Dorm.findOne({ "endDate": entityMap.enddate });
 
             if (foundDorm) {
-                botMessage.content = `The end date for the dorm is ${formatDate(foundDorm.endDate)}.`;
+                botMessage.content = `📅 **End Date Information**\n\n   • The end date for the dorm is: **${formatDate(foundDorm.endDate)}**`;
             } else {
-                botMessage.content = `Sorry, I couldn't find any dorm with the end date ${entityMap.enddate}.`;
+                botMessage.content = `❌ **Date Not Found**\n\n🔍 Sorry, I couldn't find any dorm with the end date: **${entityMap.enddate}**`;
             }
         }
         else if (entityMap.status) {
             const foundDorm = await Dorm.findOne({ "status": entityMap.status });
 
             if (foundDorm) {
-                botMessage.content = `The status of the dorm is ${foundDorm.status}.`;
+                botMessage.content = `📊 **Status Information**\n\n   • The status of the dorm is: **${foundDorm.status}**`;
             } else {
-                botMessage.content = `Sorry, I couldn't find any dorm with the status ${entityMap.status}.`;
+                botMessage.content = `❌ **Status Not Found**\n\n🔍 Sorry, I couldn't find any dorm with the status: **${entityMap.status}**`;
             }
         }
 
@@ -276,10 +321,10 @@ const sendBotQuery = async (message, res) => {
 // Helper function to process user search results and format the response
 async function processUserResults(users, botMessage, res, searchTerm, searchType = 'fullName') {
     if (users.length === 1) {
-        const { _id, firstName, lastName, email, phoneNumber } = users[0];
+        const user = users[0];
 
         // Find tenant info to get room details
-        const tenantInfo = await Tenant.findOne({ userId: _id });
+        const tenantInfo = await Tenant.findOne({ userId: user._id });
         let roomInfo = "Not assigned";
 
         if (tenantInfo && tenantInfo.roomId) {
@@ -289,24 +334,24 @@ async function processUserResults(users, botMessage, res, searchTerm, searchType
             }
         }
 
-        const startDate = tenantInfo ? formatDate(tenantInfo.startDate) : "Not specified";
-        const endDate = tenantInfo ? formatDate(tenantInfo.endDate) : "Not specified";
-        const paymentStatus = tenantInfo ? tenantInfo.paymentStatus : "Not specified";
-
-        botMessage.content = `${firstName} ${lastName} has the ID ${_id} and currently lives in room number ${roomInfo}. You may contact them via their email (${email}) or phone number (+63${phoneNumber}). The contract starts on ${startDate} and ends on ${endDate}. The payment status is ${paymentStatus}.`;
+        const userInfoFormatted = formatUserInfo(user, tenantInfo, roomInfo);
+        botMessage.content = `✅ **User Found!**\n\n${userInfoFormatted}`;
+        
         await botMessage.save();
-
         return res.status(200).json({ data: { response: botMessage.content } });
+        
     } else if (users.length > 1) {
         let message = searchType === 'fullName' 
-            ? `It appears that there are multiple people named ${searchTerm}:\n`
-            : `It appears that there are multiple users with the ${searchType} ${searchTerm}:\n`;
+            ? `👥 **Multiple Users Found: "${searchTerm}"**\n\n`
+            : `👥 **Multiple Users Found with ${searchType}: "${searchTerm}"**\n\n`;
 
-        for (const user of users) {
-            const { _id, firstName, lastName } = user;
+        message += `Found **${users.length}** users:\n\n`;
+
+        for (let i = 0; i < users.length; i++) {
+            const user = users[i];
 
             // Find tenant info to get room details
-            const tenantInfo = await Tenant.findOne({ userId: _id });
+            const tenantInfo = await Tenant.findOne({ userId: user._id });
             let roomInfo = "Not assigned";
 
             if (tenantInfo && tenantInfo.roomId) {
@@ -316,19 +361,16 @@ async function processUserResults(users, botMessage, res, searchTerm, searchType
                 }
             }
 
-            const startDate = tenantInfo ? formatDate(tenantInfo.startDate) : "Not specified";
-            const endDate = tenantInfo ? formatDate(tenantInfo.endDate) : "Not specified";
-            const paymentStatus = tenantInfo ? tenantInfo.paymentStatus : "Not specified";
-
-            message += `(${_id}) ${firstName} ${lastName} from room ${roomInfo}. The contract starts on ${startDate} and ends on ${endDate}. The payment status is ${paymentStatus}.\n`;
+            message += `**${i + 1}.** ${formatUserInfo(user, tenantInfo, roomInfo)}\n`;
         }
 
-        message += "\n\nThose are the found users, please let me know if I can assist you more.";
+        message += `💡 **Need specific information?** Please provide the user ID or more details.`;
         botMessage.content = message;
+        
     } else {
         botMessage.content = searchType === 'fullName' 
-            ? `Sorry, I couldn't find anyone named ${searchTerm}.`
-            : `Sorry, I couldn't find anyone with the ${searchType} ${searchTerm}.`;
+            ? `❌ **User Not Found**\n\n🔍 Sorry, I couldn't find anyone named **"${searchTerm}"**.\n\n💡 **Try:**\n   • Checking the spelling\n   • Using just first or last name\n   • Providing the user ID`
+            : `❌ **User Not Found**\n\n🔍 Sorry, I couldn't find anyone with the ${searchType} **"${searchTerm}"**.\n\n💡 **Try:**\n   • Checking the spelling\n   • Using the full name\n   • Providing the user ID`;
     }
     
     await botMessage.save();
@@ -356,7 +398,7 @@ const sendBotResponse = async (message, res) => {
                 roomId: message.roomId,
                 sender: message.receiver,
                 receiver: message.sender,
-                content: "I'm sorry, I don't have specific information on that query. Please contact the MlQU admin for more detailed assistance."
+                content: "❓ **Need More Help?**\n\n🔍 I don't have specific information on that query.\n\n📞 **Contact Options:**\n   • Reach out to the MlQU admin for detailed assistance\n   • Try rephrasing your question\n   • Ask about users, rooms, or payment status"
             }).save();
 
             return res.status(200).json({ data: { response: botMessage.content } });
@@ -374,7 +416,7 @@ const sendBotResponse = async (message, res) => {
                 return res.status(200).json({ data: { response: botMessage.content } });
             }
         }
-        return res.status(200).json({ message: "I'm sorry, I don't have specific information on that query. Please contact the MlQU admin for more detailed assistance." });
+        return res.status(200).json({ message: "❓ **Need More Help?**\n\n🔍 I don't have specific information on that query.\n\n📞 **Contact Options:**\n   • Reach out to the MlQU admin for detailed assistance\n   • Try rephrasing your question\n   • Ask about users, rooms, or payment status" });
     } catch (error) {
         console.log(error);
     }

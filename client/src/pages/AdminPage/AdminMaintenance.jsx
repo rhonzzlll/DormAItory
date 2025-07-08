@@ -61,7 +61,7 @@ export default function AdminMaintenance() {
 
   const fetchRequests = async () => {
     try {
-      const response = await axios.get('http://dormaitory.online:8080/api/maintenancerequest/get');
+      const response = await axios.get('http://localhost:8080/api/maintenancerequest/get');
       
       const { requests } = response.data.data;
 
@@ -74,7 +74,7 @@ export default function AdminMaintenance() {
 
   const handleStatusChange = async (requestId, newStatus) => {
     try {
-      const req = await axios.post("http://dormaitory.online:8080/api/maintenancerequest/update/status", {
+      const req = await axios.post("http://localhost:8080/api/maintenancerequest/update/status", {
         _id: requestId,
         status: newStatus
       }, {
@@ -154,7 +154,7 @@ export default function AdminMaintenance() {
   const handleSubmit = async () => {
     try {
       if (isEdit) {
-        await axios.post('http://dormaitory.online:8080/api/maintenancerequest/update', {
+        await axios.post('http://localhost:8080/api/maintenancerequest/update', {
           _id: selectedRequest._id,
           firstName: selectedRequest.firstName,
           lastName: selectedRequest.lastName,
@@ -164,7 +164,7 @@ export default function AdminMaintenance() {
           createdAt: selectedRequest.createdAt
         });
       } else {
-        await axios.post('http://dormaitory.online:8080/api/maintenancerequest/create', {
+        await axios.post('http://localhost:8080/api/maintenancerequest/create', {
           firstName: selectedRequest.firstName,
           lastName: selectedRequest.lastName,
           concernType: selectedRequest.concernType,
@@ -183,7 +183,7 @@ export default function AdminMaintenance() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.get(`http://dormaitory.online:8080/api/maintenancerequest/delete/${id}`);
+      await axios.get(`http://localhost:8080/api/maintenancerequest/delete/${id}`);
       fetchRequests();
     } catch (error) {
       console.error('Error deleting request:', error);

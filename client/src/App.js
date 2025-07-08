@@ -38,7 +38,7 @@ import AdminChatbot from './pages/AdminPage/AdminChatbot';
 import AdminChatbotPrompts from './pages/AdminPage/AdminChatbotPrompts';
 import AdminUsers from './pages/AdminPage/AdminUsers';
 import AdminManageRooms from './pages/AdminPage/AdminManageRooms';
-
+import ProfileHistory from './pages/TenantPage/ProfileHistory'; // Adjust path if needed
 // Tenant Sidebar
 import TenantSidebar from './components/layouts/TenantSidebar';
 
@@ -48,7 +48,10 @@ function App() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
   const isAdminDashboard = location.pathname.startsWith('/admin');
-  const isTenantPageWithSidebar = location.pathname.startsWith('/tenant') && location.pathname !== '/tenant';
+  // Show sidebar for /tenant/* and /profile/*
+  const isTenantPageWithSidebar =
+    (location.pathname.startsWith('/tenant') && location.pathname !== '/tenant') ||
+    location.pathname.startsWith('/profile');
 
   // Assume tenantId is obtained from authentication context or similar
   const tenantId = "exampleTenantId"; // Replace with actual tenant ID retrieval logic
@@ -58,7 +61,7 @@ function App() {
         {/* Render Header only for non-auth and non-admin pages */}
         {!isAuthPage && !isAdminDashboard && <Header />}
         <div className="flex">
-          {/* Render Tenant Sidebar only for tenant pages */}
+          {/* Render Tenant Sidebar for tenant and profile pages */}
           {isTenantPageWithSidebar && <TenantSidebar />}
           <div className="flex-1">
             <Routes>
@@ -96,7 +99,9 @@ function App() {
               <Route path="/tenant/maintenance-request" element={<MaintenanceRequest tenantId={tenantId} />} />
               <Route path="/tenant/payment-options" element={<PaymentOptions />} />
               <Route path="/tenant/chatbot" element={<ChatBot />} />
+
               <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/history" element={<ProfileHistory />} />
 
               {/* Default Redirect */}
               <Route path="/" element={<Navigate replace to="/login" />} />

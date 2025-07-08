@@ -38,7 +38,7 @@ const VisitorsChart = () => {
   useEffect(() => {
     const fetchVisitorsData = async () => {
       try {
-        const response = await axios.get('http://dormaitory.online:8080/api/visitors/');
+        const response = await axios.get('http://localhost:8080/api/visitors/');
         setVisitorsData(response.data);
       } catch (error) {
         console.error('Error fetching visitors data:', error);
@@ -83,7 +83,7 @@ const MaintenanceRequestsChart = () => {
   useEffect(() => {
     const fetchMaintenanceData = async () => {
       try {
-        const response = await axios.get('http://dormaitory.online:8080/api/maintenancerequest/get');
+        const response = await axios.get('http://localhost:8080/api/maintenancerequest/get');
         setMaintenanceData(response.data);
       } catch (error) {
         console.error('Error fetching maintenance data:', error);
@@ -212,12 +212,12 @@ const MainPage = () => {
   const fetchAnnouncementsAndEvents = async () => {
     try {
       // Fetch announcements
-      const announcementsResponse = await axios.get('http://dormaitory.online:8080/api/announcements/');
+      const announcementsResponse = await axios.get('http://localhost:8080/api/announcements/');
       console.log('Announcements response:', announcementsResponse.data);
       setAnnouncements(announcementsResponse.data.announcements || announcementsResponse.data || []);
 
       // Fetch events
-      const eventsResponse = await axios.get('http://dormaitory.online:8080/api/events/');
+      const eventsResponse = await axios.get('http://localhost:8080/api/events/');
       console.log('Events response:', eventsResponse.data);
       setEvents(eventsResponse.data.events || eventsResponse.data || []);
     } catch (error) {
@@ -302,7 +302,7 @@ const MainPage = () => {
               <div className="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay={400}>
                 <div className="icon-box" onClick={() => handleCardClick('/tenant/contact-admin')}>
                   <div className="icon"><i className="bi bi-envelope"></i></div>
-                  <h4 className="title"><a href="#" className="stretched-link">Contact Admin</a></h4>
+                  <h4 className="title"><span className="stretched-link" role="button" tabIndex={0} style={{ cursor: 'pointer' }}>Contact Admin</span></h4>
                   <p>Get in touch with dormitory administration</p>
                 </div>
               </div>{/*End Icon Box */}

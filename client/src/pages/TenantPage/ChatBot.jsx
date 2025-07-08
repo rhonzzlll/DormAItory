@@ -28,7 +28,7 @@ const DormBot = () => {
             scrollToBottom();
 
             try {
-                const req = await fetch(`http://dormaitory.online:8080/api/chat/message/send/${chatroomId}`, {
+                const req = await fetch(`http://localhost:8080/api/chat/message/send/${chatroomId}`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -67,7 +67,7 @@ const DormBot = () => {
     useEffect(() => {
         const fetchPrompts = async () => {
             try {
-                const req = await fetch("http://dormaitory.online:8080/api/chat/prompts", {
+                const req = await fetch("http://localhost:8080/api/chat/prompts", {
                     method: "GET",
                     headers: {
                         "Accept": "application/json"
@@ -84,7 +84,7 @@ const DormBot = () => {
             const otherId = "67258d7c80b699eba26fcece";
 
             try {
-                const c_req = await fetch("http://dormaitory.online:8080/api/chat/chatroom", {
+                const c_req = await fetch("http://localhost:8080/api/chat/chatroom", {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
@@ -102,7 +102,7 @@ const DormBot = () => {
                     setChatroomId(chatroomId);
                 }
 
-                const m_req = await fetch(`http://dormaitory.online:8080/api/chat/messages/${chatroomId}`, {
+                const m_req = await fetch(`http://localhost:8080/api/chat/messages/${chatroomId}`, {
                     method: "GET",
                     headers: {
                         "Accept": "application/json"

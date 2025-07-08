@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BedDouble, Users, Plug, MessageCircle, Wrench, CreditCard, MessageSquare, ChevronRight, ArrowLeft, Menu, X } from 'lucide-react';
+import { Home, BedDouble, Users, Plug, MessageCircle, Wrench, CreditCard, MessageSquare, ChevronRight, ArrowLeft, Menu, X, User } from 'lucide-react';
 
 const TenantSidebar = ({ children }) => {
   const location = useLocation();
@@ -29,7 +29,16 @@ const TenantSidebar = ({ children }) => {
           { title: 'Payment Logs', path: '/tenant/payment-options/payment-logs' }
         ]
       },
-      { title: 'Chatbot', path: '/tenant/chatbot', icon: <MessageSquare className="w-5 h-5" /> }
+      { title: 'Chatbot', path: '/tenant/chatbot', icon: <MessageSquare className="w-5 h-5" /> },
+      {
+        title: 'Profile',
+        path: '/profile',
+        icon: <User className="w-5 h-5" />,
+        submenu: [
+          { title: 'Profile', path: '/profile' },
+          { title: 'History', path: '/profile/history' }
+        ]
+      }
     ],
     rooms: [
       {

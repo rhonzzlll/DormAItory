@@ -100,7 +100,7 @@ const Signup = () => {
     }
 
     try {
-      const url = 'http://dormaitory.online:8080/api/users';
+      const url = 'http://localhost:8080/api/users';
 
       const currentData = { ...data };
       delete currentData.agreeToEULA; // Remove EULA flag before sending to backend
